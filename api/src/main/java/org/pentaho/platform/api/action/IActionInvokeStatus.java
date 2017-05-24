@@ -12,18 +12,18 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2017 Pentaho Corporation..  All rights reserved.
+ * Copyright (c) 2017 Pentaho Corporation..  All rights reserved.
  */
 
-package org.pentaho.platform.scheduler2.email;
+package org.pentaho.platform.api.action;
 
-import org.pentaho.platform.scheduler2.messsages.Messages;
+/**
+ * An API for the object representation of action invocation status, allows us to pass back status
+ * of action invocation, whether any exceptions occurred during invocation and whether the action
+ * needs to be retired.
+ */
+public interface IActionInvokeStatus {
+  boolean requiresUpdate();
 
-public class Emailer extends org.pentaho.platform.util.Emailer {
-
-  @Override
-  public String getEmailFromName () {
-    return Messages.getInstance().getString( "schedulerEmailFromName" ); //$NON-NLS-1$
-  }
-
+  Throwable getThrowable();
 }

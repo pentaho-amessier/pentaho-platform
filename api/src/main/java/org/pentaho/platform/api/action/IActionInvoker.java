@@ -12,18 +12,27 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2017 Pentaho Corporation..  All rights reserved.
+ * Copyright (c) 2017 Pentaho Corporation..  All rights reserved.
  */
 
-package org.pentaho.platform.scheduler2.email;
+package org.pentaho.platform.api.action;
 
-import org.pentaho.platform.scheduler2.messsages.Messages;
+import java.io.Serializable;
+import java.util.Map;
 
-public class Emailer extends org.pentaho.platform.util.Emailer {
+/**
+ * The purpose of this interface is to provide functionality needed to invoke an {@link IAction} instance in a
+ * generic fashion.
+ */
+public interface IActionInvoker {
 
-  @Override
-  public String getEmailFromName () {
-    return Messages.getInstance().getString( "schedulerEmailFromName" ); //$NON-NLS-1$
-  }
+  IAction createActionBean( final String actionClassName, final String actionId ) throws Exception;
 
+  // will be called by the resource
+  IActionInvokeStatus runInBackgroundLocally( final Map<String, Serializable> params )
+    throws Exception;
+
+  // called by ActionAdapterQuartzJob
+  IActionInvokeStatus runInBackground( final IAction actionBean, final String actionUser, final Map<String,
+    Serializable> params ) throws Exception;
 }

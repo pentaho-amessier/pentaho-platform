@@ -12,18 +12,33 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2017 Pentaho Corporation..  All rights reserved.
+ * Copyright (c) 2017 Pentaho Corporation..  All rights reserved.
  */
 
-package org.pentaho.platform.scheduler2.email;
+package org.pentaho.platform.plugin.action;
 
-import org.pentaho.platform.scheduler2.messsages.Messages;
+import org.pentaho.platform.api.action.IActionInvokeStatus;
 
-public class Emailer extends org.pentaho.platform.util.Emailer {
+import javax.xml.bind.annotation.XmlRootElement;
 
-  @Override
-  public String getEmailFromName () {
-    return Messages.getInstance().getString( "schedulerEmailFromName" ); //$NON-NLS-1$
+@XmlRootElement
+public class ActionInvokeStatus implements IActionInvokeStatus {
+  private boolean requiresUpdate;
+  private Throwable throwable;
+
+  void setRequiresUpdate( final boolean requiresUpdate ) {
+    this.requiresUpdate = requiresUpdate;
   }
 
+  public boolean requiresUpdate() {
+    return this.requiresUpdate;
+  }
+
+  void setThrowable( final Throwable throwable ) {
+    this.throwable = throwable;
+  }
+
+  public Throwable getThrowable() {
+    return this.throwable;
+  }
 }
