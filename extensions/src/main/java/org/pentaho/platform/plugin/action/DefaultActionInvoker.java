@@ -17,39 +17,22 @@
 
 package org.pentaho.platform.plugin.action;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
-import org.pentaho.platform.api.action.IPostProcessingAction;
-import org.pentaho.platform.api.action.IStreamingAction;
-import org.pentaho.platform.api.action.IVarArgsAction;
-import org.pentaho.platform.api.repository.IContentItem;
-import org.pentaho.platform.api.repository2.unified.ISourcesStreamEvents;
-import org.pentaho.platform.api.repository2.unified.IStreamListener;
-import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
-import org.pentaho.platform.api.repository2.unified.RepositoryFile;
 import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
-import org.pentaho.platform.engine.core.output.FileContentItem;
-import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.engine.security.SecurityHelper;
-import org.pentaho.platform.engine.services.solution.ActionSequenceCompatibilityFormatter;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
-import org.pentaho.platform.scheduler2.quartz.SchedulerOutputPathResolver;
-import org.pentaho.platform.util.beans.ActionHarness;
 import org.pentaho.platform.util.messages.LocaleHelper;
 
-import java.io.OutputStream;
 import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 /**
  * A concrete implementation of the {@link IActionInvoker} interface.
@@ -58,8 +41,8 @@ import java.util.concurrent.Callable;
 public class DefaultActionInvoker implements IActionInvoker {
   private static final Log logger = LogFactory.getLog( DefaultActionInvoker.class );
 
-  private String outputFilePath = null;
-  private Object lock = new Object();
+  //private String outputFilePath = null;
+  //private Object lock = new Object();
 
   private static final Map<String, String> KEY_MAP;
   static {
@@ -159,13 +142,11 @@ public class DefaultActionInvoker implements IActionInvoker {
     final IAction actionBean = createActionBean( actionClassName, actionId );
     return runInBackgroundLocally( actionBean, actionUser, params );
   }
-
+/*
   protected final IActionInvokeStatus runInBackgroundLocally( final IAction actionBean, final String actionUser, final
-  Map<String, Serializable> params ) throws
-    Exception {
+    Map<String, Serializable> params ) throws Exception {
     try {
       return runInBackgroundLocallyImpl( actionBean, actionUser, params );
-
     } catch ( Throwable t ) {
       // ensure that the main thread isn't blocked on lock
       synchronized ( lock ) {
@@ -178,11 +159,12 @@ public class DefaultActionInvoker implements IActionInvoker {
         "ActionInvoker.ERROR_0004_ACTION_FAILED", actionBean //$NON-NLS-1$
           .getClass().getName() ), t );
     }
-  }
+  }*/
 
-  private IActionInvokeStatus runInBackgroundLocallyImpl( final IAction actionBean, final String actionUser, final
-  Map<String, Serializable> params ) throws
-    Exception {
+  protected final IActionInvokeStatus runInBackgroundLocally( final IAction actionBean, final String actionUser, final
+    Map<String, Serializable> params ) throws Exception {
+  //private IActionInvokeStatus runInBackgroundLocallyImpl( final IAction actionBean, final String actionUser, final
+  //  Map<String, Serializable> params ) throws Exception {
     // TODO: handle nulls
 
     // set the locale, if not already set
@@ -207,7 +189,8 @@ public class DefaultActionInvoker implements IActionInvoker {
           .getClass().getName(), actionUser, QuartzScheduler.prettyPrintMap( params ) ) );
     }
 
-    Callable<Boolean> actionBeanRunner = new Callable<Boolean>() {
+    final ActionRunner actionBeanRunner = new ActionRunner(actionBean, actionUser, params, streamProvider );
+    /*new Callable<Boolean>() {
 
       public Boolean call() throws Exception {
         final Object locale = params.get( LocaleHelper.USER_LOCALE_PARAM );
@@ -330,7 +313,7 @@ public class DefaultActionInvoker implements IActionInvoker {
         }
         return null;
       }
-    };
+    };*/
 
     final ActionInvokeStatus status = new ActionInvokeStatus();
 

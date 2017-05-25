@@ -19,6 +19,10 @@ package org.pentaho.platform.scheduler2.email;
 
 import org.pentaho.platform.scheduler2.messsages.Messages;
 
+/**
+ * @deprecated as of 8.0, use {@link org.pentaho.platform.util.Emailer} instead
+ */
+@Deprecated
 public class Emailer extends org.pentaho.platform.util.Emailer {
 
   @Override
