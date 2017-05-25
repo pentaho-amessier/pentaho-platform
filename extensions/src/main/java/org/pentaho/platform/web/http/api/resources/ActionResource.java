@@ -1,6 +1,22 @@
+/*!
+ * This program is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License, version 2.1 as published by the Free Software
+ * Foundation.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, you can obtain a copy at http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+ * or from the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ *
+ * Copyright (c) 2017 Pentaho Corporation..  All rights reserved.
+ */
+
 package org.pentaho.platform.web.http.api.resources;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.enunciate.jaxrs.ResponseCode;
@@ -9,28 +25,19 @@ import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
-import org.pentaho.platform.plugin.action.DefaultActionInvoker;
+import org.pentaho.platform.plugin.action.ActionHelper;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-/**
- * Created by amessier on 5/22/2017.
- */
 @Path( "/action" )
 public class ActionResource {
   protected static final Log logger = LogFactory.getLog( ActionResource.class );
@@ -44,7 +51,7 @@ public class ActionResource {
 
   @POST
   @Path ( "/runInBackground" )
-  @Consumes( { APPLICATION_JSON  } )
+  @Consumes( { APPLICATION_JSON } )
   @Produces( { APPLICATION_JSON } )
   @StatusCodes(
     {
@@ -54,14 +61,14 @@ public class ActionResource {
       @ResponseCode( code = 500, condition = "Error while retrieving system resources." ),
     }
   )
-  public IActionInvokeStatus runInBackground( final String content ) {
+  public String runInBackground( final String content ) {
+    // TODO: to achieve asynchronous execution of the endpoint, execute the contents of this method in a new thread
+    // and return immediately
     Map<String, Serializable> paramMap = null;
     try {
-      paramMap = DefaultActionInvoker.jsonToObject( content, Map.class );
-      int value = 0;
+      paramMap = ActionHelper.jsonToObject( content, Map.class );
     } catch ( final IOException e ) {
       // TODO log
-      int dummy = 0;
     }
 
     final IActionInvoker actionInvoker = PentahoSystem.get( IActionInvoker.class, "IActionInvoker", PentahoSessionHolder
@@ -69,50 +76,11 @@ public class ActionResource {
 
     IActionInvokeStatus status = null;
     try {
-      //status = actionInvoker.runInBackground( request.getActionClass(), request.getActionId()
-      //  , request.getActionUser(), paramMap );
       status = actionInvoker.runInBackgroundLocally( paramMap );
     } catch ( final Exception e ) {
-      // TODO
+      // TODO log
     }
 
-    return status;//new JSONObject( paramMap ).toString();
+    return ActionHelper.objectToJson( status );
   }
-
-  private static String serializeMap ( final Map<String, Serializable> params ) {
-    String serializedMap = null;
-    try {
-      final FileOutputStream fos = new FileOutputStream("temp.ser");
-      final ObjectOutputStream oos = new ObjectOutputStream( fos );
-      oos.writeObject( params );
-      oos.close();
-      fos.close();
-      serializedMap = FileUtils.readFileToString(  new File( "temp.ser" ) );
-
-    } catch ( final Exception e ) {
-      // TODO
-      e.printStackTrace();
-    }
-    return serializedMap;
-  }
-  private static Map<String, Serializable> deserializeMap ( final String content ) {
-    Map<String, Serializable> map = null;
-    try {
-      //final InputStream is = new ByteArrayInputStream(content.getBytes());
-      //final ObjectInputStream ois = new ObjectInputStream( is );
-      //map = (HashMap) fis.readObject();
-
-      FileInputStream fis = new FileInputStream("temp.ser");
-      ObjectInputStream ois = new ObjectInputStream(fis);
-      map = (HashMap) ois.readObject();
-      fis.close();
-      ois.close();
-    } catch ( final Exception e ) {
-      // TODO
-      e.printStackTrace();
-    }
-    return map;
-  }
-
-
 }

@@ -19,9 +19,6 @@ package org.pentaho.platform.plugin.action;
 
 import org.pentaho.platform.api.action.IActionInvokeStatus;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
-@XmlRootElement
 public class ActionInvokeStatus implements IActionInvokeStatus {
   private boolean requiresUpdate;
   private Throwable throwable;

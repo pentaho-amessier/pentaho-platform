@@ -21,8 +21,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.json.JSONObject;
 import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
@@ -34,7 +32,6 @@ import org.pentaho.platform.api.repository2.unified.ISourcesStreamEvents;
 import org.pentaho.platform.api.repository2.unified.IStreamListener;
 import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
-import org.pentaho.platform.api.repository2.unified.data.simple.SimpleRepositoryFileData;
 import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
 import org.pentaho.platform.engine.core.output.FileContentItem;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
@@ -42,12 +39,9 @@ import org.pentaho.platform.engine.security.SecurityHelper;
 import org.pentaho.platform.engine.services.solution.ActionSequenceCompatibilityFormatter;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.scheduler2.quartz.SchedulerOutputPathResolver;
-import org.pentaho.platform.util.Emailer;
 import org.pentaho.platform.util.beans.ActionHarness;
 import org.pentaho.platform.util.messages.LocaleHelper;
-import org.pentaho.platform.util.web.MimeHelper;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.text.MessageFormat;
@@ -60,7 +54,7 @@ import java.util.concurrent.Callable;
 /**
  * A concrete implementation of the {@link IActionInvoker} interface.
  */
-// TODO: this is a singletop bean, make it thread safe
+// TODO: this is a singleton bean, make it thread safe
 public class DefaultActionInvoker implements IActionInvoker {
   private static final Log logger = LogFactory.getLog( DefaultActionInvoker.class );
 
@@ -101,7 +95,6 @@ public class DefaultActionInvoker implements IActionInvoker {
     return ActionHelper.createActionBean( actionClassName, actionId );
   }
 
-  private IBackgroundExecutionStreamProvider streamProvider = null;
   /**
    * Gets the stream provider from the INVOKER_STREAMPROVIDER, or builds it from the input file and output dir
    * @param params
@@ -109,11 +102,7 @@ public class DefaultActionInvoker implements IActionInvoker {
    */
   private IBackgroundExecutionStreamProvider getStreamProvider( final Map<String, Serializable> params ) {
 
-    if ( streamProvider == null ) {
-      streamProvider = ActionHelper.getStreamProvider( params );
-      return streamProvider;
-    }
-    return streamProvider;
+    return ActionHelper.getStreamProvider( params );
   }
 
   /**
@@ -127,7 +116,7 @@ public class DefaultActionInvoker implements IActionInvoker {
    * @throws Exception when the {@code IAction} cannot be invoked for some reason.
    */
   @Override
-  public IActionInvokeStatus runInBackground( final IAction actionBean, final String actionUser, final Map<String,
+  public final IActionInvokeStatus runInBackground( final IAction actionBean, final String actionUser, final Map<String,
     Serializable> params ) throws Exception {
     // prepare the map, this converts any map keys that are scheduler specific to generic map keys
     prepareMap( params );
@@ -171,7 +160,8 @@ public class DefaultActionInvoker implements IActionInvoker {
     return runInBackgroundLocally( actionBean, actionUser, params );
   }
 
-  protected IActionInvokeStatus runInBackgroundLocally( final IAction actionBean, final String actionUser, final Map<String, Serializable> params ) throws
+  protected final IActionInvokeStatus runInBackgroundLocally( final IAction actionBean, final String actionUser, final
+  Map<String, Serializable> params ) throws
     Exception {
     try {
       return runInBackgroundLocallyImpl( actionBean, actionUser, params );
@@ -190,8 +180,7 @@ public class DefaultActionInvoker implements IActionInvoker {
     }
   }
 
-
-  protected IActionInvokeStatus runInBackgroundLocallyImpl( final IAction actionBean, final String actionUser, final
+  private IActionInvokeStatus runInBackgroundLocallyImpl( final IAction actionBean, final String actionUser, final
   Map<String, Serializable> params ) throws
     Exception {
     // TODO: handle nulls
@@ -208,7 +197,7 @@ public class DefaultActionInvoker implements IActionInvoker {
     params.remove( ActionHelper.INVOKER_ACTIONID );
     params.remove( ActionHelper.INVOKER_ACTIONUSER );
     // build the stream provider
-    streamProvider = getStreamProvider( params );
+    final IBackgroundExecutionStreamProvider streamProvider = getStreamProvider( params );
     params.remove( ActionHelper.INVOKER_STREAMPROVIDER );
     params.remove( QuartzScheduler.RESERVEDMAPKEY_UIPASSPARAM );
 
@@ -295,7 +284,7 @@ public class DefaultActionInvoker implements IActionInvoker {
               lock.wait();
             }
           }
-          sendEmail( actionParams, params, outputFilePath );
+          ActionHelper.sendEmail( actionParams, params, outputFilePath );
         }
         if ( actionBean instanceof IPostProcessingAction ) {
           closeContentOutputStreams( (IPostProcessingAction) actionBean );
@@ -360,116 +349,5 @@ public class DefaultActionInvoker implements IActionInvoker {
     status.setRequiresUpdate( requiresUpdate );
 
     return status;
-  }
-
-  public static void sendEmail( Map<String, Object> actionParams, Map<String, Serializable> params, String filePath ) {
-    try {
-      IUnifiedRepository repo = PentahoSystem.get( IUnifiedRepository.class );
-      RepositoryFile sourceFile = repo.getFile( filePath );
-      // add metadata
-      Map<String, Serializable> metadata = repo.getFileMetadata( sourceFile.getId() );
-      String lineageId = (String) params.get( QuartzScheduler.RESERVEDMAPKEY_LINEAGE_ID );
-      metadata.put( QuartzScheduler.RESERVEDMAPKEY_LINEAGE_ID, lineageId );
-      repo.setFileMetadata( sourceFile.getId(), metadata );
-      // send email
-      SimpleRepositoryFileData data = repo.getDataForRead( sourceFile.getId(), SimpleRepositoryFileData.class );
-      // if email is setup and we have tos, then do it
-      Emailer emailer = new Emailer();
-      if ( !emailer.setup() ) {
-        // email not configured
-        return;
-      }
-      String to = (String) actionParams.get( "_SCH_EMAIL_TO" );
-      String cc = (String) actionParams.get( "_SCH_EMAIL_CC" );
-      String bcc = (String) actionParams.get( "_SCH_EMAIL_BCC" );
-      if ( ( to == null || "".equals( to ) ) && ( cc == null || "".equals( cc ) )
-        && ( bcc == null || "".equals( bcc ) ) ) {
-        // no destination
-        return;
-      }
-      emailer.setTo( to );
-      emailer.setCc( cc );
-      emailer.setBcc( bcc );
-      emailer.setAttachment( data.getInputStream() );
-      emailer.setAttachmentName( "attachment" );
-      String attachmentName = (String) actionParams.get( "_SCH_EMAIL_ATTACHMENT_NAME" );
-      if ( attachmentName != null && !"".equals( attachmentName ) ) {
-        String path = filePath;
-        if ( path.endsWith( ".*" ) ) {
-          path = path.replace( ".*", "" );
-        }
-        String extension = MimeHelper.getExtension( data.getMimeType() );
-        if ( extension == null ) {
-          extension = ".bin";
-        }
-        if ( !attachmentName.endsWith( extension ) ) {
-          emailer.setAttachmentName( attachmentName + extension );
-        } else {
-          emailer.setAttachmentName( attachmentName );
-        }
-      } else if ( data != null ) {
-        String path = filePath;
-        if ( path.endsWith( ".*" ) ) {
-          path = path.replace( ".*", "" );
-        }
-        String extension = MimeHelper.getExtension( data.getMimeType() );
-        if ( extension == null ) {
-          extension = ".bin";
-        }
-        path = path.substring( path.lastIndexOf( "/" ) + 1, path.length() );
-        if ( !path.endsWith( extension ) ) {
-          emailer.setAttachmentName( path + extension );
-        } else {
-          emailer.setAttachmentName( path );
-        }
-      }
-      if ( data == null || data.getMimeType() == null || "".equals( data.getMimeType() ) ) {
-        emailer.setAttachmentMimeType( "binary/octet-stream" );
-      } else {
-        emailer.setAttachmentMimeType( data.getMimeType() );
-      }
-      String subject = (String) actionParams.get( "_SCH_EMAIL_SUBJECT" );
-      if ( subject != null && !"".equals( subject ) ) {
-        emailer.setSubject( subject );
-      } else {
-        emailer.setSubject( "Pentaho Scheduler: " + emailer.getAttachmentName() );
-      }
-      String message = (String) actionParams.get( "_SCH_EMAIL_MESSAGE" );
-      if ( subject != null && !"".equals( subject ) ) {
-        emailer.setBody( message );
-      }
-      emailer.send();
-    } catch ( Exception e ) {
-      logger.warn( e.getMessage(), e );
-    }
-  }
-
-
-
-  private static ObjectMapper getMapper () {
-    final ObjectMapper mapper = new ObjectMapper();
-    //mapper.configure( SerializationFeature.INDENT_OUTPUT,true);
-    //mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
-    return mapper;
-  }
-
-  private static String objectToJson ( final Object obj ) {
-    final ObjectMapper mapper = getMapper();
-    //final String jsonString = mapper.writeValueAsString( obj );
-    final JSONObject jsonFeed =  new JSONObject( obj );
-    final String jsonString = jsonFeed.toString();
-    return jsonString;
-  }
-
-
-  public static String mapToJson ( final Map map ) {
-    final JSONObject jsonFeed =  new JSONObject( map );
-    final String jsonString = jsonFeed.toString();
-    return jsonString;
-  }
-
-  public static <T> T jsonToObject ( final String jsonStr, final Class<T> clazz) throws IOException {
-    final ObjectMapper mapper = new ObjectMapper();
-    return mapper.readValue( jsonStr, clazz );
   }
 }
