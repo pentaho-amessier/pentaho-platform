@@ -53,6 +53,7 @@ public class ActionHelper {
   public static final String INVOKER_STREAMPROVIDER_INPUT_FILE = "inputFile"; //$NON-NLS-
   public static final String INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN = "outputFilePattern"; //$
   public static final String INVOKER_STREAMPROVIDER_UNIQUE_FILE_NAME = "uniqueFileName"; //$NON-NLS-1$
+  public static final String INVOKER_UIPASSPARAM = QuartzScheduler.RESERVEDMAPKEY_UIPASSPARAM;
 
   public static final String INVOKER_RESTART_FLAG = "restart"; //$NON-NLS-1$
 

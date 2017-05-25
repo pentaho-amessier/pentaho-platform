@@ -17,6 +17,7 @@
 
 package org.pentaho.platform.plugin.action;
 
+import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,7 +30,6 @@ import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.util.messages.LocaleHelper;
 
 import java.io.Serializable;
-import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -37,12 +37,9 @@ import java.util.Map;
 /**
  * A concrete implementation of the {@link IActionInvoker} interface.
  */
-// TODO: this is a singleton bean, make it thread safe
 public class DefaultActionInvoker implements IActionInvoker {
-  private static final Log logger = LogFactory.getLog( DefaultActionInvoker.class );
 
-  //private String outputFilePath = null;
-  //private Object lock = new Object();
+  private static final Log logger = LogFactory.getLog( DefaultActionInvoker.class );
 
   private static final Map<String, String> KEY_MAP;
   static {
@@ -53,10 +50,52 @@ public class DefaultActionInvoker implements IActionInvoker {
     KEY_MAP.put( QuartzScheduler.RESERVEDMAPKEY_STREAMPROVIDER, ActionHelper.INVOKER_STREAMPROVIDER );
     KEY_MAP.put( QuartzScheduler.RESERVEDMAPKEY_RESTART_FLAG, ActionHelper.INVOKER_RESTART_FLAG );
   }
-  private static final long RETRY_COUNT = 6;
-  private static final long RETRY_SLEEP_AMOUNT = 10000;
 
+  /**
+   * Given a {@code key}, removes it from the map, as well as its corresponding key in the {@code KEY_MAP}. The {@code key} can
+   * be  both a key or or a value in the {@code KEY_MAP}. This is to ensure that when a key to be removed is
+   * provided, we remove both copies of the value from the map, one that corresponds to the key directly and any that
+   * may have been copied under a different key.
+   *
+   * @param map a {@link Map} of values
+   * @param key the key being removed from the map
+   */
+  static void removeFromMap ( final Map<String, ?> map, final String key ) {
+
+    if ( map == null ) {
+      // nothing to do
+      return;
+    }
+    // remove the item with this key from the map
+    map.remove( key );
+    // find this key in the KEY_MAP
+    final String mappedKey = KEY_MAP.get( key );
+    if ( mappedKey != null ) {
+      map.remove( mappedKey );
+    } else {
+      // mapped key was not found - see if we have a value in the KEY_MAP that matches this key
+      final Iterator<Map.Entry<String, String>> keyMapEntries = KEY_MAP.entrySet().iterator();
+      while ( keyMapEntries.hasNext() ) {
+        final Map.Entry<String, String> entry = keyMapEntries.next();
+        if ( key.equals( entry.getValue().toString() ) ) {
+          map.remove( entry.getValue() );
+          break;
+        }
+      }
+    }
+  }
+
+  /**
+   * Prepares the {@code params} {@link Map} for action invocation, adding appropriate keys that are not scheduler
+   * specific, so that the action invocation code canoperate on these mapped non-scheduler specific keys, rather than
+   * any keys defined within the scheduler.
+   *
+   * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
+   */
   void prepareMap( final Map<String, Serializable> params ){
+    if ( params == null ) {
+      return;
+    }
     final Map<String, Serializable> newParams = new HashMap<String, Serializable>( );
     final Iterator<String> mapKeys = params.keySet().iterator();
     while (mapKeys.hasNext()) {
@@ -70,49 +109,49 @@ public class DefaultActionInvoker implements IActionInvoker {
       newParams.put( alternateKey, value );
     }
     params.putAll( newParams );
-    getStreamProvider( params );
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public IAction createActionBean( final String actionClassName, final String actionId ) throws Exception{
     return ActionHelper.createActionBean( actionClassName, actionId );
   }
 
   /**
-   * Gets the stream provider from the INVOKER_STREAMPROVIDER, or builds it from the input file and output dir
-   * @param params
-   * @return
+   * Returns the {@link IBackgroundExecutionStreamProvider} from information stored within the {@code params} {@link
+   * Map}.
+   *
+   * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
+   *
+   * @return an instasnce of {@link IBackgroundExecutionStreamProvider}
    */
   private IBackgroundExecutionStreamProvider getStreamProvider( final Map<String, Serializable> params ) {
-
     return ActionHelper.getStreamProvider( params );
   }
 
   /**
-   * Invokes the {@link IAction} in the background.
-   *
-   * @param actionBean the {@link IAction} being invoked
-   * @param actionUser The user invoking the {@link IAction}
-   * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
-   * @return the {@link IActionInvokeStatus} object containing information about the action invocation
-   *
-   * @throws Exception when the {@code IAction} cannot be invoked for some reason.
+   * {@inheritDoc}
    */
   @Override
-  public final IActionInvokeStatus runInBackground( final IAction actionBean, final String actionUser, final Map<String,
+  public IActionInvokeStatus runInBackground( final IAction actionBean, final String actionUser, final Map<String,
     Serializable> params ) throws Exception {
-    // prepare the map, this converts any map keys that are scheduler specific to generic map keys
     prepareMap( params );
+    // call getStreamProvider, in addition to creating the provider, this method also adds values to the map that
+    // serialize the stream provider and make it possible to deserialize and recreate it for remote execution.
+    getStreamProvider( params );
     return runInBackgroundImpl( actionBean, actionUser, params );
   }
 
   /**
-   * The concrete implementation of the "run in background" functionality. Implemented here to invoke the action
+   * The concrete implementation of the "run in background" functionality. Implemented here to invoke the
    * {@link IAction} locally.
    *
    * @param actionBean the {@link IAction} being invoked
    * @param actionUser The user invoking the {@link IAction}
    * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
+   *
    * @return the {@link IActionInvokeStatus} object containing information about the action invocation
    *
    * @throws Exception when the {@code IAction} cannot be invoked for some reason.
@@ -122,13 +161,7 @@ public class DefaultActionInvoker implements IActionInvoker {
   }
 
   /**
-   * Created the {@link IAction} bean based on information stored within the provided {@code params} map and runs it
-   * locally
-   *
-   * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
-   * @return the {@link IActionInvokeStatus} object containing information about the action invocation
-   *
-   * @throws Exception when the {@code IAction} cannot be invoked for some reason.
+   * {@inheritDoc}
    */
   @Override
   public IActionInvokeStatus runInBackgroundLocally( final Map<String, Serializable> params ) throws
@@ -142,30 +175,26 @@ public class DefaultActionInvoker implements IActionInvoker {
     final IAction actionBean = createActionBean( actionClassName, actionId );
     return runInBackgroundLocally( actionBean, actionUser, params );
   }
-/*
+
+  /**
+   * Invokes the provided {@link IAction} locally as the provided [@code actionUser}.
+   *
+   * @param actionBean the {@link IAction} being invoked
+   * @param actionUser The user invoking the {@link IAction}
+   * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
+   *
+   * @return the {@link IActionInvokeStatus} object containing information about the action invocation
+   *
+   * @throws Exception when the {@code IAction} cannot be invoked for some reason.
+   */
   protected final IActionInvokeStatus runInBackgroundLocally( final IAction actionBean, final String actionUser, final
     Map<String, Serializable> params ) throws Exception {
-    try {
-      return runInBackgroundLocallyImpl( actionBean, actionUser, params );
-    } catch ( Throwable t ) {
-      // ensure that the main thread isn't blocked on lock
-      synchronized ( lock ) {
-        lock.notifyAll();
-      }
-
-      // We should not distinguish between checked and unchecked exceptions here. All job execution failures
-      // should result in a rethrow of a quartz exception
-      throw new IllegalArgumentException( Messages.getInstance().getErrorString(
-        "ActionInvoker.ERROR_0004_ACTION_FAILED", actionBean //$NON-NLS-1$
-          .getClass().getName() ), t );
-    }
-  }*/
-
-  protected final IActionInvokeStatus runInBackgroundLocally( final IAction actionBean, final String actionUser, final
-    Map<String, Serializable> params ) throws Exception {
-  //private IActionInvokeStatus runInBackgroundLocallyImpl( final IAction actionBean, final String actionUser, final
-  //  Map<String, Serializable> params ) throws Exception {
     // TODO: handle nulls
+
+    if ( logger.isDebugEnabled() ) { // TODO: read from a message bundle
+      logger.debug(String.format( "Running action '%s' in background locally:%s[ %s ]", actionBean,  System.getProperty(
+        "line.separator" ),  Joiner.on(System.getProperty( "line.separator" )).withKeyValueSeparator (" -> ").join( params )));
+    }
 
     // set the locale, if not already set
     if ( params.get( LocaleHelper.USER_LOCALE_PARAM ) == null || org.pentaho.reporting.libraries.base.util
@@ -175,146 +204,15 @@ public class DefaultActionInvoker implements IActionInvoker {
     }
 
     // remove the scheduling infrastructure properties
-    params.remove( ActionHelper.INVOKER_ACTIONCLASS );
-    params.remove( ActionHelper.INVOKER_ACTIONID );
-    params.remove( ActionHelper.INVOKER_ACTIONUSER );
+    removeFromMap( params, ActionHelper.INVOKER_ACTIONCLASS  );
+    removeFromMap( params, ActionHelper.INVOKER_ACTIONID  );
+    removeFromMap( params, ActionHelper.INVOKER_ACTIONUSER  );
     // build the stream provider
     final IBackgroundExecutionStreamProvider streamProvider = getStreamProvider( params );
-    params.remove( ActionHelper.INVOKER_STREAMPROVIDER );
-    params.remove( QuartzScheduler.RESERVEDMAPKEY_UIPASSPARAM );
-
-    if ( logger.isDebugEnabled() ) {
-      logger.debug( MessageFormat.format(
-        "Scheduling system invoking action {0} as user {1} with params [ {2} ]", actionBean //$NON-NLS-1$
-          .getClass().getName(), actionUser, QuartzScheduler.prettyPrintMap( params ) ) );
-    }
+    removeFromMap( params, ActionHelper.INVOKER_STREAMPROVIDER  );
+    removeFromMap( params, ActionHelper.INVOKER_UIPASSPARAM  );
 
     final ActionRunner actionBeanRunner = new ActionRunner(actionBean, actionUser, params, streamProvider );
-    /*new Callable<Boolean>() {
-
-      public Boolean call() throws Exception {
-        final Object locale = params.get( LocaleHelper.USER_LOCALE_PARAM );
-        if ( locale instanceof Locale ) {
-          LocaleHelper.setLocaleOverride( (Locale) locale );
-        } else {
-          LocaleHelper.setLocaleOverride( new Locale( (String) locale ) );
-        }
-        // sync job params to the action bean
-        ActionHarness actionHarness = new ActionHarness( actionBean );
-        boolean updateJob = false;
-
-        final Map<String, Object> actionParams = new HashMap<String, Object>();
-        actionParams.putAll( params );
-        if ( streamProvider != null ) {
-          actionParams.put( "inputStream", streamProvider.getInputStream() );
-        }
-        actionHarness.setValues( actionParams, new ActionSequenceCompatibilityFormatter() );
-
-        if ( actionBean instanceof IVarArgsAction ) {
-          actionParams.remove( "inputStream" );
-          actionParams.remove( "outputStream" );
-          ( (IVarArgsAction) actionBean ).setVarArgs( actionParams );
-        }
-
-        boolean waitForFileCreated = false;
-        OutputStream stream = null;
-
-        if ( streamProvider != null ) {
-          actionParams.remove( "inputStream" );
-          if ( actionBean instanceof IStreamingAction ) {
-            streamProvider.setStreamingAction( (IStreamingAction) actionBean );
-          }
-
-          // BISERVER-9414 - validate that output path still exist
-          SchedulerOutputPathResolver resolver =
-            new SchedulerOutputPathResolver( streamProvider.getOutputPath(), actionUser );
-          String outputPath = resolver.resolveOutputFilePath();
-          actionParams.put( "useJcr", Boolean.TRUE );
-          actionParams.put( "jcrOutputPath", outputPath.substring( 0, outputPath.lastIndexOf( "/" ) ) );
-
-          if ( !outputPath.equals( streamProvider.getOutputPath() ) ) {
-            streamProvider.setOutputFilePath( outputPath ); // set fallback path
-            updateJob = true; // job needs to be deleted and recreated with the new output path
-          }
-
-          stream = streamProvider.getOutputStream();
-          if ( stream instanceof ISourcesStreamEvents ) {
-            ( (ISourcesStreamEvents) stream ).addListener( new IStreamListener() {
-              public void fileCreated( final String filePath ) {
-                synchronized ( lock ) {
-                  outputFilePath = filePath;
-                  lock.notifyAll();
-                }
-              }
-            } );
-            waitForFileCreated = true;
-          }
-          actionParams.put( "outputStream", stream );
-          // The lineage_id is only useful for the metadata and not needed at this level see PDI-10171
-          actionParams.remove( QuartzScheduler.RESERVEDMAPKEY_LINEAGE_ID );
-          actionHarness.setValues( actionParams );
-        }
-
-        actionBean.execute();
-
-        if ( stream != null ) {
-          IOUtils.closeQuietly( stream );
-        }
-
-        if ( waitForFileCreated ) {
-          synchronized ( lock ) {
-            if ( outputFilePath == null ) {
-              lock.wait();
-            }
-          }
-          ActionHelper.sendEmail( actionParams, params, outputFilePath );
-        }
-        if ( actionBean instanceof IPostProcessingAction ) {
-          closeContentOutputStreams( (IPostProcessingAction) actionBean );
-          markContentAsGenerated( (IPostProcessingAction) actionBean );
-        }
-        return updateJob;
-      }
-
-      private void closeContentOutputStreams( IPostProcessingAction actionBean ) {
-        for ( IContentItem contentItem : actionBean.getActionOutputContents() ) {
-          contentItem.closeOutputStream();
-        }
-      }
-
-      private void markContentAsGenerated( IPostProcessingAction actionBean ) {
-        IUnifiedRepository repo = PentahoSystem.get( IUnifiedRepository.class );
-        String lineageId = (String) params.get( QuartzScheduler.RESERVEDMAPKEY_LINEAGE_ID );
-        for ( IContentItem contentItem : actionBean.getActionOutputContents() ) {
-          RepositoryFile sourceFile = getRepositoryFileSafe( repo, contentItem.getPath() );
-          // add metadata if we have access and we have file
-          if ( sourceFile != null ) {
-            Map<String, Serializable> metadata = repo.getFileMetadata( sourceFile.getId() );
-            metadata.put( QuartzScheduler.RESERVEDMAPKEY_LINEAGE_ID, lineageId );
-            repo.setFileMetadata( sourceFile.getId(), metadata );
-          } else {
-            String fileName = getFSFileNameSafe( contentItem );
-            logger.warn( Messages.getInstance().getString( "ActionInvoker.WARN_0001_SKIP_REMOVING_OUTPUT_FILE", fileName ) );
-          }
-        }
-      }
-
-      private RepositoryFile getRepositoryFileSafe( IUnifiedRepository repo, String path ) {
-        try {
-          return repo.getFile( path );
-        } catch ( Exception e ) {
-          logger.debug( MessageFormat.format( "Cannot get repository file \"{0}\": {1}", path, e.getMessage() ), e );
-          return null;
-        }
-      }
-      private String getFSFileNameSafe( IContentItem contentItem ) {
-        if ( contentItem instanceof FileContentItem ) {
-          return ( (FileContentItem) contentItem ).getFile().getName();
-        }
-        return null;
-      }
-    };*/
-
     final ActionInvokeStatus status = new ActionInvokeStatus();
 
     boolean requiresUpdate = false;
@@ -325,7 +223,7 @@ public class DefaultActionInvoker implements IActionInvoker {
     } else {
       try {
         requiresUpdate = SecurityHelper.getInstance().runAsUser( actionUser, actionBeanRunner );
-      } catch ( Throwable t ) { // TODO: retry only when run as user, not when anonymous?
+      } catch ( final Throwable t ) {
         status.setThrowable( t );
       }
     }
