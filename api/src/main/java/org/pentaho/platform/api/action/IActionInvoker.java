@@ -40,18 +40,17 @@ public interface IActionInvoker {
    */
   IAction createActionBean( final String actionClassName, final String actionId ) throws Exception;
 
-
   /**
    * Runs the action in background locally.
    *
    * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
-   * @return
+   *
+   * @return the {@link IActionInvokeStatus} object containing information about the action invocation
+   *
    * @throws Exception if the action cannot be run for some reason
    */
   IActionInvokeStatus runInBackgroundLocally( final Map<String, Serializable> params )
     throws Exception;
-
-  // called by ActionAdapterQuartzJob
 
   /**
    * Invokes the {@link IAction} in the background.

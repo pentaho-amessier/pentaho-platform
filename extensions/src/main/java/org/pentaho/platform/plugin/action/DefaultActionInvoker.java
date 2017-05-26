@@ -27,6 +27,7 @@ import org.pentaho.platform.api.action.IActionInvoker;
 import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
 import org.pentaho.platform.engine.security.SecurityHelper;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
+import org.pentaho.platform.util.StringUtil;
 import org.pentaho.platform.util.messages.LocaleHelper;
 
 import java.io.Serializable;
@@ -35,7 +36,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * A concrete implementation of the {@link IActionInvoker} interface.
+ * A concrete implementation of the {@link IActionInvoker} interface that invokes the {@link IAction} locally.
  */
 public class DefaultActionInvoker implements IActionInvoker {
 
@@ -77,7 +78,7 @@ public class DefaultActionInvoker implements IActionInvoker {
       final Iterator<Map.Entry<String, String>> keyMapEntries = KEY_MAP.entrySet().iterator();
       while ( keyMapEntries.hasNext() ) {
         final Map.Entry<String, String> entry = keyMapEntries.next();
-        if ( key.equals( entry.getValue().toString() ) ) {
+        if ( key.equals( entry.getValue() ) ) {
           map.remove( entry.getValue() );
           break;
         }
@@ -98,7 +99,7 @@ public class DefaultActionInvoker implements IActionInvoker {
     }
     final Map<String, Serializable> newParams = new HashMap<String, Serializable>( );
     final Iterator<String> mapKeys = params.keySet().iterator();
-    while (mapKeys.hasNext()) {
+    while ( mapKeys.hasNext() ) {
       final String key = mapKeys.next();
       // get the alternate key from KEY_MAP
       final String alternateKey = KEY_MAP.get( key );
@@ -167,7 +168,8 @@ public class DefaultActionInvoker implements IActionInvoker {
   public IActionInvokeStatus runInBackgroundLocally( final Map<String, Serializable> params ) throws
     Exception {
     if ( params == null ) {
-      // TODO
+      // TODO: localize
+      throw new ActionInvocationException( "Cannot invoke action when the map is null." );
     }
     final String actionId = (String) params.get( ActionHelper.INVOKER_ACTIONID );
     final String actionClassName = (String) params.get( ActionHelper.INVOKER_ACTIONCLASS );
@@ -177,7 +179,7 @@ public class DefaultActionInvoker implements IActionInvoker {
   }
 
   /**
-   * Invokes the provided {@link IAction} locally as the provided [@code actionUser}.
+   * Invokes the provided {@link IAction} locally as the provided {@code actionUser}.
    *
    * @param actionBean the {@link IAction} being invoked
    * @param actionUser The user invoking the {@link IAction}
@@ -189,11 +191,16 @@ public class DefaultActionInvoker implements IActionInvoker {
    */
   protected final IActionInvokeStatus runInBackgroundLocally( final IAction actionBean, final String actionUser, final
     Map<String, Serializable> params ) throws Exception {
-    // TODO: handle nulls
+
+    if ( actionBean == null || params == null ) {
+      // TODO: localize
+      throw new ActionInvocationException( "Cannot invoke null action." );
+    }
 
     if ( logger.isDebugEnabled() ) { // TODO: read from a message bundle
-      logger.debug(String.format( "Running action '%s' in background locally:%s[ %s ]", actionBean,  System.getProperty(
-        "line.separator" ),  Joiner.on(System.getProperty( "line.separator" )).withKeyValueSeparator (" -> ").join( params )));
+      logger.debug( String.format( "Running action '%s' in background locally:%s[ %s ]", actionBean,  System
+        .getProperty( "line.separator" ),  Joiner.on( System.getProperty( "line.separator" ) ).withKeyValueSeparator(
+          " -> " ).join( params ) ) );
     }
 
     // set the locale, if not already set
@@ -216,7 +223,7 @@ public class DefaultActionInvoker implements IActionInvoker {
     final ActionInvokeStatus status = new ActionInvokeStatus();
 
     boolean requiresUpdate = false;
-    if ( ( actionUser == null ) || ( actionUser.equals( "system session" ) ) ) { //$NON-NLS-1$
+    if ( ( StringUtil.isEmpty( actionUser ) ) || ( actionUser.equals( "system session" ) ) ) { //$NON-NLS-1$
       // For now, don't try to run quartz jobs as authenticated if the user
       // that created the job is a system user. See PPP-2350
       requiresUpdate = SecurityHelper.getInstance().runAsAnonymous( actionBeanRunner );

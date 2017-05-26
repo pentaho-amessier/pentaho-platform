@@ -17,38 +17,42 @@
 
 package org.pentaho.platform.web.http.api.resources;
 
+import com.google.common.base.Joiner;
+import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.enunciate.jaxrs.ResponseCode;
 import org.codehaus.enunciate.jaxrs.StatusCodes;
-import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.action.ActionHelper;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+/**
+ * This resource performs action related tasks, such as running/invoking the action in the background.
+ */
 @Path( "/action" )
 public class ActionResource {
   protected static final Log logger = LogFactory.getLog( ActionResource.class );
 
-
-  @HEAD
-  @Path ( "/runInBackground" )
-  public boolean runInBackground() {
-    return true;
-  }
-
+  /**
+   * Runs the action defined within the provided json feed in the background asynchronously.
+   *
+   * @param content a json string containing information needed to instantiate and invoke the action
+   *
+   * @return a {@link Response}
+   */
   @POST
   @Path ( "/runInBackground" )
   @Consumes( { APPLICATION_JSON } )
@@ -57,30 +61,36 @@ public class ActionResource {
     {
       @ResponseCode( code = 200, condition = "Action invoked successfully." ),
       @ResponseCode( code = 400, condition = "Bad input - could not invoke action." ),
-      @ResponseCode( code = 401, condition = "User does not have permissions to  invoke action" ),
+      @ResponseCode( code = 401, condition = "User does not have permissions to invoke action" ),
       @ResponseCode( code = 500, condition = "Error while retrieving system resources." ),
     }
   )
-  public String runInBackground( final String content ) {
-    // TODO: to achieve asynchronous execution of the endpoint, execute the contents of this method in a new thread
-    // and return immediately
-    Map<String, Serializable> paramMap = null;
-    try {
-      paramMap = ActionHelper.jsonToObject( content, Map.class );
-    } catch ( final IOException e ) {
-      // TODO log
-    }
+  public Response runInBackground( final String content ) {
 
-    final IActionInvoker actionInvoker = PentahoSystem.get( IActionInvoker.class, "IActionInvoker", PentahoSessionHolder
-      .getSession() );
+    // invoke the action asynchronously
+    final Runnable task = () -> {
+      Map<String, Serializable> paramMap = null;
+      try {
+        paramMap = ActionHelper.jsonToObject( content, Map.class );
+      } catch ( final IOException e ) {
+        // TODO localize
+        logger.error(  String.format( "Could not convert content to map:%s%s", System.getProperty( "line.separator" )
+          , content ) );
+        return;
+      }
 
-    IActionInvokeStatus status = null;
-    try {
-      status = actionInvoker.runInBackgroundLocally( paramMap );
-    } catch ( final Exception e ) {
-      // TODO log
-    }
+      final IActionInvoker actionInvoker = PentahoSystem.get( IActionInvoker.class, "IActionInvoker", PentahoSessionHolder
+        .getSession() );
 
-    return ActionHelper.objectToJson( status );
+      try {
+        actionInvoker.runInBackgroundLocally( paramMap );
+      } catch ( final Exception e ) {
+        // TODO localize
+        logger.error( String.format( "Could not convert content to map:%s%s", System.getProperty( "line.separator" )
+          , Joiner.on(System.getProperty( "line.separator" )).withKeyValueSeparator (" -> ").join( paramMap ) ) );
+      }
+    };
+    new Thread ( task ).start();
+    return Response.status( HttpStatus.SC_ACCEPTED ).build();
   }
 }

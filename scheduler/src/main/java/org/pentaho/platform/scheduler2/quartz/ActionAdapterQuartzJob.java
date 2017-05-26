@@ -80,7 +80,7 @@ public class ActionAdapterQuartzJob implements Job {
 
   private static String getActionIdentifier(final IAction actionBean, final String actionClassName, final String actionId) {
     if ( actionBean != null ) {
-      return actionBean.toString();
+      return actionBean.getClass().getName();
     } else if ( !StringUtil.isEmpty( actionClassName )) {
       return actionClassName;
     } else if ( !StringUtil.isEmpty( actionId )) {
@@ -136,7 +136,7 @@ public class ActionAdapterQuartzJob implements Job {
     // Invoke the action and get the status of the invocation
     final IActionInvokeStatus status = actionInvoker.runInBackground( actionBean, actionUser, params );
 
-    // Status may not be available for remote execution
+    // Status may not be available for remote execution, which is expected
     if ( status == null ) {
       if (log.isWarnEnabled()) {
         log.warn( Messages.getInstance().getErrorString(
