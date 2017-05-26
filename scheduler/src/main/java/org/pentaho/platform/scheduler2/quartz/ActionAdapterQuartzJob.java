@@ -53,11 +53,6 @@ import java.util.concurrent.Callable;
 public class ActionAdapterQuartzJob implements Job {
 
   static final Log log = LogFactory.getLog( ActionAdapterQuartzJob.class );
-  private static final long RETRY_COUNT = 6;
-  private static final long RETRY_SLEEP_AMOUNT = 10000;
-
-  private String outputFilePath = null;
-  private Object lock = new Object();
 
   public void execute( JobExecutionContext context ) throws JobExecutionException {
     JobDataMap jobDataMap = context.getMergedJobDataMap();
@@ -89,6 +84,9 @@ public class ActionAdapterQuartzJob implements Job {
     return Messages.getInstance().getErrorString( "Unknown" ); //$NON-NLS-1$
   }
 
+  /**
+   * @deprecated as of 8.0, use {@link #invokeAction(String, String, String, JobExecutionContext, Map)}} instead
+   */
   @Deprecated
   protected void invokeAction( final IAction actionBean, final String actionUser, final JobExecutionContext context,
     final Map<String, Serializable> params ) throws Exception {
