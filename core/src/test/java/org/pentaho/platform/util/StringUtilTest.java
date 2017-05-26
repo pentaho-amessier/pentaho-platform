@@ -20,6 +20,10 @@ package org.pentaho.platform.util;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
+
 /**
  * Unit tests for the {@link org.pentaho.platform.util.StringUtil} class.
  */
@@ -108,5 +112,81 @@ public class StringUtilTest {
     Assert.assertTrue( StringUtil.isEmpty( "" ) );
     Assert.assertFalse( StringUtil.isEmpty( " " ) );
     Assert.assertFalse( StringUtil.isEmpty( "foo" ) );
+  }
+
+  @Test
+  public void testGetMapAsPrettyStringNoArgs() {
+    // When the provided map is empty or null, the result should be an empty string
+    Assert.assertEquals( "", StringUtil.getMapAsPrettyString( null ) );
+    Assert.assertEquals( "", StringUtil.getMapAsPrettyString( new HashMap() ) );
+
+    final Map testMap = getTestMap();
+    final String output = StringUtil.getMapAsPrettyString( testMap );
+
+    final String expectedOutput = getExpectedPrettyMapOutput( null, null );
+    Assert.assertEquals( expectedOutput, output );
+  }
+
+  @Test
+  public void testGetMapAsPrettyStringWithArgs() {
+    final String kvSep = "foo";
+    final String kvpSep = "foe";
+    // When the provided map is empty or null, the result should be an empty string
+    Assert.assertEquals( "", StringUtil.getMapAsPrettyString( null, kvSep, kvpSep ) );
+    Assert.assertEquals( "", StringUtil.getMapAsPrettyString( new HashMap(), kvSep, kvpSep ) );
+
+    final Map testMap = getTestMap();
+    final String output = StringUtil.getMapAsPrettyString( testMap, kvSep, kvpSep  );
+
+    final String expectedOutput = getExpectedPrettyMapOutput( kvSep, kvpSep );
+    Assert.assertEquals( expectedOutput, output );
+  }
+
+  private String getExpectedPrettyMapOutput( String kvSep, String kvpSep ) {
+
+    if ( kvSep == null ) {
+      kvSep = StringUtil.KV_SEPARATOR;
+    }
+    if ( kvpSep == null ) {
+      kvpSep = StringUtil.KVP_SEPARATOR;
+    }
+
+    final StringBuilder expectedOutput = new StringBuilder();
+    expectedOutput.append( "[" ).append( System.getProperty( "line.separator" ) );
+    expectedOutput.append( "   " ).append( kvSep ).append( kvpSep );
+    expectedOutput.append( "   " ).append( "null" ).append( kvSep ).append( kvpSep );
+    expectedOutput.append( "   " ).append( "Suzy").append( kvSep ).append( "null" ).append( kvpSep );
+    expectedOutput.append( "   " ).append( "John").append( kvSep ).append( "Doe" ).append( kvpSep );
+    expectedOutput.append( "   " ).append( "map").append( kvSep ).append( "{John=Doe, testObj=someVar:testVar}" )
+      .append( kvpSep );
+    expectedOutput.append( "   " ).append( "testObj2").append( kvSep ).append( "someVar:testVar2" );
+    expectedOutput.append( System.getProperty( "line.separator" ) ).append( "]" );
+    return expectedOutput.toString();
+  }
+
+  private static Map getTestMap() {
+
+    final Map subMap = new TreeMap();
+    subMap.put( "John", "Doe" );
+    subMap.put( "testObj", new TestObject( "testVar" ) );
+
+    final Map testMap = new HashMap();
+    testMap.put( "", "" );
+    testMap.put( null, "" );
+    testMap.put( "Suzy", null );
+    testMap.put( "John", "Doe" );
+    testMap.put( "map", subMap );
+    testMap.put( "testObj2", new TestObject( "testVar2" ) );
+    return testMap;
+  }
+
+  static class TestObject {
+    private String someVar;
+    TestObject ( final String someVar ) {
+      this.someVar = someVar;
+    }
+    public String toString () {
+      return "someVar:" + this.someVar;
+    }
   }
 }

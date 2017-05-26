@@ -32,6 +32,7 @@ import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.util.Emailer;
+import org.pentaho.platform.util.StringUtil;
 import org.pentaho.platform.util.web.MimeHelper;
 import org.pentaho.platform.web.http.api.resources.RepositoryFileStreamProvider;
 
@@ -60,13 +61,34 @@ public class ActionHelper {
   private static final long RETRY_COUNT = 6;
   private static final long RETRY_SLEEP_AMOUNT = 10000;
 
+  /**
+   * Returns the {@link Messages} object used by this class to fetch localized messages.
+   *
+   * @return he {@link Messages} object used by this class to fetch localized messages.
+   */
+  static Messages getMessages() {
+    return Messages.getInstance();
+  }
+
+  /**
+   * Returns the {@link Class} that corresponds to the provides {@code actionClassName} and {@code beanId}.
+   *
+   * @param actionClassName the name of the class being resolved
+   * @param beanId the beanId of the class being resolved
+   *
+   * @return the {@link Class} that corresponds to the provides {@code actionClassName} and {@code beanId}
+   *
+   * @throws PluginBeanException when the plugin required to resolve the bean class from the {@code beanId} cannot be
+   * created
+   * @throws ActionInvocationException when the required parameters are not provided
+   */
   static Class<?> resolveClass( final String actionClassName, final String beanId  ) throws
-    PluginBeanException, IllegalArgumentException {
+    PluginBeanException, ActionInvocationException {
 
     Class<?> clazz = null;
 
     if ( StringUtils.isEmpty( beanId ) && StringUtils.isEmpty( actionClassName ) ) {
-      throw new IllegalArgumentException( Messages.getInstance().getErrorString(
+      throw new ActionInvocationException( getMessages().getErrorString(
         "ActionInvoker.ERROR_0001_REQUIRED_PARAM_MISSING", //$NON-NLS-1$
         INVOKER_ACTIONCLASS, INVOKER_ACTIONID ) );
     }
@@ -93,48 +115,67 @@ public class ActionHelper {
     // we have failed to locate the class for the actionClass
     // and we're giving up waiting for it to become available/registered
     // which can typically happen at system startup
-    throw new IllegalArgumentException( Messages.getInstance().getErrorString(
+    throw new IllegalArgumentException( getMessages().getErrorString(
       "ActionInvoker.ERROR_0002_FAILED_TO_CREATE_ACTION", //$NON-NLS-1$
       StringUtils.isEmpty( beanId ) ? actionClassName : beanId ) );
   }
 
-  public static IAction createActionBean( final String actionClassName, final String actionId ) throws ActionInvocationException{
+  /**
+   * Returns an instance of {@link IAction} created from the provided parameters.
+   *
+   * @param actionClassName the name of the class being resolved
+   * @param actionId the is of the action which corresponds to some bean id
+   *
+   * @return {@link IAction} created from the provided parameters.
+   * @throws ActionInvocationException when the {@link IAction} cannot be created for some reason
+   */
+  public static IAction createActionBean( final String actionClassName, final String actionId ) throws
+    ActionInvocationException {
     Object actionBean;
     Class<?> actionClass = null;
     try {
       actionClass = resolveClass( actionClassName, actionId );
       actionBean = actionClass.newInstance();
     } catch ( Exception e ) {
-      throw new ActionInvocationException( Messages.getInstance().getErrorString(
+      throw new ActionInvocationException( getMessages().getErrorString(
         "ActionInvoker.ERROR_0002_FAILED_TO_CREATE_ACTION", //$NON-NLS-1$
         ( actionClass == null ) ? "unknown" : actionClass.getName() ), e ); //$NON-NLS-1$
     }
 
     if ( !( actionBean instanceof IAction ) ) {
-      throw new ActionInvocationException( Messages.getInstance().getErrorString(
+      throw new ActionInvocationException( getMessages().getErrorString(
         "ActionInvoker.ERROR_0003_ACTION_WRONG_TYPE", actionClass.getName(), //$NON-NLS-1$
         IAction.class.getName() ) );
     }
-    return (IAction)actionBean;
+    return (IAction) actionBean;
   }
 
   /**
-   * Gets the stream provider from the INVOKER_STREAMPROVIDER, or builds it from the input file and output dir
-   * @param params
-   * @return
+   * Gets the stream provider from the {@code INVOKER_STREAMPROVIDER,} or builds it from the input file and output
+   * dir {@link Map} values. Returns {@code null} if information needed to build the stream provider is not present in
+   * the {@code map}, which is perfectly ok for some {@link IAction} types.
+   *
+   * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
+   *
+   * @return a {@link IBackgroundExecutionStreamProvider} represented in the {@code params} {@link Map}
    */
   public static IBackgroundExecutionStreamProvider getStreamProvider( final Map<String, Serializable> params ) {
 
+    if ( params == null ) {
+      // TODO: localize
+      logger.warn( "Map is null, cannot return stream provider" );
+      return null;
+    }
     IBackgroundExecutionStreamProvider streamProvider = null;
 
     final Object objsp = params.get( INVOKER_STREAMPROVIDER );
     if ( objsp != null && IBackgroundExecutionStreamProvider.class.isAssignableFrom( objsp.getClass() ) ) {
       streamProvider = (IBackgroundExecutionStreamProvider) objsp;
-      // TODO: fetch input and output params and put in map
-      if (streamProvider instanceof RepositoryFileStreamProvider) {
-        params.put( INVOKER_STREAMPROVIDER_INPUT_FILE, ( (RepositoryFileStreamProvider) streamProvider ).inputFilePath );
+      if ( streamProvider instanceof RepositoryFileStreamProvider ) {
+        params.put( INVOKER_STREAMPROVIDER_INPUT_FILE, ( (RepositoryFileStreamProvider) streamProvider )
+          .getInputFilePath() );
         params.put( INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN, ( (RepositoryFileStreamProvider) streamProvider )
-          .getOutputFilePath()  );
+          .getOutputFilePath() );
         params.put( INVOKER_STREAMPROVIDER_UNIQUE_FILE_NAME, ( (RepositoryFileStreamProvider) streamProvider )
           .autoCreateUniqueFilename() );
       }
@@ -145,18 +186,36 @@ public class ActionHelper {
         INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN ).toString();
       // TODO: check for nulls
       boolean hasInputFile = !StringUtils.isEmpty( inputFile );
-      if ( hasInputFile ) {
+      boolean hasOutputPattern = !StringUtils.isEmpty( outputFilePattern );
+      if ( hasInputFile && hasOutputPattern ) {
         boolean autoCreateUniqueFilename = params.get( "autoCreateUniqueFilename" ) == null || params.get(
           "autoCreateUniqueFilename" ).toString().equalsIgnoreCase( "true" );
         streamProvider = new RepositoryFileStreamProvider( inputFile, outputFilePattern, autoCreateUniqueFilename );
         // put in the map for future lookup
         params.put( INVOKER_STREAMPROVIDER, streamProvider );
+      } else {
+        // TODO: localize
+        if ( logger.isWarnEnabled() ) {
+          logger.warn( String.format( "Parameters required to create the stream provider (%s, "
+              + "%s) are not available in the map:%s%s", INVOKER_STREAMPROVIDER_INPUT_FILE,
+            INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN, System.getProperty( "line.separator" ),
+            StringUtil.getMapAsPrettyString( params ) ) );
+        }
       }
     }
 
     return streamProvider;
   }
 
+  /**
+   * Sends an email with the file representing the provided {@code filePath}  as an attachment. All information
+   * needed to send the email (to, from, cc, bcc etc) is expected to be proviced in the {@code actionParams}
+   * {@link Map}.
+   *
+   * @param actionParams a {@link Map} of parameters needed to send the email
+   * @param params a {@link Map} of parameter used to invoke the action
+   * @param filePath the path of the repository file that was generated when the action was invoked
+   */
   public static void sendEmail( Map<String, Object> actionParams, Map<String, Serializable> params, String filePath ) {
     try {
       IUnifiedRepository repo = PentahoSystem.get( IUnifiedRepository.class );
@@ -239,28 +298,30 @@ public class ActionHelper {
     }
   }
 
-  private static ObjectMapper getMapper () {
-    final ObjectMapper mapper = new ObjectMapper();
-    //mapper.configure( SerializationFeature.INDENT_OUTPUT,true);
-    //mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
-    return mapper;
-  }
-
-  public static String objectToJson ( final Object obj ) {
-    final ObjectMapper mapper = getMapper();
-    //final String jsonString = mapper.writeValueAsString( obj );
-    final JSONObject jsonFeed =  new JSONObject( obj );
-    final String jsonString = jsonFeed.toString();
-    return jsonString;
-  }
-
-  public static String mapToJson ( final Map map ) {
+  /**
+   * Converts the {@code map} into a JSON string
+   *
+   * @param map the {@link Map} being converted to a string.
+   * @return a JSON {@link String} representation of the {@code map}
+   */
+  public static String mapToJson( final Map map ) {
     final JSONObject jsonFeed =  new JSONObject( map );
     final String jsonString = jsonFeed.toString();
     return jsonString;
   }
 
-  public static <T> T jsonToObject ( final String jsonStr, final Class<T> clazz) throws IOException {
+  /**
+   * Returns an Object instance generated from the provided {@code jsonStr}
+   *
+   * @param jsonStr the JSON string being converted the an Object
+   * @param clazz the {@link Class} of the object being instantiated
+   * @param <T> the type of object being instantiated
+   *
+   * @return an Object instance generated from the provided {@code jsonStr}
+   *
+   * @throws IOException when the object cannot be instantiates from the provided {@code jsonStr} for some reason
+   */
+  public static <T> T jsonToObject( final String jsonStr, final Class<T> clazz ) throws IOException {
     final ObjectMapper mapper = new ObjectMapper();
     return mapper.readValue( jsonStr, clazz );
   }

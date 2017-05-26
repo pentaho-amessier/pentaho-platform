@@ -17,7 +17,6 @@
 
 package org.pentaho.platform.plugin.action;
 
-import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -61,7 +60,7 @@ public class DefaultActionInvoker implements IActionInvoker {
    * @param map a {@link Map} of values
    * @param key the key being removed from the map
    */
-  static void removeFromMap ( final Map<String, ?> map, final String key ) {
+  static void removeFromMap( final Map<String, ?> map, final String key ) {
 
     if ( map == null ) {
       // nothing to do
@@ -93,7 +92,7 @@ public class DefaultActionInvoker implements IActionInvoker {
    *
    * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
    */
-  void prepareMap( final Map<String, Serializable> params ){
+  void prepareMap( final Map<String, Serializable> params ) {
     if ( params == null ) {
       return;
     }
@@ -103,7 +102,7 @@ public class DefaultActionInvoker implements IActionInvoker {
       final String key = mapKeys.next();
       // get the alternate key from KEY_MAP
       final String alternateKey = KEY_MAP.get( key );
-      if ( StringUtils.isEmpty( alternateKey )) {
+      if ( StringUtils.isEmpty( alternateKey ) ) {
         continue;
       }
       final Serializable value = params.get( key );
@@ -116,20 +115,21 @@ public class DefaultActionInvoker implements IActionInvoker {
    * {@inheritDoc}
    */
   @Override
-  public IAction createActionBean( final String actionClassName, final String actionId ) throws Exception{
+  public IAction createActionBean( final String actionClassName, final String actionId ) throws Exception {
     return ActionHelper.createActionBean( actionClassName, actionId );
   }
 
   /**
    * Returns the {@link IBackgroundExecutionStreamProvider} from information stored within the {@code params} {@link
-   * Map}.
+   * Map}. Returns {@code null} if information needed to build the stream provider is not present in the {@code map},
+   * which is perfectly ok for some {@link IAction} types.
    *
    * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
    *
-   * @return an instasnce of {@link IBackgroundExecutionStreamProvider}
+   * @return an instance of {@link IBackgroundExecutionStreamProvider}
    */
   private IBackgroundExecutionStreamProvider getStreamProvider( final Map<String, Serializable> params ) {
-    return ActionHelper.getStreamProvider( params );
+      return ActionHelper.getStreamProvider( params );
   }
 
   /**
@@ -199,8 +199,7 @@ public class DefaultActionInvoker implements IActionInvoker {
 
     if ( logger.isDebugEnabled() ) { // TODO: read from a message bundle
       logger.debug( String.format( "Running action '%s' in background locally:%s[ %s ]", actionBean,  System
-        .getProperty( "line.separator" ),  Joiner.on( System.getProperty( "line.separator" ) ).withKeyValueSeparator(
-          " -> " ).join( params ) ) );
+        .getProperty( "line.separator" ), StringUtil.getMapAsPrettyString( params ) ) );
     }
 
     // set the locale, if not already set
@@ -219,7 +218,7 @@ public class DefaultActionInvoker implements IActionInvoker {
     removeFromMap( params, ActionHelper.INVOKER_STREAMPROVIDER  );
     removeFromMap( params, ActionHelper.INVOKER_UIPASSPARAM  );
 
-    final ActionRunner actionBeanRunner = new ActionRunner(actionBean, actionUser, params, streamProvider );
+    final ActionRunner actionBeanRunner = new ActionRunner( actionBean, actionUser, params, streamProvider );
     final ActionInvokeStatus status = new ActionInvokeStatus();
 
     boolean requiresUpdate = false;

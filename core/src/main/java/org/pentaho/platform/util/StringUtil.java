@@ -18,7 +18,9 @@
 package org.pentaho.platform.util;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,6 +38,16 @@ public class StringUtil {
   private static final String RE_CONTAINS_PARENT_PATH = "(^.*[/\\\\]|^)\\.\\.([/\\\\].*$|$)|(^.*\0.*$)"; //$NON-NLS-1$
 
   private static final Pattern CONTAINS_PARENT_PATH_PATTERN = Pattern.compile( StringUtil.RE_CONTAINS_PARENT_PATH );
+
+  /**
+   * Used to separate {@link Map} key-value pairs when turning a {@link Map} to a pretty strings.
+   */
+  static final String KVP_SEPARATOR = System.getProperty( "line.separator" );
+
+  /**
+   * Used to separate {@link Map} key and value when turning a {@link Map} to a pretty strings.
+   */
+  static final String KV_SEPARATOR = " -> ";
 
   /**
    * Tokenize a string and return a String Array of the values seperated by the passed in token.
@@ -97,4 +109,48 @@ public class StringUtil {
     return ( str == null ) || ( str.length() == 0 );
   }
 
+  /**
+   * Returns the provided {@link Map} as a pretty string, using the system dependent new like character as the
+   * key-value pair separator, and ' -> ' as the individual key and value separator.
+   *
+   * @param map the {@link Map} to be converted to a string
+   * @return a pretty {@link String} representation of the {@link Map}
+   */
+  public static String getMapAsPrettyString( final Map map ) {
+    return getMapAsPrettyString( map, KV_SEPARATOR, KVP_SEPARATOR );
+  }
+
+  /**
+   * Returns the provided {@link Map} as a pretty string, using {@code keyValueSeparator} as the key-value pair
+   * separator, and '{@code keyValuePairSeparator} as the individual key and value separator. Returns and empty string
+   * if the provided {@code map} is null
+   *
+   * @param map the {@link Map} to be converted to a string
+   * @param keyValueSeparator used to separate the individual key and value
+   * @param keyValuePairSeparator used to separate key-value pairs
+   *
+   * @return a pretty {@link String} representation of the {@link Map} or an empty {@link String} if the provider
+   * {@code map} is null
+   */
+  public static String getMapAsPrettyString( final Map map, final String keyValueSeparator, final String
+    keyValuePairSeparator ) {
+    if ( map == null || map.isEmpty() ) {
+      return "";
+    }
+    final String actualKvSep = keyValueSeparator == null ? KV_SEPARATOR : keyValueSeparator;
+    final String actualKvpSep = keyValuePairSeparator == null ? KVP_SEPARATOR : keyValuePairSeparator;
+    final StringBuilder sb = new StringBuilder();
+    sb.append( "[" ).append( System.getProperty( "line.separator" ) );
+    String currentKvpSep = "";
+    final Iterator<Map.Entry> mapIter = map.entrySet().iterator();
+    while ( mapIter.hasNext() ) {
+      final Map.Entry entry = mapIter.next();
+      final Object key = entry.getKey();
+      final Object value = entry.getValue();
+      sb.append( currentKvpSep ).append( "   " ).append( key ).append( actualKvSep ).append( value );
+      currentKvpSep = actualKvpSep;
+    }
+    sb.append( System.getProperty( "line.separator" ) ).append( "]" );
+    return sb.toString();
+  }
 }

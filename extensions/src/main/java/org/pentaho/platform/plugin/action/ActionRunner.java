@@ -58,7 +58,7 @@ public class ActionRunner implements Callable<Boolean> {
   private String outputFilePath = null;
   private Object lock = new Object();
 
-  public ActionRunner ( final IAction actionBean,  final String actionUser, final Map<String, Serializable> params, final
+  public ActionRunner( final IAction actionBean,  final String actionUser, final Map<String, Serializable> params, final
     IBackgroundExecutionStreamProvider streamProvider ) {
     this.actionBean = actionBean;
     this.actionUser = actionUser;
@@ -83,7 +83,6 @@ public class ActionRunner implements Callable<Boolean> {
           .getClass().getName() ), t );
     }
   }
-
 
   private Boolean callImpl() throws Exception {
     final Object locale = params.get( LocaleHelper.USER_LOCALE_PARAM );

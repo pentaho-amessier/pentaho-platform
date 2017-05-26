@@ -17,7 +17,6 @@
 
 package org.pentaho.platform.web.http.api.resources;
 
-import com.google.common.base.Joiner;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,6 +26,7 @@ import org.pentaho.platform.api.action.IActionInvoker;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.action.ActionHelper;
+import org.pentaho.platform.util.StringUtil;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -74,8 +74,8 @@ public class ActionResource {
         paramMap = ActionHelper.jsonToObject( content, Map.class );
       } catch ( final IOException e ) {
         // TODO localize
-        logger.error(  String.format( "Could not convert content to map:%s%s", System.getProperty( "line.separator" )
-          , content ) );
+        logger.error( String.format( "Could not convert content to map:%s%s", System.getProperty( "line.separator" ),
+          content ) );
         return;
       }
 
@@ -86,11 +86,12 @@ public class ActionResource {
         actionInvoker.runInBackgroundLocally( paramMap );
       } catch ( final Exception e ) {
         // TODO localize
-        logger.error( String.format( "Could not convert content to map:%s%s", System.getProperty( "line.separator" )
-          , Joiner.on(System.getProperty( "line.separator" )).withKeyValueSeparator (" -> ").join( paramMap ) ) );
+        final String NEW_LINE = System.getProperty( "line.separator" );
+        logger.error( String.format( "Could not convert content to map:%s%s", NEW_LINE, StringUtil
+          .getMapAsPrettyString( paramMap ) ) );
       }
     };
-    new Thread ( task ).start();
+    new Thread( task ).start();
     return Response.status( HttpStatus.SC_ACCEPTED ).build();
   }
 }
