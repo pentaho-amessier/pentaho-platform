@@ -41,22 +41,21 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 
+/**
+ * Helper methods related to the invocation of {@link IAction}s.
+ */
 public class ActionHelper {
 
   private static final Log logger = LogFactory.getLog( ActionHelper.class );
 
   public static final String INVOKER_ACTIONCLASS = "actionClass"; //$NON-NLS-1$
-
   public static final String INVOKER_ACTIONUSER = "actionUser"; //$NON-NLS-1$
-
   public static final String INVOKER_ACTIONID = "actionId"; //$NON-NLS-1$
-
   public static final String INVOKER_STREAMPROVIDER = "streamProvider"; //$NON-NLS-1$
   public static final String INVOKER_STREAMPROVIDER_INPUT_FILE = "inputFile"; //$NON-NLS-
   public static final String INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN = "outputFilePattern"; //$
   public static final String INVOKER_STREAMPROVIDER_UNIQUE_FILE_NAME = "uniqueFileName"; //$NON-NLS-1$
   public static final String INVOKER_UIPASSPARAM = QuartzScheduler.RESERVEDMAPKEY_UIPASSPARAM;
-
   public static final String INVOKER_RESTART_FLAG = "restart"; //$NON-NLS-1$
 
   private static final long RETRY_COUNT = 6;
@@ -171,7 +170,6 @@ public class ActionHelper {
         INVOKER_STREAMPROVIDER_INPUT_FILE ).toString();
       final String outputFilePattern = params.get( INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN ) == null ? null : params.get(
         INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN ).toString();
-      // TODO: check for nulls
       boolean hasInputFile = !StringUtils.isEmpty( inputFile );
       boolean hasOutputPattern = !StringUtils.isEmpty( outputFilePattern );
       if ( hasInputFile && hasOutputPattern ) {
@@ -187,7 +185,6 @@ public class ActionHelper {
         }
       }
     }
-
     return streamProvider;
   }
 
