@@ -30,6 +30,7 @@ import org.pentaho.platform.api.repository2.unified.RepositoryFile;
 import org.pentaho.platform.api.repository2.unified.data.simple.SimpleRepositoryFileData;
 import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
+import org.pentaho.platform.plugin.action.messages.Messages;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.util.Emailer;
 import org.pentaho.platform.util.StringUtil;
@@ -62,15 +63,6 @@ public class ActionHelper {
   private static final long RETRY_SLEEP_AMOUNT = 10000;
 
   /**
-   * Returns the {@link Messages} object used by this class to fetch localized messages.
-   *
-   * @return he {@link Messages} object used by this class to fetch localized messages.
-   */
-  static Messages getMessages() {
-    return Messages.getInstance();
-  }
-
-  /**
    * Returns the {@link Class} that corresponds to the provides {@code actionClassName} and {@code beanId}.
    *
    * @param actionClassName the name of the class being resolved
@@ -88,9 +80,8 @@ public class ActionHelper {
     Class<?> clazz = null;
 
     if ( StringUtils.isEmpty( beanId ) && StringUtils.isEmpty( actionClassName ) ) {
-      throw new ActionInvocationException( getMessages().getErrorString(
-        "ActionInvoker.ERROR_0001_REQUIRED_PARAM_MISSING", //$NON-NLS-1$
-        INVOKER_ACTIONCLASS, INVOKER_ACTIONID ) );
+      throw new ActionInvocationException( Messages.getInstance().getRequiredParamMissing( INVOKER_ACTIONCLASS,
+        INVOKER_ACTIONID ) );
     }
 
     for ( int i = 0; i < RETRY_COUNT; i++ ) {
@@ -115,9 +106,8 @@ public class ActionHelper {
     // we have failed to locate the class for the actionClass
     // and we're giving up waiting for it to become available/registered
     // which can typically happen at system startup
-    throw new IllegalArgumentException( getMessages().getErrorString(
-      "ActionInvoker.ERROR_0002_FAILED_TO_CREATE_ACTION", //$NON-NLS-1$
-      StringUtils.isEmpty( beanId ) ? actionClassName : beanId ) );
+    throw new ActionInvocationException( Messages.getInstance().getFailedToCreateAction( StringUtils.isEmpty(
+      beanId ) ? actionClassName : beanId ) );
   }
 
   /**
@@ -137,15 +127,13 @@ public class ActionHelper {
       actionClass = resolveClass( actionClassName, actionId );
       actionBean = actionClass.newInstance();
     } catch ( Exception e ) {
-      throw new ActionInvocationException( getMessages().getErrorString(
-        "ActionInvoker.ERROR_0002_FAILED_TO_CREATE_ACTION", //$NON-NLS-1$
-        ( actionClass == null ) ? "unknown" : actionClass.getName() ), e ); //$NON-NLS-1$
+      throw new ActionInvocationException( Messages.getInstance().getFailedToCreateAction( ( actionClass == null )
+        ? "?" : actionClass.getName() ) );
     }
 
     if ( !( actionBean instanceof IAction ) ) {
-      throw new ActionInvocationException( getMessages().getErrorString(
-        "ActionInvoker.ERROR_0003_ACTION_WRONG_TYPE", actionClass.getName(), //$NON-NLS-1$
-        IAction.class.getName() ) );
+      throw new ActionInvocationException( Messages.getInstance().getActionWrongType( actionClass.getName(), IAction
+        .class.getName() ) );
     }
     return (IAction) actionBean;
   }
@@ -162,8 +150,7 @@ public class ActionHelper {
   public static IBackgroundExecutionStreamProvider getStreamProvider( final Map<String, Serializable> params ) {
 
     if ( params == null ) {
-      // TODO: localize
-      logger.warn( "Map is null, cannot return stream provider" );
+      logger.warn( Messages.getInstance().getMapNullCantReturnSp() );
       return null;
     }
     IBackgroundExecutionStreamProvider streamProvider = null;
@@ -194,12 +181,9 @@ public class ActionHelper {
         // put in the map for future lookup
         params.put( INVOKER_STREAMPROVIDER, streamProvider );
       } else {
-        // TODO: localize
         if ( logger.isWarnEnabled() ) {
-          logger.warn( String.format( "Parameters required to create the stream provider (%s, "
-              + "%s) are not available in the map:%s%s", INVOKER_STREAMPROVIDER_INPUT_FILE,
-            INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN, System.getProperty( "line.separator" ),
-            StringUtil.getMapAsPrettyString( params ) ) );
+          logger.warn( Messages.getInstance().getMissingParamsCantReturnSp( String.format( "%s, %s",
+            INVOKER_STREAMPROVIDER_INPUT_FILE, INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN ), params ) ); //$NON-NLS-1$
         }
       }
     }
@@ -324,5 +308,27 @@ public class ActionHelper {
   public static <T> T jsonToObject( final String jsonStr, final Class<T> clazz ) throws IOException {
     final ObjectMapper mapper = new ObjectMapper();
     return mapper.readValue( jsonStr, clazz );
+  }
+
+  /**
+   * Returns a string identifier for this action. This is either the {@code actionBean}s class name, the {@code
+   * actionClassName} or the {@code actionId}, whichever is available, in that order.
+   *
+   * @param actionBean the {@link IAction} bean
+   * @param actionClassName the full class name
+   * @param actionId the action id
+   *
+   * @return a {@code String} representation of the action identifier.
+   */
+  public static String getActionIdentifier( final IAction actionBean, final String actionClassName, final String
+    actionId ) {
+    if ( actionBean != null ) {
+      return actionBean.getClass().getName();
+    } else if ( !StringUtil.isEmpty( actionClassName ) ) {
+      return actionClassName;
+    } else if ( !StringUtil.isEmpty( actionId ) ) {
+      return actionId;
+    }
+    return "?"; //$NON-NLS-1$
   }
 }

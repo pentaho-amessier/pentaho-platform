@@ -73,15 +73,16 @@ public class ActionAdapterQuartzJob implements Job {
     }
   }
 
-  private static String getActionIdentifier(final IAction actionBean, final String actionClassName, final String actionId) {
+  private static String getActionIdentifier( final IAction actionBean, final String actionClassName, final String
+    actionId ) {
     if ( actionBean != null ) {
       return actionBean.getClass().getName();
-    } else if ( !StringUtil.isEmpty( actionClassName )) {
+    } else if ( !StringUtil.isEmpty( actionClassName ) ) {
       return actionClassName;
-    } else if ( !StringUtil.isEmpty( actionId )) {
+    } else if ( !StringUtil.isEmpty( actionId ) ) {
       return actionId;
     }
-    return Messages.getInstance().getErrorString( "Unknown" ); //$NON-NLS-1$
+    return "?"; //$NON-NLS-1$
   }
 
   /**
@@ -117,7 +118,7 @@ public class ActionAdapterQuartzJob implements Job {
     // create an instance of IActionInvoker, which knows know to invoke this IAction
     final IActionInvoker actionInvoker = PentahoSystem.get( IActionInvoker.class, "IActionInvoker", PentahoSessionHolder
       .getSession() );
-    if (actionInvoker == null) {
+    if ( actionInvoker == null ) {
       throw new LoggingJobExecutionException( Messages.getInstance().getErrorString(
         "ActionAdapterQuartzJob.ERROR_0002_FAILED_TO_CREATE_ACTION", //$NON-NLS-1$
         getActionIdentifier( null, actionClassName, actionId ) ) );
@@ -125,7 +126,7 @@ public class ActionAdapterQuartzJob implements Job {
 
     // Instantiate the requested IAction bean
     final IAction actionBean = (IAction) actionInvoker.createActionBean( actionClassName, actionId );
-    if (actionBean == null) {
+    if ( actionBean == null ) {
       throw new LoggingJobExecutionException( Messages.getInstance().getErrorString(
         "ActionAdapterQuartzJob.ERROR_0002_FAILED_TO_CREATE_ACTION", //$NON-NLS-1$
         getActionIdentifier( actionBean, actionClassName, actionId ) ) );
@@ -136,7 +137,7 @@ public class ActionAdapterQuartzJob implements Job {
 
     // Status may not be available for remote execution, which is expected
     if ( status == null ) {
-      if (log.isWarnEnabled()) {
+      if ( log.isWarnEnabled() ) {
         log.warn( Messages.getInstance().getErrorString(
           "ActionAdapterQuartzJob.WARN_0002_NO_STATUS", //$NON-NLS-1$
           getActionIdentifier( actionBean, actionClassName, actionId  ) ) );
@@ -161,7 +162,7 @@ public class ActionAdapterQuartzJob implements Job {
     }
 
     final IScheduler scheduler = PentahoSystem.getObjectFactory().get( IScheduler.class, "IScheduler2", null );
-    if ( throwable != null) {
+    if ( throwable != null ) {
       Object restartFlag = jobParams.get( QuartzScheduler.RESERVEDMAPKEY_RESTART_FLAG );
       if ( restartFlag == null ) {
         final SimpleJobTrigger trigger = new SimpleJobTrigger( new Date(), null, 0, 0 );

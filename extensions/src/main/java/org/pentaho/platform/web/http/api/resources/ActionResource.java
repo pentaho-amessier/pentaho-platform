@@ -26,7 +26,7 @@ import org.pentaho.platform.api.action.IActionInvoker;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.action.ActionHelper;
-import org.pentaho.platform.util.StringUtil;
+import org.pentaho.platform.plugin.action.messages.Messages;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -73,9 +73,7 @@ public class ActionResource {
       try {
         paramMap = ActionHelper.jsonToObject( content, Map.class );
       } catch ( final IOException e ) {
-        // TODO localize
-        logger.error( String.format( "Could not convert content to map:%s%s", System.getProperty( "line.separator" ),
-          content ) );
+        logger.error( Messages.getInstance().getCouldNotConvertContentToMap( content ) );
         return;
       }
 
@@ -85,10 +83,7 @@ public class ActionResource {
       try {
         actionInvoker.runInBackgroundLocally( paramMap );
       } catch ( final Exception e ) {
-        // TODO localize
-        final String NEW_LINE = System.getProperty( "line.separator" );
-        logger.error( String.format( "Could not convert content to map:%s%s", NEW_LINE, StringUtil
-          .getMapAsPrettyString( paramMap ) ) );
+        logger.error( Messages.getInstance().getCouldNotInvokeActionLocally( paramMap ), e );
       }
     };
     new Thread( task ).start();

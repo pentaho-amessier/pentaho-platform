@@ -25,6 +25,7 @@ import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
 import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
 import org.pentaho.platform.engine.security.SecurityHelper;
+import org.pentaho.platform.plugin.action.messages.Messages;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.util.StringUtil;
 import org.pentaho.platform.util.messages.LocaleHelper;
@@ -129,7 +130,7 @@ public class DefaultActionInvoker implements IActionInvoker {
    * @return an instance of {@link IBackgroundExecutionStreamProvider}
    */
   private IBackgroundExecutionStreamProvider getStreamProvider( final Map<String, Serializable> params ) {
-      return ActionHelper.getStreamProvider( params );
+    return ActionHelper.getStreamProvider( params );
   }
 
   /**
@@ -168,8 +169,7 @@ public class DefaultActionInvoker implements IActionInvoker {
   public IActionInvokeStatus runInBackgroundLocally( final Map<String, Serializable> params ) throws
     Exception {
     if ( params == null ) {
-      // TODO: localize
-      throw new ActionInvocationException( "Cannot invoke action when the map is null." );
+      throw new ActionInvocationException( Messages.getInstance().getCantInvokeActionWithNullMap() );
     }
     final String actionId = (String) params.get( ActionHelper.INVOKER_ACTIONID );
     final String actionClassName = (String) params.get( ActionHelper.INVOKER_ACTIONCLASS );
@@ -193,19 +193,16 @@ public class DefaultActionInvoker implements IActionInvoker {
     Map<String, Serializable> params ) throws Exception {
 
     if ( actionBean == null || params == null ) {
-      // TODO: localize
-      throw new ActionInvocationException( "Cannot invoke null action." );
+      throw new ActionInvocationException( Messages.getInstance().getCantInvokeNullAction() );
     }
 
-    if ( logger.isDebugEnabled() ) { // TODO: read from a message bundle
-      logger.debug( String.format( "Running action '%s' in background locally:%s[ %s ]", actionBean,  System
-        .getProperty( "line.separator" ), StringUtil.getMapAsPrettyString( params ) ) );
+    if ( logger.isDebugEnabled() ) {
+      logger.debug( Messages.getInstance().getRunningInBackgroundLocally( actionBean.getClass().getName(), params ) );
     }
 
     // set the locale, if not already set
-    if ( params.get( LocaleHelper.USER_LOCALE_PARAM ) == null || org.pentaho.reporting.libraries.base.util
-      .StringUtils.isEmpty( params.get( LocaleHelper
-        .USER_LOCALE_PARAM ).toString() ) ) {
+    if ( params.get( LocaleHelper.USER_LOCALE_PARAM ) == null || StringUtils.isEmpty(
+      params.get( LocaleHelper.USER_LOCALE_PARAM ).toString() ) ) {
       params.put( LocaleHelper.USER_LOCALE_PARAM, LocaleHelper.getLocale() );
     }
 

@@ -33,6 +33,7 @@ import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
 import org.pentaho.platform.engine.core.output.FileContentItem;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.engine.services.solution.ActionSequenceCompatibilityFormatter;
+import org.pentaho.platform.plugin.action.messages.Messages;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.scheduler2.quartz.SchedulerOutputPathResolver;
 import org.pentaho.platform.util.beans.ActionHarness;
@@ -40,7 +41,6 @@ import org.pentaho.platform.util.messages.LocaleHelper;
 
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -66,7 +66,7 @@ public class ActionRunner implements Callable<Boolean> {
     this.streamProvider = streamProvider;
   }
 
-  public Boolean call() throws Exception {
+  public Boolean call() throws ActionInvocationException {
     try {
       return callImpl();
     } catch ( final Throwable t ) {
@@ -75,11 +75,9 @@ public class ActionRunner implements Callable<Boolean> {
         lock.notifyAll();
       }
 
-      // TODO: reword this comment
       // We should not distinguish between checked and unchecked exceptions here. All job execution failures
-      // should result in a rethrow of a quartz exception
-      throw new IllegalArgumentException( Messages.getInstance().getErrorString(
-        "ActionInvoker.ERROR_0004_ACTION_FAILED", actionBean //$NON-NLS-1$
+      // should result in a rethrow of the exception
+      throw new ActionInvocationException( Messages.getInstance().getActionFailedToExecute( actionBean //$NON-NLS-1$
           .getClass().getName() ), t );
     }
   }
@@ -186,7 +184,7 @@ public class ActionRunner implements Callable<Boolean> {
         repo.setFileMetadata( sourceFile.getId(), metadata );
       } else {
         String fileName = getFSFileNameSafe( contentItem );
-        logger.warn( Messages.getInstance().getString( "ActionInvoker.WARN_0001_SKIP_REMOVING_OUTPUT_FILE", fileName ) );
+        logger.warn( Messages.getInstance().getSkipRemovingOutputFile( fileName ) );
       }
     }
   }
@@ -195,7 +193,7 @@ public class ActionRunner implements Callable<Boolean> {
     try {
       return repo.getFile( path );
     } catch ( Exception e ) {
-      logger.debug( MessageFormat.format( "Cannot get repository file \"{0}\": {1}", path, e.getMessage() ), e );
+      logger.debug( Messages.getInstance().getCannotGetRepoFile( path, e.getMessage() ) );
       return null;
     }
   }
