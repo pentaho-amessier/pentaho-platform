@@ -29,6 +29,8 @@ import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.action.ActionHelper;
 import org.pentaho.platform.plugin.action.ActionParams;
+import org.pentaho.platform.plugin.action.messages.Messages;
+import org.pentaho.platform.util.StringUtil;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -88,15 +90,15 @@ public class ActionResource {
 
         final IActionInvokeStatus status = actionInvoker.runInBackgroundLocally( action, user, params );
         if ( status.getThrowable() == null ) {
-          // TODO localize
-          logger.info( String.format( "Action run in background successfully : %s. ", action.getClass().getName() ) );
+          logger.info( Messages.getInstance().getRunningInBgLocallySuccess( action.getClass().getName(), params ),
+                  status.getThrowable() );
         } else {
-          logger.error( String.format( "Action run in background failed : %s. ", action.getClass().getName() ) );
+          logger.error( Messages.getInstance().getCouldNotInvokeActionLocally( action.getClass().getName(), params ),
+                  status.getThrowable() );
         }
       } catch ( final Throwable thr ) {
-        // TODO: add the details of the requested action and localize
-        //
-        logger.error( "Run action in background failed: ", thr );
+        logger.error( Messages.getInstance().getCouldNotInvokeActionLocallyUnexpected( ( StringUtil.isEmpty( actionClass )
+                        ? actionId : actionClass ), actionParams ), thr );
       }
     });
 

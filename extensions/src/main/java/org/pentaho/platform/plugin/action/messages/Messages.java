@@ -17,12 +17,16 @@
 
 package org.pentaho.platform.plugin.action.messages;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.pentaho.platform.util.StringUtil;
 import org.pentaho.platform.util.messages.MessagesBase;
 
 import java.util.Map;
 
 public class Messages extends MessagesBase {
+  protected static final Log logger = LogFactory.getLog( Messages.class );
+
   private static final String BUNDLE_NAME = Messages.class.getPackage().getName() + ".messages"; //$NON-NLS-1$
 
   private static Messages instance = new Messages();
@@ -45,9 +49,19 @@ public class Messages extends MessagesBase {
       StringUtil.getMapAsPrettyString( params ) );
   }
 
-  public String getPostingToResource( final String actionIdentifier, final Map params ) {
-    return getString( "ActionInvoker.INFO_0003_POSTING_TO_RESOURCE", actionIdentifier,
-      StringUtil.getMapAsPrettyString( params ) );
+  public String getRunningInBgLocallySuccess( final String actionIdentified, final Map params ) {
+    return getString( "ActionInvoker.INFO_0005_RUNNING_IN_BG_LOCALLY_SUCCESS", actionIdentified,
+            StringUtil.getMapAsPrettyString( params ) );
+  }
+
+  public String getPostingToResource( final String actionIdentifier, final String actionParams ) {
+    /*String jsonParams = null;
+    try {
+      jsonParams = ActionParams.toJson( actionParams );
+    } catch ( final JsonProcessingException jpe ) {
+      logger.error( jpe.getLocalizedMessage() );
+    }*/
+    return getString( "ActionInvoker.INFO_0003_POSTING_TO_RESOURCE", actionIdentifier, actionParams );
   }
 
   public String getResourceResponded( final String url, final int responseCode ) {
@@ -104,8 +118,12 @@ public class Messages extends MessagesBase {
     return getErrorString( "ActionInvoker.ERROR_0011_COULD_NOT_CONVERT_CONTENT_TO_MAP", content );
   }
 
-  public String getCouldNotInvokeActionLocally( final Map params ) {
-    return getErrorString( "ActionInvoker.ERROR_0012_COULD_NOT_INVOKE_ACTION_LOCALLY",
-      StringUtil.getMapAsPrettyString( params ) );
+  public String getCouldNotInvokeActionLocally( final String actionIdentified, final Map params ) {
+    return getErrorString( "ActionInvoker.ERROR_0012_COULD_NOT_INVOKE_ACTION_LOCALLY", actionIdentified,
+            StringUtil.getMapAsPrettyString( params ) );
+  }
+
+  public String getCouldNotInvokeActionLocallyUnexpected( final String actionIdentified, final String params ) {
+    return getErrorString( "ActionInvoker.ERROR_0012_COULD_NOT_INVOKE_ACTION_LOCALLY", actionIdentified, params );
   }
 }

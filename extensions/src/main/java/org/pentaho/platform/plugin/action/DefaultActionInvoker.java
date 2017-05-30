@@ -97,20 +97,19 @@ public class DefaultActionInvoker implements IActionInvoker {
     if ( params == null ) {
       return;
     }
-    final Map<String, Serializable> newParams = new HashMap<String, Serializable>( );
-    final Iterator<String> mapKeys = params.keySet().iterator();
-    while ( mapKeys.hasNext() ) {
-      final String key = mapKeys.next();
-      // get the alternate key from KEY_MAP
-      final String alternateKey = KEY_MAP.get( key );
-      if ( StringUtils.isEmpty( alternateKey ) ) {
-        continue;
-      }
+
+    final Map<String, Serializable> replaced = new HashMap<>();
+
+    for (final Map.Entry<String,Serializable> ent : params.entrySet() ) {
+      final String key = ent.getKey();
       final Serializable value = params.get( key );
-      newParams.put( alternateKey, value );
+      final String altKey = KEY_MAP.get( key );
+
+      replaced.put( altKey == null ? key : altKey, value );
     }
+
     params.clear();
-    params.putAll( newParams );
+    params.putAll( replaced );
   }
 
   /**
