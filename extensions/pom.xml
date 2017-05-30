@@ -2834,6 +2834,11 @@
       <artifactId>jackson-databind</artifactId>
       <version>${fasterxml.jackson.version}</version>
     </dependency>
+      <dependency>
+          <groupId>org.pentaho.reporting.plugin</groupId>
+          <artifactId>classic-core-platform-plugin</artifactId>
+          <version>RELEASE</version>
+      </dependency>
   </dependencies>
   <build>
     <plugins>
