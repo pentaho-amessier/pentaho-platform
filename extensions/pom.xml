@@ -2109,7 +2109,7 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpcore</artifactId>
-      <version>${httpcore.version}</version>
+      <version>${apache.http.core.version}</version>
       <scope>runtime</scope>
       <exclusions>
         <exclusion>

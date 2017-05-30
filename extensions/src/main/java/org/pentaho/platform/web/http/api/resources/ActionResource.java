@@ -22,22 +22,25 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.enunciate.jaxrs.ResponseCode;
 import org.codehaus.enunciate.jaxrs.StatusCodes;
+import org.pentaho.platform.api.action.IAction;
+import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.action.ActionHelper;
-import org.pentaho.platform.plugin.action.messages.Messages;
+import org.pentaho.platform.plugin.action.ActionParams;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 /**
  * This resource performs action related tasks, such as running/invoking the action in the background.
@@ -45,18 +48,23 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Path( "/action" )
 public class ActionResource {
   protected static final Log logger = LogFactory.getLog( ActionResource.class );
+  protected static final int MAX_THREADS = 8;
+  protected static ExecutorService executorService = Executors.newFixedThreadPool( MAX_THREADS );
 
   /**
    * Runs the action defined within the provided json feed in the background asynchronously.
    *
-   * @param content a json string containing information needed to instantiate and invoke the action
+   * @param actionId the action id if applicable
+   *
+   * @param actionClass the action class name if applicable
+   *
+   * @param actionParams the action parameters needed to instantiate and invoke the action
    *
    * @return a {@link Response}
    */
   @POST
   @Path ( "/runInBackground" )
-  @Consumes( { APPLICATION_JSON } )
-  @Produces( { APPLICATION_JSON } )
+  @Consumes( { TEXT_PLAIN } )
   @StatusCodes(
     {
       @ResponseCode( code = 200, condition = "Action invoked successfully." ),
@@ -65,28 +73,33 @@ public class ActionResource {
       @ResponseCode( code = 500, condition = "Error while retrieving system resources." ),
     }
   )
-  public Response runInBackground( final String content ) {
+  public Response runInBackground(
+          @QueryParam( "actionId" ) String actionId,
+          @QueryParam( "actionClass" ) String actionClass,
+          @QueryParam( "user" ) String user,
+          final String actionParams ) {
 
-    // invoke the action asynchronously
-    final Runnable task = () -> {
-      Map<String, Serializable> paramMap = null;
+    executorService.submit( () -> {
       try {
-        paramMap = ActionHelper.jsonToObject( content, Map.class );
-      } catch ( final IOException e ) {
-        logger.error( Messages.getInstance().getCouldNotConvertContentToMap( content ) );
-        return;
-      }
+        final IActionInvoker actionInvoker = PentahoSystem.get( IActionInvoker.class, "IActionInvoker", PentahoSessionHolder
+                .getSession() );
+        final IAction action = ActionHelper.createActionBean( actionClass, actionId );
+        final Map<String, Serializable> params = ActionParams.deserialize( action, ActionParams.fromJson( actionParams ) );
 
-      final IActionInvoker actionInvoker = PentahoSystem.get( IActionInvoker.class, "IActionInvoker", PentahoSessionHolder
-        .getSession() );
-
-      try {
-        actionInvoker.runInBackgroundLocally( paramMap );
-      } catch ( final Exception e ) {
-        logger.error( Messages.getInstance().getCouldNotInvokeActionLocally( paramMap ), e );
+        final IActionInvokeStatus status = actionInvoker.runInBackgroundLocally( action, user, params );
+        if ( status.getThrowable() == null ) {
+          // TODO localize
+          logger.info( String.format( "Action run in background successfully : %s. ", action.getClass().getName() ) );
+        } else {
+          logger.error( String.format( "Action run in background failed : %s. ", action.getClass().getName() ) );
+        }
+      } catch ( final Throwable thr ) {
+        // TODO: add the details of the requested action and localize
+        //
+        logger.error( "Run action in background failed: ", thr );
       }
-    };
-    new Thread( task ).start();
+    });
+
     return Response.status( HttpStatus.SC_ACCEPTED ).build();
   }
 }

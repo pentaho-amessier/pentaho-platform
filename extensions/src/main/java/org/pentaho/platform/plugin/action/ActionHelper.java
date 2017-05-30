@@ -20,8 +20,6 @@ package org.pentaho.platform.plugin.action;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.json.JSONObject;
 import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.engine.IPluginManager;
 import org.pentaho.platform.api.engine.PluginBeanException;
@@ -37,7 +35,6 @@ import org.pentaho.platform.util.StringUtil;
 import org.pentaho.platform.util.web.MimeHelper;
 import org.pentaho.platform.web.http.api.resources.RepositoryFileStreamProvider;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 
@@ -277,55 +274,5 @@ public class ActionHelper {
     } catch ( Exception e ) {
       logger.warn( e.getMessage(), e );
     }
-  }
-
-  /**
-   * Converts the {@code map} into a JSON string
-   *
-   * @param map the {@link Map} being converted to a string.
-   * @return a JSON {@link String} representation of the {@code map}
-   */
-  public static String mapToJson( final Map map ) {
-    final JSONObject jsonFeed =  new JSONObject( map );
-    final String jsonString = jsonFeed.toString();
-    return jsonString;
-  }
-
-  /**
-   * Returns an Object instance generated from the provided {@code jsonStr}
-   *
-   * @param jsonStr the JSON string being converted the an Object
-   * @param clazz the {@link Class} of the object being instantiated
-   * @param <T> the type of object being instantiated
-   *
-   * @return an Object instance generated from the provided {@code jsonStr}
-   *
-   * @throws IOException when the object cannot be instantiates from the provided {@code jsonStr} for some reason
-   */
-  public static <T> T jsonToObject( final String jsonStr, final Class<T> clazz ) throws IOException {
-    final ObjectMapper mapper = new ObjectMapper();
-    return mapper.readValue( jsonStr, clazz );
-  }
-
-  /**
-   * Returns a string identifier for this action. This is either the {@code actionBean}s class name, the {@code
-   * actionClassName} or the {@code actionId}, whichever is available, in that order.
-   *
-   * @param actionBean the {@link IAction} bean
-   * @param actionClassName the full class name
-   * @param actionId the action id
-   *
-   * @return a {@code String} representation of the action identifier.
-   */
-  public static String getActionIdentifier( final IAction actionBean, final String actionClassName, final String
-    actionId ) {
-    if ( actionBean != null ) {
-      return actionBean.getClass().getName();
-    } else if ( !StringUtil.isEmpty( actionClassName ) ) {
-      return actionClassName;
-    } else if ( !StringUtil.isEmpty( actionId ) ) {
-      return actionId;
-    }
-    return "?"; //$NON-NLS-1$
   }
 }

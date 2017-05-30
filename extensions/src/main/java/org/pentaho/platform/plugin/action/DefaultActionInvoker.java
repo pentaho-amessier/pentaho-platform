@@ -109,6 +109,7 @@ public class DefaultActionInvoker implements IActionInvoker {
       final Serializable value = params.get( key );
       newParams.put( alternateKey, value );
     }
+    params.clear();
     params.putAll( newParams );
   }
 
@@ -163,22 +164,6 @@ public class DefaultActionInvoker implements IActionInvoker {
   }
 
   /**
-   * {@inheritDoc}
-   */
-  @Override
-  public IActionInvokeStatus runInBackgroundLocally( final Map<String, Serializable> params ) throws
-    Exception {
-    if ( params == null ) {
-      throw new ActionInvocationException( Messages.getInstance().getCantInvokeActionWithNullMap() );
-    }
-    final String actionId = (String) params.get( ActionHelper.INVOKER_ACTIONID );
-    final String actionClassName = (String) params.get( ActionHelper.INVOKER_ACTIONCLASS );
-    final String actionUser = (String) params.get( ActionHelper.INVOKER_ACTIONUSER );
-    final IAction actionBean = createActionBean( actionClassName, actionId );
-    return runInBackgroundLocally( actionBean, actionUser, params );
-  }
-
-  /**
    * Invokes the provided {@link IAction} locally as the provided {@code actionUser}.
    *
    * @param actionBean the {@link IAction} being invoked
@@ -189,7 +174,8 @@ public class DefaultActionInvoker implements IActionInvoker {
    *
    * @throws Exception when the {@code IAction} cannot be invoked for some reason.
    */
-  protected final IActionInvokeStatus runInBackgroundLocally( final IAction actionBean, final String actionUser, final
+  @Override
+  public final IActionInvokeStatus runInBackgroundLocally( final IAction actionBean, final String actionUser, final
     Map<String, Serializable> params ) throws Exception {
 
     if ( actionBean == null || params == null ) {
