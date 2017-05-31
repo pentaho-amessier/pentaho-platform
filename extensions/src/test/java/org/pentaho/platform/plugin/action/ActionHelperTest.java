@@ -26,12 +26,10 @@ import org.mockito.Mockito;
 import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.engine.IPluginManager;
 import org.pentaho.platform.api.engine.PluginBeanException;
-import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
 import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.action.builtin.ActionSequenceAction;
-import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.web.http.api.resources.RepositoryFileStreamProvider;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -109,22 +107,6 @@ public class ActionHelperTest {
     public void createActionBeanHappyPath() throws ActionInvocationException {
         IAction iaction = ActionHelper.createActionBean(ActionSequenceAction.class.getName(), null);
         Assert.assertEquals(iaction.getClass(), ActionSequenceAction.class);
-    }
-
-    @Test
-    public void sendEmailTestEmailNotConfigured() {
-        Map<String, Serializable> metadata = new HashMap<>();
-        Map<String, Serializable> params = new HashMap<>();
-        params.put(QuartzScheduler.RESERVEDMAPKEY_LINEAGE_ID, "lineageID");
-
-        IUnifiedRepository repo = mock(IUnifiedRepository.class);
-        PowerMockito.mockStatic(PentahoSystem.class);
-        BDDMockito.given(PentahoSystem.get(IUnifiedRepository.class)).willReturn(repo);
-
-        Mockito.doReturn(repositoryFile).when(repo).getFile(anyString());
-        Mockito.doReturn(metadata).when(repo).getFileMetadata(repositoryFile.getId());
-
-        ActionHelper.sendEmail(null, params, "filePath");
     }
 
     @Test
