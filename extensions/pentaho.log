@@ -1,0 +1,14 @@
+2017-05-31 20:53:22,003 WARN  [org.pentaho.platform.plugin.action.ActionHelper] ActionInvoker.ERROR_0009 - Parameters required to create the stream provider (inputFile, outputFilePattern) are not available in the map: [
+   streamProvider -> null
+]
+2017-05-31 20:53:22,003 WARN  [org.pentaho.platform.plugin.action.ActionHelper] ActionInvoker.ERROR_0009 - Parameters required to create the stream provider (inputFile, outputFilePattern) are not available in the map: [
+   streamProvider -> null
+]
+2017-05-31 20:53:22,017 WARN  [org.pentaho.platform.plugin.action.ActionHelper] ActionInvoker.ERROR_0009 - Parameters required to create the stream provider (inputFile, outputFilePattern) are not available in the map: [
+   inputFile -> example.txt
+   streamProvider -> null
+]
+2017-05-31 20:53:22,017 WARN  [org.pentaho.platform.plugin.action.ActionHelper] ActionInvoker.ERROR_0009 - Parameters required to create the stream provider (inputFile, outputFilePattern) are not available in the map: [
+   inputFile -> example.txt
+   streamProvider -> null
+]

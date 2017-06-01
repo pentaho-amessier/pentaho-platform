@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 /**
@@ -56,10 +57,9 @@ public class ActionResource {
   /**
    * Runs the action defined within the provided json feed in the background asynchronously.
    *
-   * @param actionId the action id if applicable
-   *
-   * @param actionClass the action class name if applicable
-   *
+   * @param actionId the action id, if applicable
+   * @param actionClass the action class name, if applicable
+   * @param user the user invoking the action
    * @param actionParams the action parameters needed to instantiate and invoke the action
    *
    * @return a {@link Response}
@@ -76,32 +76,79 @@ public class ActionResource {
     }
   )
   public Response runInBackground(
-          @QueryParam( "actionId" ) String actionId,
-          @QueryParam( "actionClass" ) String actionClass,
-          @QueryParam( "user" ) String user,
-          final String actionParams ) {
+    @QueryParam( "actionId" ) String actionId,
+    @QueryParam( "actionClass" ) String actionClass,
+    @QueryParam( "user" ) String user,
+    final String actionParams ) {
 
-    executorService.submit( () -> {
+    executorService.submit( createRunnable( actionId, actionClass, user, actionParams ) );
+    return Response.status( HttpStatus.SC_ACCEPTED ).build();
+  }
+
+  /**
+   * Returns a {@link RunnableAction} that creates the {@link IAction} and invokes it.
+   *
+   * @param actionId the action id, if applicable
+   * @param actionClass the action class name, if applicable
+   * @param user the user invoking the action
+   * @param actionParams the action parameters needed to instantiate and invoke the action
+   *
+   * @return a {@link RunnableAction} that creates the {@link IAction} and invokes it
+   */
+  protected RunnableAction createRunnable( final String actionId, final String actionClass, final String user, final
+  String actionParams ) {
+    return new RunnableAction( this, actionId, actionClass, user, actionParams );
+  }
+
+  /**
+   * Returns the appropriate {@link IActionInvoker}.
+   * @return the {@link IActionInvoker}
+   */
+  IActionInvoker getActionInvoker() {
+    return PentahoSystem.get( IActionInvoker.class, "IActionInvoker", PentahoSessionHolder.getSession() );
+  }
+
+  /**
+   * A {@link Runnable} implementation that creates the {@link IAction} and invokes it.
+   */
+  static class RunnableAction implements Runnable {
+
+    private ActionResource resource;
+    private String actionId;
+    private String actionClass;
+    private String user;
+    private String actionParams;
+
+    RunnableAction() { }
+
+    public RunnableAction( final ActionResource resource, final String actionId, final String actionClass, final
+    String user, final String actionParams ) {
+      this.resource = resource;
+      this.actionClass = actionClass;
+      this.actionId = actionId;
+      this.user = user;
+      this.actionParams = actionParams;
+    }
+
+    public void run() {
       try {
-        final IActionInvoker actionInvoker = PentahoSystem.get( IActionInvoker.class, "IActionInvoker", PentahoSessionHolder
-                .getSession() );
+        final IActionInvoker actionInvoker = resource.getActionInvoker();
         final IAction action = ActionHelper.createActionBean( actionClass, actionId );
         final Map<String, Serializable> params = ActionParams.deserialize( action, ActionParams.fromJson( actionParams ) );
 
         final IActionInvokeStatus status = actionInvoker.runInBackgroundLocally( action, user, params );
         if ( status.getThrowable() == null ) {
           logger.info( Messages.getInstance().getRunningInBgLocallySuccess( action.getClass().getName(), params ),
-                  status.getThrowable() );
+            status.getThrowable() );
         } else {
           logger.error( Messages.getInstance().getCouldNotInvokeActionLocally( action.getClass().getName(), params ),
-                  status.getThrowable() );
+            status.getThrowable() );
         }
       } catch ( final Throwable thr ) {
         logger.error( Messages.getInstance().getCouldNotInvokeActionLocallyUnexpected( ( StringUtil.isEmpty( actionClass )
-                        ? actionId : actionClass ), actionParams ), thr );
+          ? actionId : actionClass ), actionParams ), thr );
       }
-    });
+    }
 
-    return Response.status( HttpStatus.SC_ACCEPTED ).build();
   }
 }
