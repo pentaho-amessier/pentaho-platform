@@ -59,11 +59,8 @@ public class MessagesTest {
   @Test
   public void testGetPostingToResource() {
 
-    final Map<String, String> params = new HashMap<String, String>();
-    params.put( "key1", "val1" );
-    params.put( "key2", "val2" );
-    Assert.assertEquals( "POSTing to resource \"foo\": [" + NL + "   key1 "
-      + "-> val1" + NL + "   key2 -> val2" + NL + "]", messages.getPostingToResource( "foo", params ) );
+    final String params = "{\"key1\" : \"var1\", \"key2\" : \"var2\", \"key3\" : \"var3\"}";
+    Assert.assertEquals( "POSTing to resource \"foo\": " + params, messages.getPostingToResource( "foo", params ) );
   }
 
   @Test
@@ -153,7 +150,19 @@ public class MessagesTest {
     params.put( "key1", "val1" );
     params.put( "key2", "val2" );
 
-    Assert.assertEquals( "ActionInvoker.ERROR_0012 - Could not invoke action locally: [" + NL + "   key1 -> val1" +
-      NL + "   key2 -> val2" + NL + "]", messages.getCouldNotInvokeActionLocally( params ) );
+    Assert.assertEquals( "ActionInvoker.ERROR_0012 - Could not invoke action \"foo\" locally: [" + NL + "   key1 -> val1" +
+            NL + "   key2 -> val2" + NL + "]", messages.getCouldNotInvokeActionLocally( "foo", params ) );
+  }
+
+  @Test
+  public void testGetRunningInBgLocallySuccess() {
+
+    final Map<String, String> params = new HashMap<String, String>();
+    params.put( "key1", "val1" );
+    params.put( "key2", "val2" );
+
+    Assert.assertEquals( "Local action \"foo\" ran in background successfully: " +
+                    "[" + NL + "   key1 -> val1" + NL + "   key2 -> val2" + NL + "]",
+            messages.getRunningInBgLocallySuccess( "foo", params ) );
   }
 }

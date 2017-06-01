@@ -69,16 +69,20 @@ public class ActionParams {
     }
 
     private static void recreate( final List<String> paramsToRecreate, final Map<String, Serializable> res ) {
-        //TODO: implements
+        //TODO: for now only the stream provider needs to be recreated, but that happens implicitly
+        //during invocation - so no code is added here at this time.
     }
 
     private static List<String> filter( final IAction action, Map<String, Serializable> params ) {
         List<String> res = new ArrayList<>();
         for ( final String name : params.keySet() ) {
-            if ( name.equals( "streamProvider" )) {
+            if ( name.equals( ActionHelper.INVOKER_STREAMPROVIDER ) ) {
                 res.add( name );
-                params.remove( name );
             }
+        }
+
+        for ( final String paramName : res ) {
+            params.remove( paramName );
         }
 
         return res;
