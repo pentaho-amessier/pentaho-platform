@@ -203,6 +203,16 @@ public class ActionParams {
     return mapper.readValue( serializedParams, HashMap.class );
   }
 
-
+  @Override
+  public boolean equals( final Object other ) {
+    if ( other == null || (! ( other instanceof ActionParams ) ) ) {
+      return false;
+    } else if ( this == other ) {
+      return true;
+    } else {
+      return serializedParams.equals( ( (ActionParams) other ).serializedParams ) &&
+        paramsToRecreate.equals( ( (ActionParams) other ).paramsToRecreate );
+    }
+  }
 
 }
