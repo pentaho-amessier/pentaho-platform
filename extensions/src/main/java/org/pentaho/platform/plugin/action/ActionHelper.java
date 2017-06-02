@@ -31,7 +31,6 @@ import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.action.messages.Messages;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.util.Emailer;
-import org.pentaho.platform.util.StringUtil;
 import org.pentaho.platform.util.web.MimeHelper;
 import org.pentaho.platform.web.http.api.resources.RepositoryFileStreamProvider;
 
@@ -54,6 +53,7 @@ public class ActionHelper {
   public static final String INVOKER_STREAMPROVIDER_UNIQUE_FILE_NAME = "uniqueFileName"; //$NON-NLS-1$
   public static final String INVOKER_UIPASSPARAM = QuartzScheduler.RESERVEDMAPKEY_UIPASSPARAM;
   public static final String INVOKER_RESTART_FLAG = "restart"; //$NON-NLS-1$
+  public static final String INVOKER_SESSION = "::session"; //$NON-NLS-1$
 
   private static final long RETRY_COUNT = 6;
   private static final long RETRY_SLEEP_AMOUNT = 10000;

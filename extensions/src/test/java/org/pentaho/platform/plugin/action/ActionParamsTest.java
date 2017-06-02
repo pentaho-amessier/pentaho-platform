@@ -114,18 +114,19 @@ public class ActionParamsTest {
   }
 
   @Test
-  public void testStreamProviderIsFiltered() throws Exception {
+  public void testFilteredParams() throws Exception {
     final Map<String, Serializable> expected = buildSample();
     final IAction dummyAction = new ActionParamsTestAction();
 
     expected.put( ActionHelper.INVOKER_STREAMPROVIDER, new String() );
+    expected.put( "::session", new String() );
     final ActionParams actionParams = ActionParams.serialize( dummyAction, expected );
     final ActionParams jsonManipulatedParams = ActionParams.fromJson( ActionParams.toJson( actionParams ) );
     final Map<String, Serializable> actual = ActionParams.deserialize( dummyAction, jsonManipulatedParams );
 
     Assert.assertTrue( actionParams.getParamsToRecreate().contains( ActionHelper.INVOKER_STREAMPROVIDER ) );
     Assert.assertTrue( jsonManipulatedParams.getParamsToRecreate().contains( ActionHelper.INVOKER_STREAMPROVIDER ) );
-    Assert.assertFalse( actual.containsKey( ActionHelper.INVOKER_STREAMPROVIDER ) ); // at this point we don't recreate this param
-
+    Assert.assertFalse( actual.containsKey( ActionHelper.INVOKER_STREAMPROVIDER ) );
+    Assert.assertFalse( actual.containsKey( ActionHelper.INVOKER_SESSION ) );
   }
 }
