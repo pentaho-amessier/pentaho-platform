@@ -21,8 +21,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.pentaho.platform.api.action.IAction;
-import org.pentaho.platform.api.engine.IPluginManager;
-import org.pentaho.platform.api.engine.PluginBeanException;
 import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
 import org.pentaho.platform.api.repository2.unified.data.simple.SimpleRepositoryFileData;
@@ -30,6 +28,7 @@ import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.action.messages.Messages;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
+import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.Emailer;
 import org.pentaho.platform.util.web.MimeHelper;
 import org.pentaho.platform.web.http.api.resources.RepositoryFileStreamProvider;
@@ -43,96 +42,6 @@ import java.util.Map;
 public class ActionHelper {
 
   private static final Log logger = LogFactory.getLog( ActionHelper.class );
-
-  public static final String INVOKER_ACTIONCLASS = "actionClass"; //$NON-NLS-1$
-  public static final String INVOKER_ACTIONUSER = "actionUser"; //$NON-NLS-1$
-  public static final String INVOKER_ACTIONID = "actionId"; //$NON-NLS-1$
-  public static final String INVOKER_STREAMPROVIDER = "streamProvider"; //$NON-NLS-1$
-  public static final String INVOKER_STREAMPROVIDER_INPUT_FILE = "inputFile"; //$NON-NLS-
-  public static final String INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN = "outputFilePattern"; //$
-  public static final String INVOKER_STREAMPROVIDER_UNIQUE_FILE_NAME = "uniqueFileName"; //$NON-NLS-1$
-  public static final String INVOKER_UIPASSPARAM = QuartzScheduler.RESERVEDMAPKEY_UIPASSPARAM;
-  public static final String INVOKER_RESTART_FLAG = "restart"; //$NON-NLS-1$
-  public static final String INVOKER_SESSION = "::session"; //$NON-NLS-1$
-
-  private static final long RETRY_COUNT = 6;
-  private static final long RETRY_SLEEP_AMOUNT = 10000;
-
-  /**
-   * Returns the {@link Class} that corresponds to the provides {@code actionClassName} and {@code beanId}.
-   *
-   * @param actionClassName the name of the class being resolved
-   * @param beanId the beanId of the class being resolved
-   *
-   * @return the {@link Class} that corresponds to the provides {@code actionClassName} and {@code beanId}
-   *
-   * @throws PluginBeanException when the plugin required to resolve the bean class from the {@code beanId} cannot be
-   * created
-   * @throws ActionInvocationException when the required parameters are not provided
-   */
-  static Class<?> resolveClass( final String actionClassName, final String beanId  ) throws
-    PluginBeanException, ActionInvocationException {
-
-    Class<?> clazz = null;
-
-    if ( StringUtils.isEmpty( beanId ) && StringUtils.isEmpty( actionClassName ) ) {
-      throw new ActionInvocationException( Messages.getInstance().getRequiredParamMissing( INVOKER_ACTIONCLASS,
-        INVOKER_ACTIONID ) );
-    }
-
-    for ( int i = 0; i < RETRY_COUNT; i++ ) {
-      try {
-        if ( !StringUtils.isEmpty( beanId ) ) {
-          IPluginManager pluginManager = PentahoSystem.get( IPluginManager.class );
-          clazz = pluginManager.loadClass( beanId );
-          return clazz;
-        } else if ( !StringUtils.isEmpty( actionClassName ) ) {
-          clazz = Class.forName( actionClassName );
-          return clazz;
-        }
-      } catch ( Throwable t ) {
-        try {
-          Thread.sleep( RETRY_SLEEP_AMOUNT );
-        } catch ( InterruptedException ie ) {
-          logger.info( ie.getMessage(), ie );
-        }
-      }
-    }
-
-    // we have failed to locate the class for the actionClass
-    // and we're giving up waiting for it to become available/registered
-    // which can typically happen at system startup
-    throw new ActionInvocationException( Messages.getInstance().getFailedToCreateAction( StringUtils.isEmpty(
-      beanId ) ? actionClassName : beanId ) );
-  }
-
-  /**
-   * Returns an instance of {@link IAction} created from the provided parameters.
-   *
-   * @param actionClassName the name of the class being resolved
-   * @param actionId the is of the action which corresponds to some bean id
-   *
-   * @return {@link IAction} created from the provided parameters.
-   * @throws ActionInvocationException when the {@link IAction} cannot be created for some reason
-   */
-  public static IAction createActionBean( final String actionClassName, final String actionId ) throws
-    ActionInvocationException {
-    Object actionBean;
-    Class<?> actionClass = null;
-    try {
-      actionClass = resolveClass( actionClassName, actionId );
-      actionBean = actionClass.newInstance();
-    } catch ( Exception e ) {
-      throw new ActionInvocationException( Messages.getInstance().getFailedToCreateAction( ( actionClass == null )
-        ? "?" : actionClass.getName() ) );
-    }
-
-    if ( !( actionBean instanceof IAction ) ) {
-      throw new ActionInvocationException( Messages.getInstance().getActionWrongType( actionClass.getName(), IAction
-        .class.getName() ) );
-    }
-    return (IAction) actionBean;
-  }
 
   /**
    * Gets the stream provider from the {@code INVOKER_STREAMPROVIDER,} or builds it from the input file and output
@@ -151,22 +60,22 @@ public class ActionHelper {
     }
     IBackgroundExecutionStreamProvider streamProvider = null;
 
-    final Object objsp = params.get( INVOKER_STREAMPROVIDER );
+    final Object objsp = params.get( ActionUtil.INVOKER_STREAMPROVIDER );
     if ( objsp != null && IBackgroundExecutionStreamProvider.class.isAssignableFrom( objsp.getClass() ) ) {
       streamProvider = (IBackgroundExecutionStreamProvider) objsp;
       if ( streamProvider instanceof RepositoryFileStreamProvider ) {
-        params.put( INVOKER_STREAMPROVIDER_INPUT_FILE, ( (RepositoryFileStreamProvider) streamProvider )
+        params.put( ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE, ( (RepositoryFileStreamProvider) streamProvider )
           .getInputFilePath() );
-        params.put( INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN, ( (RepositoryFileStreamProvider) streamProvider )
-          .getOutputFilePath() );
-        params.put( INVOKER_STREAMPROVIDER_UNIQUE_FILE_NAME, ( (RepositoryFileStreamProvider) streamProvider )
-          .autoCreateUniqueFilename() );
+        params.put( ActionUtil.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN, ( (RepositoryFileStreamProvider)
+          streamProvider ).getOutputFilePath() );
+        params.put( ActionUtil.INVOKER_STREAMPROVIDER_UNIQUE_FILE_NAME, ( (RepositoryFileStreamProvider)
+          streamProvider ).autoCreateUniqueFilename() );
       }
     } else {
-      final String inputFile = params.get( INVOKER_STREAMPROVIDER_INPUT_FILE ) == null ? null : params.get(
-        INVOKER_STREAMPROVIDER_INPUT_FILE ).toString();
-      final String outputFilePattern = params.get( INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN ) == null ? null : params.get(
-        INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN ).toString();
+      final String inputFile = params.get( ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE ) == null ? null : params.get(
+        ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE ).toString();
+      final String outputFilePattern = params.get( ActionUtil.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN ) == null
+        ? null : params.get( ActionUtil.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN ).toString();
       boolean hasInputFile = !StringUtils.isEmpty( inputFile );
       boolean hasOutputPattern = !StringUtils.isEmpty( outputFilePattern );
       if ( hasInputFile && hasOutputPattern ) {
@@ -174,11 +83,12 @@ public class ActionHelper {
           "autoCreateUniqueFilename" ).toString().equalsIgnoreCase( "true" );
         streamProvider = new RepositoryFileStreamProvider( inputFile, outputFilePattern, autoCreateUniqueFilename );
         // put in the map for future lookup
-        params.put( INVOKER_STREAMPROVIDER, streamProvider );
+        params.put( ActionUtil.INVOKER_STREAMPROVIDER, streamProvider );
       } else {
         if ( logger.isWarnEnabled() ) {
           logger.warn( Messages.getInstance().getMissingParamsCantReturnSp( String.format( "%s, %s",
-            INVOKER_STREAMPROVIDER_INPUT_FILE, INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN ), params ) ); //$NON-NLS-1$
+            ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE, ActionUtil.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN ),
+            params ) ); //$NON-NLS-1$
         }
       }
     }

@@ -20,9 +20,11 @@ package org.pentaho.platform.plugin.action;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.pentaho.platform.api.action.ActionInvocationException;
 import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.plugin.action.builtin.ActionSequenceAction;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
+import org.pentaho.platform.util.ActionUtil;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -93,18 +95,12 @@ public class DefaultActionInvokerTest {
     }
 
     @Test
-    public void createActionBeanTest() throws Exception {
-        IAction iaction = defaultActionInvoker.createActionBean(ActionSequenceAction.class.getName(), null);
-        Assert.assertEquals(iaction.getClass(), ActionSequenceAction.class);
-    }
-
-    @Test
     public void runInBackgroundLocallyTest() throws Exception {
         Map<String, Serializable> testMap = new HashMap<>();
         testMap.put(QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, "one");
         testMap.put(QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER, "two");
-        IAction iaction = ActionHelper.createActionBean(ActionSequenceAction.class.getName(), null);
-        ActionInvokeStatus actionInvokeStatus = (ActionInvokeStatus) defaultActionInvoker.runInBackgroundLocally(iaction, "aUser", testMap);
+        IAction iaction = ActionUtil.createActionBean(ActionSequenceAction.class.getName(), null);
+        ActionInvokeStatus actionInvokeStatus = (ActionInvokeStatus) defaultActionInvoker.runInBackground(iaction, "aUser", testMap);
         Assert.assertFalse(actionInvokeStatus.requiresUpdate());
     }
 
@@ -113,14 +109,14 @@ public class DefaultActionInvokerTest {
         Map<String, Serializable> testMap = new HashMap<>();
         testMap.put(QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, "one");
         testMap.put(QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER, "two");
-        IAction iaction = ActionHelper.createActionBean(ActionSequenceAction.class.getName(), null);
+        IAction iaction = ActionUtil.createActionBean(ActionSequenceAction.class.getName(), null);
         ActionInvokeStatus actionInvokeStatus = (ActionInvokeStatus) defaultActionInvoker.runInBackground(iaction, "aUser", testMap);
         Assert.assertFalse(actionInvokeStatus.requiresUpdate());
     }
 
     @Test(expected=ActionInvocationException.class)
     public void runInBackgroundLocallyWithNullsThrowsExceptionTest() throws Exception {
-        defaultActionInvoker.runInBackgroundLocally(null, "aUser", null);
+        defaultActionInvoker.runInBackground(null, "aUser", null);
     }
 
 }

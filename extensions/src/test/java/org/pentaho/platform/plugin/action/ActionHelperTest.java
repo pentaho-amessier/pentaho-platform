@@ -21,26 +21,21 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
-import org.pentaho.platform.api.action.IAction;
-import org.pentaho.platform.api.engine.IPluginManager;
-import org.pentaho.platform.api.engine.PluginBeanException;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
 import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
-import org.pentaho.platform.plugin.action.builtin.ActionSequenceAction;
+import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.web.http.api.resources.RepositoryFileStreamProvider;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.mock;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PentahoSystem.class)
@@ -59,60 +54,10 @@ public class ActionHelperTest {
                 "originalParentFolderPath", null, 12345L, "creatorId", null);
     }
 
-    @Test(expected=ActionInvocationException.class)
-    public void resolveClassIllegalArgumentExceptionWithEmptyStrings() throws PluginBeanException, ActionInvocationException {
-        ActionHelper.resolveClass("", "");
-    }
-
-    @Test(expected=ActionInvocationException.class)
-    public void resolveClassIllegalArgumentExceptionWithNulls() throws PluginBeanException, ActionInvocationException {
-        ActionHelper.resolveClass(null, null);
-    }
-
-    @Test(expected=ActionInvocationException.class)
-    public void createActionBeanIllegalArgumentExceptionWithEmptyStrings() throws PluginBeanException, ActionInvocationException {
-        ActionHelper.createActionBean("", "");
-    }
-
-    @Test(expected=ActionInvocationException.class)
-    public void createActionBeanIllegalArgumentExceptionWithNulls() throws PluginBeanException, ActionInvocationException {
-        ActionHelper.createActionBean(null, null);
-    }
-
-    @Test
-    public void resolveClassTestHappyPathNoBeanID() throws Exception {
-        Class<?> aClass = ActionHelper.resolveClass(
-                ActionSequenceAction.class.getName(),
-                "");
-        Assert.assertEquals(ActionSequenceAction.class, aClass);
-    }
-
-    @Test
-    public void resolveClassTestHappyPath() throws Exception {
-        String beanId = "ktr.backgroundAction";
-        Class<?> clazz = ActionSequenceAction.class;
-
-        IPluginManager pluginManager = mock(IPluginManager.class);
-        PowerMockito.mockStatic(PentahoSystem.class);
-        BDDMockito.given(PentahoSystem.get(IPluginManager.class)).willReturn(pluginManager);
-
-        Mockito.doReturn(clazz).when(pluginManager).loadClass(anyString());
-
-        Class<?> aClass = ActionHelper.resolveClass(ActionSequenceAction.class.getName(), beanId);
-
-        Assert.assertEquals(ActionSequenceAction.class, aClass);
-    }
-
-    @Test
-    public void createActionBeanHappyPath() throws ActionInvocationException {
-        IAction iaction = ActionHelper.createActionBean(ActionSequenceAction.class.getName(), null);
-        Assert.assertEquals(iaction.getClass(), ActionSequenceAction.class);
-    }
-
     @Test
     public void getStreamProviderNullTest() {
         Map<String, Serializable> paramMap = new HashMap<>();
-        paramMap.put(ActionHelper.INVOKER_STREAMPROVIDER, null);
+        paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER, null);
         IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = ActionHelper.getStreamProvider(paramMap);
         Assert.assertNull(iBackgroundExecutionStreamProvider);
     }
@@ -123,8 +68,8 @@ public class ActionHelperTest {
         File inputFile = new File("example.txt");
         BufferedWriter output = new BufferedWriter(new FileWriter(inputFile));
         output.write("TEST TEXT");
-        paramMap.put(ActionHelper.INVOKER_STREAMPROVIDER, null);
-        paramMap.put(ActionHelper.INVOKER_STREAMPROVIDER_INPUT_FILE, inputFile);
+        paramMap.put(ActionUtil.INVOKER_STREAMPROVIDER, null);
+        paramMap.put(ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE, inputFile);
         IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = ActionHelper.getStreamProvider(paramMap);
         Assert.assertNull(iBackgroundExecutionStreamProvider);
     }
@@ -136,9 +81,9 @@ public class ActionHelperTest {
         File inputFile = new File("example.txt");
         BufferedWriter output = new BufferedWriter(new FileWriter(inputFile));
         output.write("TEST TEXT");
-        paramMap.put(ActionHelper.INVOKER_STREAMPROVIDER, repositoryFileStreamProvider);
-        paramMap.put(ActionHelper.INVOKER_STREAMPROVIDER_INPUT_FILE, inputFile);
-        paramMap.put(ActionHelper.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN, inputFile);
+        paramMap.put(ActionUtil.INVOKER_STREAMPROVIDER, repositoryFileStreamProvider);
+        paramMap.put(ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE, inputFile);
+        paramMap.put(ActionUtil.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN, inputFile);
         paramMap.put("autoCreateUniqueFilename", true);
         IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = ActionHelper.getStreamProvider(paramMap);
         Assert.assertEquals(iBackgroundExecutionStreamProvider, repositoryFileStreamProvider);
@@ -149,9 +94,8 @@ public class ActionHelperTest {
     public void getStreamProviderTest() {
         Map<String, Serializable> paramMap = new HashMap<>();
         RepositoryFileStreamProvider repositoryFileStreamProvider = new RepositoryFileStreamProvider();
-        paramMap.put(ActionHelper.INVOKER_STREAMPROVIDER, repositoryFileStreamProvider);
+        paramMap.put(ActionUtil.INVOKER_STREAMPROVIDER, repositoryFileStreamProvider);
         IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = ActionHelper.getStreamProvider(paramMap);
         Assert.assertEquals(repositoryFileStreamProvider, iBackgroundExecutionStreamProvider);
     }
-
 }

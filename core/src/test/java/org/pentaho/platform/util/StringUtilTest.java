@@ -115,52 +115,43 @@ public class StringUtilTest {
   }
 
   @Test
-  public void testGetMapAsPrettyStringNoArgs() {
+  public void testGetMapAsPrettyStringEmpty() {
     // When the provided map is empty or null, the result should be an empty string
-    Assert.assertEquals( "", StringUtil.getMapAsPrettyString( null ) );
-    Assert.assertEquals( "", StringUtil.getMapAsPrettyString( new HashMap() ) );
-
-    final Map testMap = getTestMap();
-    final String output = StringUtil.getMapAsPrettyString( testMap );
-
-    final String expectedOutput = getExpectedPrettyMapOutput( null, null );
-    Assert.assertEquals( expectedOutput, output );
+    Assert.assertEquals( "Map = null" + System.getProperty( "line.separator" ), StringUtil.getMapAsPrettyString( null
+    ) );
+    Assert.assertEquals( "Map = " + System.getProperty( "line.separator" ) + "{" + System.getProperty( "line"
+      + ".separator" ) + "} java.util.HashMap" + System.getProperty( "line.separator" ), StringUtil
+      .getMapAsPrettyString( new HashMap() ) );
   }
 
   @Test
-  public void testGetMapAsPrettyStringWithArgs() {
-    final String kvSep = "foo";
-    final String kvpSep = "foe";
-    // When the provided map is empty or null, the result should be an empty string
-    Assert.assertEquals( "", StringUtil.getMapAsPrettyString( null, kvSep, kvpSep ) );
-    Assert.assertEquals( "", StringUtil.getMapAsPrettyString( new HashMap(), kvSep, kvpSep ) );
-
+  public void testGetMapAsPrettyString() {
     final Map testMap = getTestMap();
-    final String output = StringUtil.getMapAsPrettyString( testMap, kvSep, kvpSep  );
+    final String output = StringUtil.getMapAsPrettyString( testMap );
 
-    final String expectedOutput = getExpectedPrettyMapOutput( kvSep, kvpSep );
+    final String expectedOutput = getExpectedPrettyMapOutput( );
     Assert.assertEquals( expectedOutput, output );
   }
 
-  private String getExpectedPrettyMapOutput( String kvSep, String kvpSep ) {
+  private String getExpectedPrettyMapOutput( ) {
 
-    if ( kvSep == null ) {
-      kvSep = StringUtil.KV_SEPARATOR;
-    }
-    if ( kvpSep == null ) {
-      kvpSep = StringUtil.KVP_SEPARATOR;
-    }
-
+    final String NL = System.getProperty( "line.separator" );
     final StringBuilder expectedOutput = new StringBuilder();
-    expectedOutput.append( "[" ).append( System.getProperty( "line.separator" ) );
-    expectedOutput.append( "   " ).append( kvSep ).append( kvpSep );
-    expectedOutput.append( "   " ).append( "null" ).append( kvSep ).append( kvpSep );
-    expectedOutput.append( "   " ).append( "Suzy").append( kvSep ).append( "null" ).append( kvpSep );
-    expectedOutput.append( "   " ).append( "John").append( kvSep ).append( "Doe" ).append( kvpSep );
-    expectedOutput.append( "   " ).append( "map").append( kvSep ).append( "{John=Doe, testObj=someVar:testVar}" )
-      .append( kvpSep );
-    expectedOutput.append( "   " ).append( "testObj2").append( kvSep ).append( "someVar:testVar2" );
-    expectedOutput.append( System.getProperty( "line.separator" ) ).append( "]" );
+    expectedOutput.append( "Map = " ).append( NL );
+    expectedOutput.append( "{" ).append( NL );
+    expectedOutput.append( "    " ).append( " =  java.lang.String" ).append( NL );
+    expectedOutput.append( "    " ).append( "null" ).append( " =  java.lang.String" ).append( NL );
+    expectedOutput.append( "    " ).append( "Suzy").append( " = " ).append( "null" ).append( NL );
+    expectedOutput.append( "    " ).append( "John").append( " = " ).append( "Doe java.lang.String" ).append( NL );
+    expectedOutput.append( "    " ).append( "map").append( " = " ).append( NL );
+    expectedOutput.append( "    " ).append( "{" ).append( NL );
+    expectedOutput.append( "        " ).append( "John" ).append( " = " ).append( "Doe java.lang.String" ).append( NL );
+    expectedOutput.append( "        " ).append( "testObj").append( " = " ).append( "someVar:testVar org.pentaho"
+      + ".platform.util.StringUtilTest$TestObject" ).append( NL );
+    expectedOutput.append( "    " ).append( "} java.util.TreeMap" ).append( NL );
+    expectedOutput.append( "    " ).append( "testObj2").append( " = " ).append( "someVar:testVar2 org.pentaho"
+      + ".platform.util.StringUtilTest$TestObject" );
+    expectedOutput.append( NL ).append( "} java.util.HashMap" ).append( NL );
     return expectedOutput.toString();
   }
 

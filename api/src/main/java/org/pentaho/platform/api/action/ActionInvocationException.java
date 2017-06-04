@@ -15,7 +15,7 @@
  * Copyright (c) 2017 Pentaho Corporation..  All rights reserved.
  */
 
-package org.pentaho.platform.plugin.action;
+package org.pentaho.platform.api.action;
 
 /**
  * An exception thrown when the invocation of {@link org.pentaho.platform.api.action.IAction} fails.

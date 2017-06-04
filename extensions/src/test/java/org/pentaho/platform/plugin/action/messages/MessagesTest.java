@@ -42,8 +42,9 @@ public class MessagesTest {
     final Map<String, String> params = new HashMap<String, String>();
     params.put( "key1", "val1" );
     params.put( "key2", "val2" );
-    Assert.assertEquals( "Running action \"foo\" in background locally: [" + NL + "   key1 -> val1" + NL + "   key2 "
-      + "-> val2" + NL + "]", messages.getRunningInBackgroundLocally( "foo", params ) );
+    Assert.assertEquals( "Running action \"foo\" in background locally: Map = " + NL + "{" + NL + "    key1 = val1 java.lang"
+      + ".String" + NL + "    "  + "key2 = val2 java.lang.String" + NL + "} java.util.HashMap" + NL, messages
+      .getRunningInBackgroundLocally("foo", params ) );
   }
 
   @Test
@@ -52,8 +53,9 @@ public class MessagesTest {
     final Map<String, String> params = new HashMap<String, String>();
     params.put( "key1", "val1" );
     params.put( "key2", "val2" );
-    Assert.assertEquals( "Running action \"foo\" in background remotely: [" + NL + "   key1 -> val1" + NL + "   key2 "
-      + "-> val2" + NL + "]", messages.getRunningInBackgroundRemotely( "foo", params ) );
+    Assert.assertEquals( "Running action \"foo\" in background remotely: Map = " + NL + "{" + NL + "    key1 = val1 "
+      + "java.lang.String" + NL + "    key2 = val2 java.lang.String" + NL + "} java.util.HashMap" + NL, messages
+      .getRunningInBackgroundRemotely( "foo", params ) );
   }
 
   @Test
@@ -86,24 +88,6 @@ public class MessagesTest {
   }
 
   @Test
-  public void testGetRequiredParamMissing() {
-    Assert.assertEquals( "ActionInvoker.ERROR_0001 - Property \"foo\" or \"foe\" must be set in "
-      + "the action data map", messages.getRequiredParamMissing( "foo", "foe" ) );
-  }
-
-  @Test
-  public void testGetFailedToCreateAction() {
-    Assert.assertEquals( "ActionInvoker.ERROR_0002 - Failed to create an instance of action "
-      + "\"foo\"", messages.getFailedToCreateAction( "foo" ) );
-  }
-
-  @Test
-  public void testGetActionWrongType() {
-    Assert.assertEquals( "ActionInvoker.ERROR_0003 - class foo must be an instance of \"foe\"",
-      messages.getActionWrongType( "foo", "foe" ) );
-  }
-
-  @Test
   public void testGetMapNullCantReturnSp() {
     Assert.assertEquals( "ActionInvoker.ERROR_0008 - Map is null, cannot return stream provider", messages
       .getMapNullCantReturnSp() );
@@ -114,9 +98,9 @@ public class MessagesTest {
     final Map<String, String> params = new HashMap<String, String>();
     params.put( "key1", "val1" );
     params.put( "key2", "val2" );
-    Assert.assertEquals( "ActionInvoker.ERROR_0009 - Parameters required to create the stream provider (foo) are not "
-      + "available in the map: [" + NL + "   key1 -> val1" + NL + "   key2 -> val2" + NL + "]", messages
-      .getMissingParamsCantReturnSp( "foo", params ) );
+    Assert.assertEquals( "Parameters required to create the stream provider (foo) are not "
+      + "available in the map: Map = " + NL + "{" + NL + "    key1 = val1 java.lang.String" + NL + "    key2 = val2 "
+        + "java.lang.String" + NL + "} java.util.HashMap" + NL, messages.getMissingParamsCantReturnSp( "foo", params ) );
   }
 
   @Test
@@ -150,8 +134,9 @@ public class MessagesTest {
     params.put( "key1", "val1" );
     params.put( "key2", "val2" );
 
-    Assert.assertEquals( "ActionInvoker.ERROR_0012 - Could not invoke action \"foo\" locally: [" + NL + "   key1 -> val1" +
-            NL + "   key2 -> val2" + NL + "]", messages.getCouldNotInvokeActionLocally( "foo", params ) );
+    Assert.assertEquals( "ActionInvoker.ERROR_0012 - Could not invoke action \"foo\" locally: Map = " + NL + "{" + NL
+      + "    key1 = val1 java.lang.String" + NL + "    key2 = val2 java.lang.String" + NL + "} java.util.HashMap" +
+      NL, messages.getCouldNotInvokeActionLocally( "foo", params ) );
   }
 
   @Test
@@ -161,8 +146,14 @@ public class MessagesTest {
     params.put( "key1", "val1" );
     params.put( "key2", "val2" );
 
-    Assert.assertEquals( "Local action \"foo\" ran in background successfully: " +
-                    "[" + NL + "   key1 -> val1" + NL + "   key2 -> val2" + NL + "]",
-            messages.getRunningInBgLocallySuccess( "foo", params ) );
+    Assert.assertEquals( "Local action \"foo\" ran in background successfully: Map = " + NL + "{" + NL + "    key1 = "
+        + "val1 java.lang.String" + NL + "    key2 = val2 java.lang.String" + NL + "}" + " java.util.HashMap" + NL,
+      messages.getRunningInBgLocallySuccess( "foo", params ) );
+  }
+
+  @Test
+  public void testGetNoEeLicense() {
+    Assert.assertEquals( "ActionInvoker.ERROR_0001 - Cannot invoke actions remotely without an EE license",
+      messages.getNoEeLicense() );
   }
 }

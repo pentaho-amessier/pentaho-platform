@@ -20,6 +20,7 @@ package org.pentaho.platform.plugin.action;
 import org.junit.Assert;
 import org.junit.Test;
 import org.pentaho.platform.api.action.IAction;
+import org.pentaho.platform.util.ActionUtil;
 
 import java.io.Serializable;
 import java.text.DateFormat;
@@ -118,15 +119,15 @@ public class ActionParamsTest {
     final Map<String, Serializable> expected = buildSample();
     final IAction dummyAction = new ActionParamsTestAction();
 
-    expected.put( ActionHelper.INVOKER_STREAMPROVIDER, new String() );
+    expected.put( ActionUtil.INVOKER_STREAMPROVIDER, new String() );
     expected.put( "::session", new String() );
     final ActionParams actionParams = ActionParams.serialize( dummyAction, expected );
     final ActionParams jsonManipulatedParams = ActionParams.fromJson( ActionParams.toJson( actionParams ) );
     final Map<String, Serializable> actual = ActionParams.deserialize( dummyAction, jsonManipulatedParams );
 
-    Assert.assertTrue( actionParams.getParamsToRecreate().contains( ActionHelper.INVOKER_STREAMPROVIDER ) );
-    Assert.assertTrue( jsonManipulatedParams.getParamsToRecreate().contains( ActionHelper.INVOKER_STREAMPROVIDER ) );
-    Assert.assertFalse( actual.containsKey( ActionHelper.INVOKER_STREAMPROVIDER ) );
-    Assert.assertFalse( actual.containsKey( ActionHelper.INVOKER_SESSION ) );
+    Assert.assertTrue( actionParams.getParamsToRecreate().contains( ActionUtil.INVOKER_STREAMPROVIDER ) );
+    Assert.assertTrue( jsonManipulatedParams.getParamsToRecreate().contains( ActionUtil.INVOKER_STREAMPROVIDER ) );
+    Assert.assertFalse( actual.containsKey( ActionUtil.INVOKER_STREAMPROVIDER ) ); // at this point we don't recreate this param
+    Assert.assertFalse( actual.containsKey( ActionUtil.INVOKER_SESSION ) );
   }
 }

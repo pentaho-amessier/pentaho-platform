@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.pentaho.platform.api.action.ActionInvocationException;
 import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.plugin.action.messages.Messages;
+import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.web.http.api.resources.RepositoryFileStreamProvider;
 
 import java.io.IOException;
@@ -151,24 +153,24 @@ public class ActionParams {
    */
   private static void recreate( final List<String> paramsToRecreate, final Map<String, Serializable> res ) {
     for ( final String param : paramsToRecreate ) {
-      if ( param.equals( ActionHelper.INVOKER_STREAMPROVIDER ) ) {
+      if ( param.equals( ActionUtil.INVOKER_STREAMPROVIDER ) ) {
         recreateStreamProvider( res );
       }
     }
   }
 
   private static void recreateStreamProvider( final Map<String, Serializable> params ) {
-    final Serializable spInputFile = params.get( ActionHelper.INVOKER_STREAMPROVIDER_INPUT_FILE );
+    final Serializable spInputFile = params.get( ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE );
     final String inputFile = spInputFile != null ? spInputFile.toString() : null;
-    final Serializable spOutputFilePattern = params.get( ActionHelper.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN );
+    final Serializable spOutputFilePattern = params.get( ActionUtil.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN );
     final String outputFilePattern = spOutputFilePattern != null ? spOutputFilePattern.toString() : null;
 
 
     if ( inputFile == null || outputFilePattern == null ) {
       if ( logger.isWarnEnabled() ) {
         logger.warn( Messages.getInstance().getMissingParamsCantReturnSp(
-          String.format( "%s, %s", ActionHelper.INVOKER_STREAMPROVIDER_INPUT_FILE,
-            ActionHelper.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN ),
+          String.format( "%s, %s", ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE,
+            ActionUtil.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN ),
           params ) ); //$NON-NLS-1$
       }
 
@@ -179,12 +181,12 @@ public class ActionParams {
       ? Boolean.parseBoolean( params.get( "autoCreateUniqueFilename" ).toString() )
       : true;
 
-    params.put( ActionHelper.INVOKER_STREAMPROVIDER,
+    params.put( ActionUtil.INVOKER_STREAMPROVIDER,
       new RepositoryFileStreamProvider( inputFile, outputFilePattern, autoCreateUniqueFilename ) );
   }
 
   /**
-   * Removes un-serializable action parameters from the parameters map. An inverse sibling of the recreate() }
+   * Removes un-serializable action parameters from the parameters map. An inverse sibling of the recreate()
    *
    * @param action the action that has these parameters.
    * @param params the parameter map to filter un-serialized parameters from.
@@ -193,9 +195,9 @@ public class ActionParams {
   private static List<String> filter( final IAction action, Map<String, Serializable> params ) {
     List<String> res = new ArrayList<>();
     for ( final String name : params.keySet() ) {
-      if ( name.equals( ActionHelper.INVOKER_STREAMPROVIDER ) ) {
+      if ( name.equals( ActionUtil.INVOKER_STREAMPROVIDER ) ) {
         res.add( name );
-      } else if ( name.equals( ActionHelper.INVOKER_SESSION ) ) {
+      } else if ( name.equals( ActionUtil.INVOKER_SESSION ) ) {
         // discard as this is a quartz context parameter that may be used only locally.
         //
         res.add( name );
@@ -243,13 +245,13 @@ public class ActionParams {
 
   @Override
   public boolean equals( final Object other ) {
-    if ( other == null || (! ( other instanceof ActionParams ) ) ) {
+    if ( other == null || ( !( other instanceof ActionParams ) ) ) {
       return false;
     } else if ( this == other ) {
       return true;
     } else {
-      return serializedParams.equals( ( (ActionParams) other ).serializedParams ) &&
-        paramsToRecreate.equals( ( (ActionParams) other ).paramsToRecreate );
+      return serializedParams.equals( ( (ActionParams) other ).serializedParams )
+        && paramsToRecreate.equals( ( (ActionParams) other ).paramsToRecreate );
     }
   }
 

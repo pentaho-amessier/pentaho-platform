@@ -20,6 +20,7 @@ package org.pentaho.platform.plugin.action;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.pentaho.platform.api.action.ActionInvocationException;
 import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
@@ -27,6 +28,7 @@ import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
 import org.pentaho.platform.engine.security.SecurityHelper;
 import org.pentaho.platform.plugin.action.messages.Messages;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
+import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.StringUtil;
 import org.pentaho.platform.util.messages.LocaleHelper;
 
@@ -45,18 +47,42 @@ public class DefaultActionInvoker implements IActionInvoker {
   private static final Map<String, String> KEY_MAP;
   static {
     KEY_MAP = new HashMap<String, String>( );
-    KEY_MAP.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, ActionHelper.INVOKER_ACTIONCLASS );
-    KEY_MAP.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER, ActionHelper.INVOKER_ACTIONUSER );
-    KEY_MAP.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONID, ActionHelper.INVOKER_ACTIONID );
-    KEY_MAP.put( QuartzScheduler.RESERVEDMAPKEY_STREAMPROVIDER, ActionHelper.INVOKER_STREAMPROVIDER );
-    KEY_MAP.put( QuartzScheduler.RESERVEDMAPKEY_RESTART_FLAG, ActionHelper.INVOKER_RESTART_FLAG );
+    KEY_MAP.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, ActionUtil.INVOKER_ACTIONCLASS );
+    KEY_MAP.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER, ActionUtil.INVOKER_ACTIONUSER );
+    KEY_MAP.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONID, ActionUtil.INVOKER_ACTIONID );
+    KEY_MAP.put( QuartzScheduler.RESERVEDMAPKEY_STREAMPROVIDER, ActionUtil.INVOKER_STREAMPROVIDER );
+    KEY_MAP.put( QuartzScheduler.RESERVEDMAPKEY_RESTART_FLAG, ActionUtil.INVOKER_RESTART_FLAG );
   }
 
   /**
-   * Given a {@code key}, removes it from the map, as well as its corresponding key in the {@code KEY_MAP}. The {@code key} can
-   * be  both a key or or a value in the {@code KEY_MAP}. This is to ensure that when a key to be removed is
-   * provided, we remove both copies of the value from the map, one that corresponds to the key directly and any that
-   * may have been copied under a different key.
+   * This method finds the "sibling" of the provided {@code key}, which can be found in the {@code KEY_MAP}, either
+   * as a key within {@code KEY_MAP} or a value. Both keys, the original and the "sibling" are removed from the
+   * provided {@code map}. This is to ensure that when a key to be removed is provided, we remove both copies of the
+   * value from the {@code map}, one that corresponds to the key directly and any that may have been copied under a
+   * different key, as defined within {@code KEY_MAP}.<br><br>
+   * Example:<br>
+   * <pre>
+   * Given maps with the following content:
+   *   map:
+   *      "name" : "john".
+   *      "my-name" : "john",
+   *      "age" : "30"
+   *      "my-age" : "30"
+   *      "address" : "Boston"
+   *
+   *   KEY_MAP:
+   *     "name" : "my-name"
+   *     "age" : "my-age"
+   *
+   * Calling removeFromMap( map, "name" ) results in:
+   *   map:
+   *      "age" : "30"
+   *      "my-age" : "30"
+   *      "address" : "Boston"
+   * Calling removeFromMap( map, "my-age" ) results in:
+   *   map:
+   *      "address" : "Boston"
+   * </pre>
    *
    * @param map a {@link Map} of values
    * @param key the key being removed from the map
@@ -88,8 +114,8 @@ public class DefaultActionInvoker implements IActionInvoker {
 
   /**
    * Prepares the {@code params} {@link Map} for action invocation, adding appropriate keys that are not scheduler
-   * specific, so that the action invocation code canoperate on these mapped non-scheduler specific keys, rather than
-   * any keys defined within the scheduler.
+   * specific, so that the action invocation code can operate on these mapped non-scheduler specific keys, rather than
+   * any keys defined within the scheduler. The corresponding entries that use the scheduler related keys are removed.
    *
    * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
    */
@@ -100,7 +126,7 @@ public class DefaultActionInvoker implements IActionInvoker {
 
     final Map<String, Serializable> replaced = new HashMap<>();
 
-    for (final Map.Entry<String,Serializable> ent : params.entrySet() ) {
+    for ( final Map.Entry<String, Serializable> ent : params.entrySet() ) {
       final String key = ent.getKey();
       final Serializable value = params.get( key );
       final String altKey = KEY_MAP.get( key );
@@ -110,14 +136,6 @@ public class DefaultActionInvoker implements IActionInvoker {
 
     params.clear();
     params.putAll( replaced );
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public IAction createActionBean( final String actionClassName, final String actionId ) throws Exception {
-    return ActionHelper.createActionBean( actionClassName, actionId );
   }
 
   /**
@@ -134,21 +152,7 @@ public class DefaultActionInvoker implements IActionInvoker {
   }
 
   /**
-   * {@inheritDoc}
-   */
-  @Override
-  public IActionInvokeStatus runInBackground( final IAction actionBean, final String actionUser, final Map<String,
-    Serializable> params ) throws Exception {
-    prepareMap( params );
-    // call getStreamProvider, in addition to creating the provider, this method also adds values to the map that
-    // serialize the stream provider and make it possible to deserialize and recreate it for remote execution.
-    getStreamProvider( params );
-    return runInBackgroundImpl( actionBean, actionUser, params );
-  }
-
-  /**
-   * The concrete implementation of the "run in background" functionality. Implemented here to invoke the
-   * {@link IAction} locally.
+   * Invokes the provided {@link IAction} as the provided {@code actionUser}.
    *
    * @param actionBean the {@link IAction} being invoked
    * @param actionUser The user invoking the {@link IAction}
@@ -158,8 +162,14 @@ public class DefaultActionInvoker implements IActionInvoker {
    *
    * @throws Exception when the {@code IAction} cannot be invoked for some reason.
    */
-  protected IActionInvokeStatus runInBackgroundImpl( final IAction actionBean, final String actionUser, final Map<String, Serializable> params ) throws Exception {
-    return runInBackgroundLocally( actionBean, actionUser, params );
+  @Override
+  public IActionInvokeStatus runInBackground( final IAction actionBean, final String actionUser, final
+    Map<String, Serializable> params ) throws Exception {
+    prepareMap( params );
+    // call getStreamProvider, in addition to creating the provider, this method also adds values to the map that
+    // serialize the stream provider and make it possible to deserialize and recreate it for remote execution.
+    getStreamProvider( params );
+    return runInBackgroundImpl( actionBean, actionUser, params );
   }
 
   /**
@@ -173,8 +183,7 @@ public class DefaultActionInvoker implements IActionInvoker {
    *
    * @throws Exception when the {@code IAction} cannot be invoked for some reason.
    */
-  @Override
-  public final IActionInvokeStatus runInBackgroundLocally( final IAction actionBean, final String actionUser, final
+  protected IActionInvokeStatus runInBackgroundImpl( final IAction actionBean, final String actionUser, final
     Map<String, Serializable> params ) throws Exception {
 
     if ( actionBean == null || params == null ) {
@@ -192,13 +201,13 @@ public class DefaultActionInvoker implements IActionInvoker {
     }
 
     // remove the scheduling infrastructure properties
-    removeFromMap( params, ActionHelper.INVOKER_ACTIONCLASS  );
-    removeFromMap( params, ActionHelper.INVOKER_ACTIONID  );
-    removeFromMap( params, ActionHelper.INVOKER_ACTIONUSER  );
+    removeFromMap( params, ActionUtil.INVOKER_ACTIONCLASS  );
+    removeFromMap( params, ActionUtil.INVOKER_ACTIONID  );
+    removeFromMap( params, ActionUtil.INVOKER_ACTIONUSER  );
     // build the stream provider
     final IBackgroundExecutionStreamProvider streamProvider = getStreamProvider( params );
-    removeFromMap( params, ActionHelper.INVOKER_STREAMPROVIDER  );
-    removeFromMap( params, ActionHelper.INVOKER_UIPASSPARAM  );
+    removeFromMap( params, ActionUtil.INVOKER_STREAMPROVIDER  );
+    removeFromMap( params, ActionUtil.INVOKER_UIPASSPARAM  );
 
     final ActionRunner actionBeanRunner = new ActionRunner( actionBean, actionUser, params, streamProvider );
     final ActionInvokeStatus status = new ActionInvokeStatus();

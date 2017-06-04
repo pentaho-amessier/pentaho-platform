@@ -20,6 +20,7 @@ package org.pentaho.platform.plugin.action;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.pentaho.platform.api.action.ActionInvocationException;
 import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.action.IPostProcessingAction;
 import org.pentaho.platform.api.action.IStreamingAction;

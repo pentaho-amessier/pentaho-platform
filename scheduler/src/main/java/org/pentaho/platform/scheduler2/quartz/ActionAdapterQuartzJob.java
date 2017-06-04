@@ -32,6 +32,7 @@ import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.engine.security.SecurityHelper;
 import org.pentaho.platform.scheduler2.blockout.BlockoutAction;
 import org.pentaho.platform.scheduler2.messsages.Messages;
+import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.StringUtil;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
@@ -121,15 +122,15 @@ public class ActionAdapterQuartzJob implements Job {
     if ( actionInvoker == null ) {
       throw new LoggingJobExecutionException( Messages.getInstance().getErrorString(
         "ActionAdapterQuartzJob.ERROR_0002_FAILED_TO_CREATE_ACTION", //$NON-NLS-1$
-        getActionIdentifier( null, actionClassName, actionId ) ) );
+        getActionIdentifier( null, actionClassName, actionId ), StringUtil.getMapAsPrettyString( params ) ) );
     }
 
     // Instantiate the requested IAction bean
-    final IAction actionBean = (IAction) actionInvoker.createActionBean( actionClassName, actionId );
+    final IAction actionBean = (IAction) ActionUtil.createActionBean( actionClassName, actionId );
     if ( actionBean == null ) {
       throw new LoggingJobExecutionException( Messages.getInstance().getErrorString(
         "ActionAdapterQuartzJob.ERROR_0002_FAILED_TO_CREATE_ACTION", //$NON-NLS-1$
-        getActionIdentifier( actionBean, actionClassName, actionId ) ) );
+        getActionIdentifier( actionBean, actionClassName, actionId ), StringUtil.getMapAsPrettyString( params ) ) );
     }
 
     // Invoke the action and get the status of the invocation
@@ -140,7 +141,7 @@ public class ActionAdapterQuartzJob implements Job {
       if ( log.isWarnEnabled() ) {
         log.warn( Messages.getInstance().getErrorString(
           "ActionAdapterQuartzJob.WARN_0002_NO_STATUS", //$NON-NLS-1$
-          getActionIdentifier( actionBean, actionClassName, actionId  ) ) );
+          getActionIdentifier( actionBean, actionClassName, actionId  ), StringUtil.getMapAsPrettyString( params )  ) );
       }
       return;
     }

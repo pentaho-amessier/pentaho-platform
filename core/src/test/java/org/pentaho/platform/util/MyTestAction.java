@@ -15,25 +15,18 @@
  * Copyright (c) 2017 Pentaho Corporation..  All rights reserved.
  */
 
-package org.pentaho.platform.api.action;
+package org.pentaho.platform.util;
+
+import org.pentaho.platform.api.action.IAction;
 
 /**
- * An API for the object representation of action invocation status, allows us to pass back status
- * of action invocation, whether any exceptions occurred during invocation and whether the action
- * needs to be retired.
+ * A no-op test implementation of {@link IAction}
  */
-public interface IActionInvokeStatus {
+public class MyTestAction implements IAction {
 
-  /**
-   * Returns true if the  {@link IAction} that was just invoked needs to be resubmitted. Used for scheduling purposes
-   * only.
-   * @return true if the  {@link IAction} that was just invoked needs to be resubmitted and false otherwise
-   */
-  boolean requiresUpdate();
+  public MyTestAction() { }
 
-  /**
-   * Returns a {@link Throwable} instance, if any occurred when the {@link IAction} was being invoked.
-   * @return a {@link Throwable} instance, if any occurred when the {@link IAction} was being invoked
-   */
-  Throwable getThrowable();
+  public void execute() throws Exception {
+    // do nothing
+  }
 }

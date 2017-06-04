@@ -22,14 +22,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.enunciate.jaxrs.ResponseCode;
 import org.codehaus.enunciate.jaxrs.StatusCodes;
+import org.pentaho.platform.api.action.ActionInvocationException;
 import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
-import org.pentaho.platform.plugin.action.ActionHelper;
 import org.pentaho.platform.plugin.action.ActionParams;
+import org.pentaho.platform.plugin.action.DefaultActionInvoker;
 import org.pentaho.platform.plugin.action.messages.Messages;
+import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.StringUtil;
 
 import javax.ws.rs.Consumes;
@@ -37,11 +39,11 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
@@ -76,9 +78,9 @@ public class ActionResource {
     }
   )
   public Response runInBackground(
-    @QueryParam( "actionId" ) String actionId,
-    @QueryParam( "actionClass" ) String actionClass,
-    @QueryParam( "user" ) String user,
+    @QueryParam( ActionUtil.INVOKER_ACTIONID ) String actionId,
+    @QueryParam( ActionUtil.INVOKER_ACTIONCLASS ) String actionClass,
+    @QueryParam( ActionUtil.INVOKER_ACTIONUSER ) String user,
     final String actionParams ) {
 
     executorService.submit( createRunnable( actionId, actionClass, user, actionParams ) );
@@ -96,7 +98,7 @@ public class ActionResource {
    * @return a {@link RunnableAction} that creates the {@link IAction} and invokes it
    */
   protected RunnableAction createRunnable( final String actionId, final String actionClass, final String user, final
-  String actionParams ) {
+    String actionParams ) {
     return new RunnableAction( this, actionId, actionClass, user, actionParams );
   }
 
@@ -108,21 +110,25 @@ public class ActionResource {
     return PentahoSystem.get( IActionInvoker.class, "IActionInvoker", PentahoSessionHolder.getSession() );
   }
 
+  DefaultActionInvoker getDefaultActionInvoker() {
+    return new DefaultActionInvoker();
+  }
+
   /**
    * A {@link Runnable} implementation that creates the {@link IAction} and invokes it.
    */
   static class RunnableAction implements Runnable {
 
-    private ActionResource resource;
-    private String actionId;
-    private String actionClass;
-    private String user;
-    private String actionParams;
+    protected ActionResource resource;
+    protected String actionId;
+    protected String actionClass;
+    protected String user;
+    protected String actionParams;
 
     RunnableAction() { }
 
     public RunnableAction( final ActionResource resource, final String actionId, final String actionClass, final
-    String user, final String actionParams ) {
+      String user, final String actionParams ) {
       this.resource = resource;
       this.actionClass = actionClass;
       this.actionId = actionId;
@@ -130,13 +136,23 @@ public class ActionResource {
       this.actionParams = actionParams;
     }
 
+    IAction createActionBean( final String actionClass, final String actionId ) throws Exception {
+      return ActionUtil.createActionBean( actionClass, actionId );
+    }
+
+    Map<String, Serializable> deserialize( final IAction action, final String actionParams )
+      throws IOException, ActionInvocationException {
+      return ActionParams.deserialize( action, ActionParams.fromJson( actionParams ) );
+    }
+
     public void run() {
       try {
-        final IActionInvoker actionInvoker = resource.getActionInvoker();
-        final IAction action = ActionHelper.createActionBean( actionClass, actionId );
-        final Map<String, Serializable> params = ActionParams.deserialize( action, ActionParams.fromJson( actionParams ) );
+        // instantiate the DefaultActionInvoker directly to force local invocation of the action
+        final IActionInvoker actionInvoker = resource.getDefaultActionInvoker();
+        final IAction action = createActionBean( actionClass, actionId );
+        final Map<String, Serializable> params = deserialize( action, actionParams );
 
-        final IActionInvokeStatus status = actionInvoker.runInBackgroundLocally( action, user, params );
+        final IActionInvokeStatus status = actionInvoker.runInBackground( action, user, params );
         if ( status.getThrowable() == null ) {
           logger.info( Messages.getInstance().getRunningInBgLocallySuccess( action.getClass().getName(), params ),
             status.getThrowable() );
@@ -149,6 +165,5 @@ public class ActionResource {
           ? actionId : actionClass ), actionParams ), thr );
       }
     }
-
   }
 }

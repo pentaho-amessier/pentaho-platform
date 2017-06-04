@@ -55,12 +55,6 @@ public class Messages extends MessagesBase {
   }
 
   public String getPostingToResource( final String actionIdentifier, final String actionParams ) {
-    /*String jsonParams = null;
-    try {
-      jsonParams = ActionParams.toJson( actionParams );
-    } catch ( final JsonProcessingException jpe ) {
-      logger.error( jpe.getLocalizedMessage() );
-    }*/
     return getString( "ActionInvoker.INFO_0003_POSTING_TO_RESOURCE", actionIdentifier, actionParams );
   }
 
@@ -68,17 +62,8 @@ public class Messages extends MessagesBase {
     return getString( "ActionInvoker.INFO_0004_RESOURCE_RESPONDED", url, responseCode );
   }
 
-  public String getRequiredParamMissing( final String actionClassNameKey, final String actionIdKey ) {
-    return getErrorString( "ActionInvoker.ERROR_0001_REQUIRED_PARAM_MISSING", //$NON-NLS-1$
-      actionClassNameKey, actionIdKey );
-  }
-
-  public String getFailedToCreateAction( final String actionIdentifier ) {
-    return getErrorString( "ActionInvoker.ERROR_0002_FAILED_TO_CREATE_ACTION", actionIdentifier );
-  }
-
-  public String getActionWrongType( final String actualType, final String expectedType ) {
-    return getErrorString( "ActionInvoker.ERROR_0003_ACTION_WRONG_TYPE", actualType, expectedType );
+  public String getNoEeLicense() {
+    return getErrorString( "ActionInvoker.ERROR_0001_NO_EE_LICENSE" );
   }
 
   public String getCantInvokeNullAction() {
@@ -98,7 +83,7 @@ public class Messages extends MessagesBase {
   }
 
   public String getMissingParamsCantReturnSp( final String paramList, final Map params ) {
-    return getErrorString( "ActionInvoker.ERROR_0009_MISSING_PARAMS_CANT_RETURN_SP", paramList, StringUtil
+    return getString( "ActionInvoker.WARN_0002_MISSING_PARAMS_CANT_RETURN_SP", paramList, StringUtil
       .getMapAsPrettyString( params ) );
   }
 
