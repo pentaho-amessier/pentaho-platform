@@ -25,6 +25,7 @@ import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.engine.IPluginManager;
 import org.pentaho.platform.api.engine.PluginBeanException;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
+import org.pentaho.platform.util.messages.Messages;
 
 public class ActionUtil {
 
