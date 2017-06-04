@@ -35,7 +35,6 @@ import org.pentaho.platform.engine.core.output.FileContentItem;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.engine.services.solution.ActionSequenceCompatibilityFormatter;
 import org.pentaho.platform.plugin.action.messages.Messages;
-import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.scheduler2.quartz.SchedulerOutputPathResolver;
 import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.beans.ActionHarness;
@@ -143,7 +142,7 @@ public class ActionRunner implements Callable<Boolean> {
       }
       actionParams.put( "outputStream", stream );
       // The lineage_id is only useful for the metadata and not needed at this level see PDI-10171
-      actionParams.remove( QuartzScheduler.RESERVEDMAPKEY_LINEAGE_ID );
+      actionParams.remove( ActionUtil.QUARTZ_LINEAGE_ID );
       actionHarness.setValues( actionParams );
     }
 
@@ -176,13 +175,13 @@ public class ActionRunner implements Callable<Boolean> {
 
   private void markContentAsGenerated( IPostProcessingAction actionBean ) {
     IUnifiedRepository repo = PentahoSystem.get( IUnifiedRepository.class );
-    String lineageId = (String) params.get( QuartzScheduler.RESERVEDMAPKEY_LINEAGE_ID );
+    String lineageId = (String) params.get( ActionUtil.QUARTZ_LINEAGE_ID );
     for ( IContentItem contentItem : actionBean.getActionOutputContents() ) {
       RepositoryFile sourceFile = getRepositoryFileSafe( repo, contentItem.getPath() );
       // add metadata if we have access and we have file
       if ( sourceFile != null ) {
         Map<String, Serializable> metadata = repo.getFileMetadata( sourceFile.getId() );
-        metadata.put( QuartzScheduler.RESERVEDMAPKEY_LINEAGE_ID, lineageId );
+        metadata.put( ActionUtil.QUARTZ_LINEAGE_ID, lineageId );
         repo.setFileMetadata( sourceFile.getId(), metadata );
       } else {
         String fileName = getFSFileNameSafe( contentItem );

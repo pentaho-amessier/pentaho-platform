@@ -24,7 +24,6 @@ import org.pentaho.platform.api.action.ActionInvocationException;
 import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
 import org.pentaho.platform.plugin.action.builtin.ActionSequenceAction;
-import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.web.http.api.resources.RepositoryFileStreamProvider;
 
@@ -48,8 +47,8 @@ public class DefaultActionInvokerTest {
   @Test
   public void runInBackgroundLocallyTest() throws Exception {
     Map<String, Serializable> testMap = new HashMap<>();
-    testMap.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, "one" );
-    testMap.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER, "two" );
+    testMap.put( ActionUtil.QUARTZ_ACTIONCLASS, "one" );
+    testMap.put( ActionUtil.QUARTZ_ACTIONUSER, "two" );
     IAction iaction = ActionUtil.createActionBean( ActionSequenceAction.class.getName(), null );
     ActionInvokeStatus actionInvokeStatus =
       (ActionInvokeStatus) defaultActionInvoker.runInBackground( iaction, "aUser", testMap );
@@ -59,8 +58,8 @@ public class DefaultActionInvokerTest {
   @Test
   public void runInBackgroundTest() throws Exception {
     Map<String, Serializable> testMap = new HashMap<>();
-    testMap.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, "one" );
-    testMap.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER, "two" );
+    testMap.put( ActionUtil.QUARTZ_ACTIONCLASS, "one" );
+    testMap.put( ActionUtil.QUARTZ_ACTIONUSER, "two" );
     IAction iaction = ActionUtil.createActionBean( ActionSequenceAction.class.getName(), null );
     ActionInvokeStatus actionInvokeStatus =
       (ActionInvokeStatus) defaultActionInvoker.runInBackground( iaction, "aUser", testMap );
