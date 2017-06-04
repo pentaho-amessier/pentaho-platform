@@ -45,8 +45,9 @@ public class DefaultActionInvoker implements IActionInvoker {
   private static final Log logger = LogFactory.getLog( DefaultActionInvoker.class );
 
   private static final Map<String, String> KEY_MAP;
+
   static {
-    KEY_MAP = new HashMap<String, String>( );
+    KEY_MAP = new HashMap<String, String>();
     KEY_MAP.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, ActionUtil.INVOKER_ACTIONCLASS );
     KEY_MAP.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER, ActionUtil.INVOKER_ACTIONUSER );
     KEY_MAP.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONID, ActionUtil.INVOKER_ACTIONID );
@@ -144,7 +145,6 @@ public class DefaultActionInvoker implements IActionInvoker {
    * which is perfectly ok for some {@link IAction} types.
    *
    * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
-   *
    * @return an instance of {@link IBackgroundExecutionStreamProvider}
    */
   private IBackgroundExecutionStreamProvider getStreamProvider( final Map<String, Serializable> params ) {
@@ -156,15 +156,13 @@ public class DefaultActionInvoker implements IActionInvoker {
    *
    * @param actionBean the {@link IAction} being invoked
    * @param actionUser The user invoking the {@link IAction}
-   * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
-   *
+   * @param params     the {@link Map} or parameters needed to invoke the {@link IAction}
    * @return the {@link IActionInvokeStatus} object containing information about the action invocation
-   *
    * @throws Exception when the {@code IAction} cannot be invoked for some reason.
    */
   @Override
   public IActionInvokeStatus runInBackground( final IAction actionBean, final String actionUser, final
-    Map<String, Serializable> params ) throws Exception {
+  Map<String, Serializable> params ) throws Exception {
     prepareMap( params );
     // call getStreamProvider, in addition to creating the provider, this method also adds values to the map that
     // serialize the stream provider and make it possible to deserialize and recreate it for remote execution.
@@ -177,14 +175,12 @@ public class DefaultActionInvoker implements IActionInvoker {
    *
    * @param actionBean the {@link IAction} being invoked
    * @param actionUser The user invoking the {@link IAction}
-   * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
-   *
+   * @param params     the {@link Map} or parameters needed to invoke the {@link IAction}
    * @return the {@link IActionInvokeStatus} object containing information about the action invocation
-   *
    * @throws Exception when the {@code IAction} cannot be invoked for some reason.
    */
   protected IActionInvokeStatus runInBackgroundImpl( final IAction actionBean, final String actionUser, final
-    Map<String, Serializable> params ) throws Exception {
+  Map<String, Serializable> params ) throws Exception {
 
     if ( actionBean == null || params == null ) {
       throw new ActionInvocationException( Messages.getInstance().getCantInvokeNullAction() );
@@ -201,13 +197,13 @@ public class DefaultActionInvoker implements IActionInvoker {
     }
 
     // remove the scheduling infrastructure properties
-    removeFromMap( params, ActionUtil.INVOKER_ACTIONCLASS  );
-    removeFromMap( params, ActionUtil.INVOKER_ACTIONID  );
-    removeFromMap( params, ActionUtil.INVOKER_ACTIONUSER  );
+    removeFromMap( params, ActionUtil.INVOKER_ACTIONCLASS );
+    removeFromMap( params, ActionUtil.INVOKER_ACTIONID );
+    removeFromMap( params, ActionUtil.INVOKER_ACTIONUSER );
     // build the stream provider
     final IBackgroundExecutionStreamProvider streamProvider = getStreamProvider( params );
-    removeFromMap( params, ActionUtil.INVOKER_STREAMPROVIDER  );
-    removeFromMap( params, ActionUtil.INVOKER_UIPASSPARAM  );
+    removeFromMap( params, ActionUtil.INVOKER_STREAMPROVIDER );
+    removeFromMap( params, ActionUtil.INVOKER_UIPASSPARAM );
 
     final ActionRunner actionBeanRunner = new ActionRunner( actionBean, actionUser, params, streamProvider );
     final ActionInvokeStatus status = new ActionInvokeStatus();

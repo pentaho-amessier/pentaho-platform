@@ -59,8 +59,8 @@ public class ActionRunner implements Callable<Boolean> {
   private String outputFilePath = null;
   private Object lock = new Object();
 
-  public ActionRunner( final IAction actionBean,  final String actionUser, final Map<String, Serializable> params, final
-    IBackgroundExecutionStreamProvider streamProvider ) {
+  public ActionRunner( final IAction actionBean, final String actionUser, final Map<String, Serializable> params, final
+  IBackgroundExecutionStreamProvider streamProvider ) {
     this.actionBean = actionBean;
     this.actionUser = actionUser;
     this.params = params;
@@ -72,14 +72,14 @@ public class ActionRunner implements Callable<Boolean> {
       return callImpl();
     } catch ( final Throwable t ) {
       // ensure that the main thread isn't blocked on lock
-      synchronized ( lock ) {
+      synchronized( lock ) {
         lock.notifyAll();
       }
 
       // We should not distinguish between checked and unchecked exceptions here. All job execution failures
       // should result in a rethrow of the exception
       throw new ActionInvocationException( Messages.getInstance().getActionFailedToExecute( actionBean //$NON-NLS-1$
-          .getClass().getName() ), t );
+        .getClass().getName() ), t );
     }
   }
 
@@ -132,7 +132,7 @@ public class ActionRunner implements Callable<Boolean> {
       if ( stream instanceof ISourcesStreamEvents ) {
         ( (ISourcesStreamEvents) stream ).addListener( new IStreamListener() {
           public void fileCreated( final String filePath ) {
-            synchronized ( lock ) {
+            synchronized( lock ) {
               outputFilePath = filePath;
               lock.notifyAll();
             }
@@ -153,7 +153,7 @@ public class ActionRunner implements Callable<Boolean> {
     }
 
     if ( waitForFileCreated ) {
-      synchronized ( lock ) {
+      synchronized( lock ) {
         if ( outputFilePath == null ) {
           lock.wait();
         }
@@ -198,6 +198,7 @@ public class ActionRunner implements Callable<Boolean> {
       return null;
     }
   }
+
   private String getFSFileNameSafe( IContentItem contentItem ) {
     if ( contentItem instanceof FileContentItem ) {
       return ( (FileContentItem) contentItem ).getFile().getName();

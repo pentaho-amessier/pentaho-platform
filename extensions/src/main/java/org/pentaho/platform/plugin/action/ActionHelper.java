@@ -20,7 +20,6 @@ package org.pentaho.platform.plugin.action;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
 import org.pentaho.platform.api.repository2.unified.RepositoryFile;
 import org.pentaho.platform.api.repository2.unified.data.simple.SimpleRepositoryFileData;
@@ -37,7 +36,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 /**
- * Helper methods related to the invocation of {@link IAction}s.
+ * Helper methods related to the invocation of {@link org.pentaho.platform.api.action.IAction}s.
  */
 public class ActionHelper {
 
@@ -46,10 +45,9 @@ public class ActionHelper {
   /**
    * Gets the stream provider from the {@code INVOKER_STREAMPROVIDER,} or builds it from the input file and output
    * dir {@link Map} values. Returns {@code null} if information needed to build the stream provider is not present in
-   * the {@code map}, which is perfectly ok for some {@link IAction} types.
+   * the {@code map}, which is perfectly ok for some {@link org.pentaho.platform.api.action.IAction} types.
    *
-   * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
-   *
+   * @param params the {@link Map} or parameters needed to invoke the {@link org.pentaho.platform.api.action.IAction}
    * @return a {@link IBackgroundExecutionStreamProvider} represented in the {@code params} {@link Map}
    */
   public static IBackgroundExecutionStreamProvider getStreamProvider( final Map<String, Serializable> params ) {
@@ -101,8 +99,8 @@ public class ActionHelper {
    * {@link Map}.
    *
    * @param actionParams a {@link Map} of parameters needed to send the email
-   * @param params a {@link Map} of parameter used to invoke the action
-   * @param filePath the path of the repository file that was generated when the action was invoked
+   * @param params       a {@link Map} of parameter used to invoke the action
+   * @param filePath     the path of the repository file that was generated when the action was invoked
    */
   public static void sendEmail( Map<String, Object> actionParams, Map<String, Serializable> params, String filePath ) {
     try {

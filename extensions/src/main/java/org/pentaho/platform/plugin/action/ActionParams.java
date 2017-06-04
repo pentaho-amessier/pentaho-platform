@@ -1,3 +1,20 @@
+/*!
+ * This program is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License, version 2.1 as published by the Free Software
+ * Foundation.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, you can obtain a copy at http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+ * or from the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ *
+ * Copyright (c) 2017 Pentaho Corporation.  All rights reserved.
+ */
+
 package org.pentaho.platform.plugin.action;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,7 +39,7 @@ import java.util.Map;
  * This is a POJO representing the parameters coming in to the ActionResource.runInBackground()
  * endpoint. The incoming json fromatted params should be converted and used in the runInBackground method
  * singnature (TODO: investigate using the jax rs entity body reader customization for this).
- *
+ * <p>
  * This class provides logic to serialize and de-serialize the action parameters.
  * TODO: in the future investigate replacing this class with generic platform API if any.
  */
@@ -67,9 +84,9 @@ public class ActionParams {
   /**
    * Private constructor used by the class only.
    *
-   * @param serializedParams the params that were serialized in the action request.
-   * @param unserializedParams the params that were not serialized and potentially need
-   *                           to be recreated to execute the action.
+   * @param serializedParams   the params that were serialized in the action request.
+   * @param unserializedParams the params that were not serialized and potentially need to be recreated to execute the
+   *                           action.
    */
   private ActionParams( final String serializedParams, List<String> unserializedParams ) {
     this.serializedParams = serializedParams;
@@ -82,10 +99,10 @@ public class ActionParams {
    * @param action the action.
    * @param params the parameters
    * @return an ActionParams instance.
-   *
    * @throws ActionInvocationException when serialization fails for any reason.
    */
-  public static ActionParams serialize( final IAction action, final Map<String, Serializable> params ) throws ActionInvocationException {
+  public static ActionParams serialize( final IAction action, final Map<String, Serializable> params )
+    throws ActionInvocationException {
 
     // since we end up filtering the un-serialized params, use a clone
     //
@@ -104,12 +121,11 @@ public class ActionParams {
    *
    * @param action the action these params belong too.
    * @param params the ActionParams instance to deserialize.
-   *
    * @return a map of parameters, with String keys and values that are all serializable.
-   *
    * @throws ActionInvocationException if anything goes wrong.
    */
-  public static Map<String, Serializable> deserialize( final IAction action, final ActionParams params ) throws ActionInvocationException {
+  public static Map<String, Serializable> deserialize( final IAction action, final ActionParams params )
+    throws ActionInvocationException {
     try {
       Map<String, Serializable> res = deserializeParams( params.getSerializedParams() );
       // at this point recreate the unserialized parameters, as needed
@@ -122,13 +138,13 @@ public class ActionParams {
     }
   }
 
- /**
-  * A conversion to a json string form an ActionParams instance.
-  *
-  * @param params the instance to convert from.
-  * @return a json formatted String.
-  * @throws JsonProcessingException if the conversion fails.
-  */
+  /**
+   * A conversion to a json string form an ActionParams instance.
+   *
+   * @param params the instance to convert from.
+   * @return a json formatted String.
+   * @throws JsonProcessingException if the conversion fails.
+   */
   public static String toJson( final ActionParams params ) throws JsonProcessingException {
     return new ObjectMapper().writeValueAsString( params );
   }
@@ -148,8 +164,8 @@ public class ActionParams {
    * Recreates the un-serializable params of an action. A inverse sibling of filter().
    *
    * @param paramsToRecreate a list with the names of the un-serializable parameters.
-   * @param res the current map parameters where the un-serialized parameters will be recreated and
-   *            added to.
+   * @param res              the current map parameters where the un-serialized parameters will be recreated and added
+   *                         to.
    */
   private static void recreate( final List<String> paramsToRecreate, final Map<String, Serializable> res ) {
     for ( final String param : paramsToRecreate ) {
@@ -211,13 +227,13 @@ public class ActionParams {
     return res;
   }
 
-    /**
-     * Convenience method for serializing a params map.
-     *
-     * @param params the parameter map.
-     * @return the serialized representation of the map.
-     * @throws JsonProcessingException if anything goes wrong.
-     */
+  /**
+   * Convenience method for serializing a params map.
+   *
+   * @param params the parameter map.
+   * @return the serialized representation of the map.
+   * @throws JsonProcessingException if anything goes wrong.
+   */
   private static String serializeParams( final Map<String, Serializable> params ) throws JsonProcessingException {
     final ObjectMapper mapper = new ObjectMapper();
     // this mapper configuration is required to enable de-serialization.

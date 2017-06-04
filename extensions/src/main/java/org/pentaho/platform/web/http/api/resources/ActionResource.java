@@ -59,15 +59,14 @@ public class ActionResource {
   /**
    * Runs the action defined within the provided json feed in the background asynchronously.
    *
-   * @param actionId the action id, if applicable
-   * @param actionClass the action class name, if applicable
-   * @param user the user invoking the action
+   * @param actionId     the action id, if applicable
+   * @param actionClass  the action class name, if applicable
+   * @param user         the user invoking the action
    * @param actionParams the action parameters needed to instantiate and invoke the action
-   *
    * @return a {@link Response}
    */
   @POST
-  @Path ( "/runInBackground" )
+  @Path( "/runInBackground" )
   @Consumes( { TEXT_PLAIN } )
   @StatusCodes(
     {
@@ -90,20 +89,20 @@ public class ActionResource {
   /**
    * Returns a {@link RunnableAction} that creates the {@link IAction} and invokes it.
    *
-   * @param actionId the action id, if applicable
-   * @param actionClass the action class name, if applicable
-   * @param user the user invoking the action
+   * @param actionId     the action id, if applicable
+   * @param actionClass  the action class name, if applicable
+   * @param user         the user invoking the action
    * @param actionParams the action parameters needed to instantiate and invoke the action
-   *
    * @return a {@link RunnableAction} that creates the {@link IAction} and invokes it
    */
   protected RunnableAction createRunnable( final String actionId, final String actionClass, final String user, final
-    String actionParams ) {
+  String actionParams ) {
     return new RunnableAction( this, actionId, actionClass, user, actionParams );
   }
 
   /**
    * Returns the appropriate {@link IActionInvoker}.
+   *
    * @return the {@link IActionInvoker}
    */
   IActionInvoker getActionInvoker() {
@@ -125,10 +124,11 @@ public class ActionResource {
     protected String user;
     protected String actionParams;
 
-    RunnableAction() { }
+    RunnableAction() {
+    }
 
     public RunnableAction( final ActionResource resource, final String actionId, final String actionClass, final
-      String user, final String actionParams ) {
+    String user, final String actionParams ) {
       this.resource = resource;
       this.actionClass = actionClass;
       this.actionId = actionId;
@@ -161,8 +161,9 @@ public class ActionResource {
             status.getThrowable() );
         }
       } catch ( final Throwable thr ) {
-        logger.error( Messages.getInstance().getCouldNotInvokeActionLocallyUnexpected( ( StringUtil.isEmpty( actionClass )
-          ? actionId : actionClass ), actionParams ), thr );
+        logger
+          .error( Messages.getInstance().getCouldNotInvokeActionLocallyUnexpected( ( StringUtil.isEmpty( actionClass )
+            ? actionId : actionClass ), actionParams ), thr );
       }
     }
   }

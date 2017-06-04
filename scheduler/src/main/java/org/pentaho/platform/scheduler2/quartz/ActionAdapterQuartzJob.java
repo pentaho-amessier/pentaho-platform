@@ -48,7 +48,7 @@ import java.util.concurrent.Callable;
 
 /**
  * A Quartz job that is responsible for executing the {@link IAction} referred to in the job context.
- * 
+ *
  * @author aphillips
  */
 public class ActionAdapterQuartzJob implements Job {
@@ -91,7 +91,7 @@ public class ActionAdapterQuartzJob implements Job {
    */
   @Deprecated
   protected void invokeAction( final IAction actionBean, final String actionUser, final JobExecutionContext context,
-    final Map<String, Serializable> params ) throws Exception {
+                               final Map<String, Serializable> params ) throws Exception {
 
     final JobDataMap jobDataMap = context.getMergedJobDataMap();
     final String actionClass = jobDataMap.getString( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS );
@@ -105,12 +105,12 @@ public class ActionAdapterQuartzJob implements Job {
    * the provided {@code actionUser}. If the {@code IAction} execution fails as-is, the scheduler attempts to re-create
    * the job that will try to invoke the {@link IAction} again.
    *
-   * @param actionClassName The class name of the {@link IAction} bean; used as a backup, if the {@code actionId} is
-   *                        not available or vald
-   * @param actionId The bean id of the {@link IAction} requested to be invoked.
-   * @param actionUser The user invoking the {@link IAction}
-   * @param context the {@code JobExecutionContext}
-   * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
+   * @param actionClassName The class name of the {@link IAction} bean; used as a backup, if the {@code actionId} is not
+   *                        available or vald
+   * @param actionId        The bean id of the {@link IAction} requested to be invoked.
+   * @param actionUser      The user invoking the {@link IAction}
+   * @param context         the {@code JobExecutionContext}
+   * @param params          the {@link Map} or parameters needed to invoke the {@link IAction}
    * @throws Exception when the {@code IAction} cannot be invoked for some reason.
    */
   protected void invokeAction( final String actionClassName, final String actionId, final String actionUser, final
@@ -141,7 +141,7 @@ public class ActionAdapterQuartzJob implements Job {
       if ( log.isWarnEnabled() ) {
         log.warn( Messages.getInstance().getErrorString(
           "ActionAdapterQuartzJob.WARN_0002_NO_STATUS", //$NON-NLS-1$
-          getActionIdentifier( actionBean, actionClassName, actionId  ), StringUtil.getMapAsPrettyString( params )  ) );
+          getActionIdentifier( actionBean, actionClassName, actionId ), StringUtil.getMapAsPrettyString( params ) ) );
       }
       return;
     }
@@ -208,7 +208,7 @@ public class ActionAdapterQuartzJob implements Job {
             QuartzJobKey jobKey = QuartzJobKey.parse( context.getJobDetail().getName() );
             String jobName = jobKey.getJobName();
             org.pentaho.platform.api.scheduler2.Job j =
-                scheduler.createJob( jobName, iaction, jobParams, trigger, streamProvider );
+              scheduler.createJob( jobName, iaction, jobParams, trigger, streamProvider );
             log.warn( "New Job: " + j.getJobId() + " created" );
             return null;
           }

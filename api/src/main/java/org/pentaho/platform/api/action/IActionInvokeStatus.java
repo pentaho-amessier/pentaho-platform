@@ -27,12 +27,14 @@ public interface IActionInvokeStatus {
   /**
    * Returns true if the  {@link IAction} that was just invoked needs to be resubmitted. Used for scheduling purposes
    * only.
+   *
    * @return true if the  {@link IAction} that was just invoked needs to be resubmitted and false otherwise
    */
   boolean requiresUpdate();
 
   /**
    * Returns a {@link Throwable} instance, if any occurred when the {@link IAction} was being invoked.
+   *
    * @return a {@link Throwable} instance, if any occurred when the {@link IAction} was being invoked
    */
   Throwable getThrowable();

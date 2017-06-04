@@ -24,7 +24,8 @@ import org.pentaho.platform.api.action.IAction;
  */
 public class MyTestAction implements IAction {
 
-  public MyTestAction() { }
+  public MyTestAction() {
+  }
 
   public void execute() throws Exception {
     // do nothing

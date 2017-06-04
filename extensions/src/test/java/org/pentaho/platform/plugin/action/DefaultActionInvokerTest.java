@@ -32,91 +32,93 @@ import java.util.Map;
 
 public class DefaultActionInvokerTest {
 
-    DefaultActionInvoker defaultActionInvoker;
+  DefaultActionInvoker defaultActionInvoker;
 
-    @Before
-    public void initialize() {
-        defaultActionInvoker = new DefaultActionInvoker();
-    }
+  @Before
+  public void initialize() {
+    defaultActionInvoker = new DefaultActionInvoker();
+  }
 
-    @Test
-    public void removeFromMapHappyPathTest() throws Exception {
-        Map<String, String> testMap = new HashMap<>();
-        testMap.put("one", "one");
-        testMap.put("two", "two");
-        DefaultActionInvoker.removeFromMap(testMap, "one");
-        Assert.assertNull(testMap.get("one"));
-        Assert.assertEquals(testMap.get("two"), "two");
-    }
+  @Test
+  public void removeFromMapHappyPathTest() throws Exception {
+    Map<String, String> testMap = new HashMap<>();
+    testMap.put( "one", "one" );
+    testMap.put( "two", "two" );
+    DefaultActionInvoker.removeFromMap( testMap, "one" );
+    Assert.assertNull( testMap.get( "one" ) );
+    Assert.assertEquals( testMap.get( "two" ), "two" );
+  }
 
-    @Test
-    public void removeFromMapSecondHappyPathTest() throws Exception {
-        Map<String, String> testMap = new HashMap<>();
-        testMap.put("one", "one");
-        testMap.put("two", "two");
-        testMap.put("actionClass", "actionClass");
-        DefaultActionInvoker.removeFromMap(testMap, "actionClass");
-        Assert.assertNull(testMap.get("actionClass"));
-        Assert.assertEquals(testMap.get("two"), "two");
-    }
+  @Test
+  public void removeFromMapSecondHappyPathTest() throws Exception {
+    Map<String, String> testMap = new HashMap<>();
+    testMap.put( "one", "one" );
+    testMap.put( "two", "two" );
+    testMap.put( "actionClass", "actionClass" );
+    DefaultActionInvoker.removeFromMap( testMap, "actionClass" );
+    Assert.assertNull( testMap.get( "actionClass" ) );
+    Assert.assertEquals( testMap.get( "two" ), "two" );
+  }
 
-    @Test
-    public void removeFromMapHappyPathMappedKeyTest() throws Exception {
-        Map<String, String> testMap = new HashMap<>();
-        testMap.put(QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, "one");
-        testMap.put("two", "two");
-        DefaultActionInvoker.removeFromMap(testMap, QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS);
-        Assert.assertNull(testMap.get(QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS));
-        Assert.assertEquals(testMap.get("two"), "two");
-    }
+  @Test
+  public void removeFromMapHappyPathMappedKeyTest() throws Exception {
+    Map<String, String> testMap = new HashMap<>();
+    testMap.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, "one" );
+    testMap.put( "two", "two" );
+    DefaultActionInvoker.removeFromMap( testMap, QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS );
+    Assert.assertNull( testMap.get( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS ) );
+    Assert.assertEquals( testMap.get( "two" ), "two" );
+  }
 
-    @Test
-    public void removeFromMapNullMapTest() throws Exception {
-        Map<String, String> testMap = null;
-        DefaultActionInvoker.removeFromMap(testMap, "one");
-        Assert.assertNull(testMap);
-    }
+  @Test
+  public void removeFromMapNullMapTest() throws Exception {
+    Map<String, String> testMap = null;
+    DefaultActionInvoker.removeFromMap( testMap, "one" );
+    Assert.assertNull( testMap );
+  }
 
-    @Test
-    public void prepareMapNullTest() throws Exception {
-        Map<String, Serializable> testMap = null;
-        defaultActionInvoker.prepareMap(testMap);
-        Assert.assertNull(testMap);
-    }
+  @Test
+  public void prepareMapNullTest() throws Exception {
+    Map<String, Serializable> testMap = null;
+    defaultActionInvoker.prepareMap( testMap );
+    Assert.assertNull( testMap );
+  }
 
-    @Test
-    public void prepareMapTest() throws Exception {
-        Map<String, Serializable> testMap = new HashMap<>();
-        testMap.put(QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, "one");
-        testMap.put(QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER, "two");
-        defaultActionInvoker.prepareMap(testMap);
-        Assert.assertEquals(testMap.get(QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS), null);
-        Assert.assertEquals(testMap.get(QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER), null);
-    }
+  @Test
+  public void prepareMapTest() throws Exception {
+    Map<String, Serializable> testMap = new HashMap<>();
+    testMap.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, "one" );
+    testMap.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER, "two" );
+    defaultActionInvoker.prepareMap( testMap );
+    Assert.assertEquals( testMap.get( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS ), null );
+    Assert.assertEquals( testMap.get( QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER ), null );
+  }
 
-    @Test
-    public void runInBackgroundLocallyTest() throws Exception {
-        Map<String, Serializable> testMap = new HashMap<>();
-        testMap.put(QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, "one");
-        testMap.put(QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER, "two");
-        IAction iaction = ActionUtil.createActionBean(ActionSequenceAction.class.getName(), null);
-        ActionInvokeStatus actionInvokeStatus = (ActionInvokeStatus) defaultActionInvoker.runInBackground(iaction, "aUser", testMap);
-        Assert.assertFalse(actionInvokeStatus.requiresUpdate());
-    }
+  @Test
+  public void runInBackgroundLocallyTest() throws Exception {
+    Map<String, Serializable> testMap = new HashMap<>();
+    testMap.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, "one" );
+    testMap.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER, "two" );
+    IAction iaction = ActionUtil.createActionBean( ActionSequenceAction.class.getName(), null );
+    ActionInvokeStatus actionInvokeStatus =
+      (ActionInvokeStatus) defaultActionInvoker.runInBackground( iaction, "aUser", testMap );
+    Assert.assertFalse( actionInvokeStatus.requiresUpdate() );
+  }
 
-    @Test
-    public void runInBackgroundTest() throws Exception {
-        Map<String, Serializable> testMap = new HashMap<>();
-        testMap.put(QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, "one");
-        testMap.put(QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER, "two");
-        IAction iaction = ActionUtil.createActionBean(ActionSequenceAction.class.getName(), null);
-        ActionInvokeStatus actionInvokeStatus = (ActionInvokeStatus) defaultActionInvoker.runInBackground(iaction, "aUser", testMap);
-        Assert.assertFalse(actionInvokeStatus.requiresUpdate());
-    }
+  @Test
+  public void runInBackgroundTest() throws Exception {
+    Map<String, Serializable> testMap = new HashMap<>();
+    testMap.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, "one" );
+    testMap.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER, "two" );
+    IAction iaction = ActionUtil.createActionBean( ActionSequenceAction.class.getName(), null );
+    ActionInvokeStatus actionInvokeStatus =
+      (ActionInvokeStatus) defaultActionInvoker.runInBackground( iaction, "aUser", testMap );
+    Assert.assertFalse( actionInvokeStatus.requiresUpdate() );
+  }
 
-    @Test(expected=ActionInvocationException.class)
-    public void runInBackgroundLocallyWithNullsThrowsExceptionTest() throws Exception {
-        defaultActionInvoker.runInBackground(null, "aUser", null);
-    }
+  @Test( expected = ActionInvocationException.class )
+  public void runInBackgroundLocallyWithNullsThrowsExceptionTest() throws Exception {
+    defaultActionInvoker.runInBackground( null, "aUser", null );
+  }
 
 }

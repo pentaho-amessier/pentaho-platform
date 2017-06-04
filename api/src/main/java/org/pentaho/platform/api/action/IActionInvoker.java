@@ -30,11 +30,9 @@ public interface IActionInvoker {
    * Invokes the {@link IAction} {@code action} in the background.
    *
    * @param action The {@link IAction} to be invoked
-   * @param user The user invoking the action
+   * @param user   The user invoking the action
    * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
-   *
    * @return the {@link IActionInvokeStatus} object containing information about the action invocation
-   *
    * @throws Exception if the action cannot be run for some reason
    */
   IActionInvokeStatus runInBackground( IAction action, final String user, final Map<String, Serializable> params )

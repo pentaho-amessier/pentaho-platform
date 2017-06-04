@@ -49,15 +49,13 @@ public class ActionUtil {
    * Returns the {@link Class} that corresponds to the provides {@code actionClassName} and {@code beanId}.
    *
    * @param actionClassName the name of the class being resolved
-   * @param beanId the beanId of the class being resolved
-   *
+   * @param beanId          the beanId of the class being resolved
    * @return the {@link Class} that corresponds to the provides {@code actionClassName} and {@code beanId}
-   *
    * @throws PluginBeanException when the plugin required to resolve the bean class from the {@code beanId} cannot be
-   * created
-   * @throws Exception when the required parameters are not provided
+   *                             created
+   * @throws Exception           when the required parameters are not provided
    */
-  static Class<?> resolveActionClass( final String actionClassName, final String beanId  ) throws
+  static Class<?> resolveActionClass( final String actionClassName, final String beanId ) throws
     PluginBeanException, ActionInvocationException {
 
     Class<?> clazz = null;
@@ -101,8 +99,7 @@ public class ActionUtil {
    * Returns an instance of {@link IAction} created from the provided parameters.
    *
    * @param actionClassName the name of the class being resolved
-   * @param actionId the is of the action which corresponds to some bean id
-   *
+   * @param actionId        the is of the action which corresponds to some bean id
    * @return {@link IAction} created from the provided parameters.
    * @throws Exception when the {@link IAction} cannot be created for some reason
    */

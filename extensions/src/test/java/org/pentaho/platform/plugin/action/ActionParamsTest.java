@@ -30,12 +30,12 @@ import java.util.Map;
 import java.util.Random;
 
 public class ActionParamsTest {
-  private Map<String,Serializable> buildSample() {
-    final Map<String,Serializable> res = new HashMap<>( );
-    for (int i = 0; i < 10; i++ ) {
+  private Map<String, Serializable> buildSample() {
+    final Map<String, Serializable> res = new HashMap<>();
+    for ( int i = 0; i < 10; i++ ) {
       final String keyPostFix = String.valueOf( i );
 
-      switch ( i ) {
+      switch( i ) {
         case 0:
         case 2:
           res.put( "int-" + keyPostFix, i );
@@ -43,24 +43,24 @@ public class ActionParamsTest {
 
         case 1:
         case 3:
-          res.put( "string-" + keyPostFix , String.valueOf( i ) );
+          res.put( "string-" + keyPostFix, String.valueOf( i ) );
           break;
 
         case 4:
         case 6:
-          final HashMap<String,Serializable> sub = new HashMap<>( );
-          res.put( "map-" + keyPostFix , sub );
+          final HashMap<String, Serializable> sub = new HashMap<>();
+          res.put( "map-" + keyPostFix, sub );
 
-          for ( int j = 1000; sub.size() < new Random().nextInt( 10 ) ; j += j ) {
-            sub.put( "sub-map-" + keyPostFix, new Random(  ).nextLong() );
+          for ( int j = 1000; sub.size() < new Random().nextInt( 10 ); j += j ) {
+            sub.put( "sub-map-" + keyPostFix, new Random().nextLong() );
           }
           break;
 
         case 5:
         case 7:
-          final Date date = new Date( new Random(  ).nextLong() );
+          final Date date = new Date( new Random().nextLong() );
           final DateFormat dateFormat = DateFormat.getDateInstance();
-          final String formatted = dateFormat.format(date);
+          final String formatted = dateFormat.format( date );
           res.put( "date-" + keyPostFix, date );
           res.put( "date-formatted-" + keyPostFix, formatted );
           break;
@@ -86,8 +86,10 @@ public class ActionParamsTest {
     final Map<String, Serializable> params2 = buildSample();
     final IAction dummyAction = new ActionParamsTestAction();
 
-    Assert.assertEquals( ActionParams.serialize( dummyAction, params1 ), ActionParams.serialize( dummyAction, params1 ) );
-    Assert.assertNotEquals( ActionParams.serialize( dummyAction, params1 ), ActionParams.serialize( dummyAction, params2 ) );
+    Assert
+      .assertEquals( ActionParams.serialize( dummyAction, params1 ), ActionParams.serialize( dummyAction, params1 ) );
+    Assert.assertNotEquals( ActionParams.serialize( dummyAction, params1 ),
+      ActionParams.serialize( dummyAction, params2 ) );
   }
 
   @Test
@@ -96,7 +98,7 @@ public class ActionParamsTest {
     final IAction dummyAction = new ActionParamsTestAction();
 
     final ActionParams serializedParams = ActionParams.serialize( dummyAction, expected );
-    final Map<String, Serializable> actual =  ActionParams.deserialize( dummyAction, serializedParams );
+    final Map<String, Serializable> actual = ActionParams.deserialize( dummyAction, serializedParams );
 
     Assert.assertTrue( expected.equals( actual ) );
   }
@@ -127,7 +129,8 @@ public class ActionParamsTest {
 
     Assert.assertTrue( actionParams.getParamsToRecreate().contains( ActionUtil.INVOKER_STREAMPROVIDER ) );
     Assert.assertTrue( jsonManipulatedParams.getParamsToRecreate().contains( ActionUtil.INVOKER_STREAMPROVIDER ) );
-    Assert.assertFalse( actual.containsKey( ActionUtil.INVOKER_STREAMPROVIDER ) ); // at this point we don't recreate this param
+    Assert.assertFalse(
+      actual.containsKey( ActionUtil.INVOKER_STREAMPROVIDER ) ); // at this point we don't recreate this param
     Assert.assertFalse( actual.containsKey( ActionUtil.INVOKER_SESSION ) );
   }
 }

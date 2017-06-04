@@ -37,65 +37,65 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(PentahoSystem.class)
+@RunWith( PowerMockRunner.class )
+@PrepareForTest( PentahoSystem.class )
 public class ActionHelperTest {
 
-    private Map<String, Integer> testMap;
-    RepositoryFile repositoryFile;
+  private Map<String, Integer> testMap;
+  RepositoryFile repositoryFile;
 
-    @Before public void initialize() {
-        testMap = new HashMap<>();
-        testMap.put("one", 1);
-        testMap.put("two", 2);
+  @Before public void initialize() {
+    testMap = new HashMap<>();
+    testMap.put( "one", 1 );
+    testMap.put( "two", 2 );
 
-        repositoryFile = new RepositoryFile(12, "string", false, Boolean.FALSE, Boolean.FALSE, false, 12,
-                "path", null, null, false, "aOwner", "lockMessage", null, "EN-US", "title", "description",
-                "originalParentFolderPath", null, 12345L, "creatorId", null);
-    }
+    repositoryFile = new RepositoryFile( 12, "string", false, Boolean.FALSE, Boolean.FALSE, false, 12,
+      "path", null, null, false, "aOwner", "lockMessage", null, "EN-US", "title", "description",
+      "originalParentFolderPath", null, 12345L, "creatorId", null );
+  }
 
-    @Test
-    public void getStreamProviderNullTest() {
-        Map<String, Serializable> paramMap = new HashMap<>();
-        paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER, null);
-        IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = ActionHelper.getStreamProvider(paramMap);
-        Assert.assertNull(iBackgroundExecutionStreamProvider);
-    }
+  @Test
+  public void getStreamProviderNullTest() {
+    Map<String, Serializable> paramMap = new HashMap<>();
+    paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER, null );
+    IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = ActionHelper.getStreamProvider( paramMap );
+    Assert.assertNull( iBackgroundExecutionStreamProvider );
+  }
 
-    @Test
-    public void getStreamProviderNullWithInputFileTest() throws IOException {
-        Map<String, Serializable> paramMap = new HashMap<>();
-        File inputFile = new File("example.txt");
-        BufferedWriter output = new BufferedWriter(new FileWriter(inputFile));
-        output.write("TEST TEXT");
-        paramMap.put(ActionUtil.INVOKER_STREAMPROVIDER, null);
-        paramMap.put(ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE, inputFile);
-        IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = ActionHelper.getStreamProvider(paramMap);
-        Assert.assertNull(iBackgroundExecutionStreamProvider);
-    }
+  @Test
+  public void getStreamProviderNullWithInputFileTest() throws IOException {
+    Map<String, Serializable> paramMap = new HashMap<>();
+    File inputFile = new File( "example.txt" );
+    BufferedWriter output = new BufferedWriter( new FileWriter( inputFile ) );
+    output.write( "TEST TEXT" );
+    paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER, null );
+    paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE, inputFile );
+    IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = ActionHelper.getStreamProvider( paramMap );
+    Assert.assertNull( iBackgroundExecutionStreamProvider );
+  }
 
-    @Test
-    public void getStreamProviderWithInputAndOutputFileTest() throws IOException {
-        Map<String, Serializable> paramMap = new HashMap<>();
-        RepositoryFileStreamProvider repositoryFileStreamProvider = new RepositoryFileStreamProvider();
-        File inputFile = new File("example.txt");
-        BufferedWriter output = new BufferedWriter(new FileWriter(inputFile));
-        output.write("TEST TEXT");
-        paramMap.put(ActionUtil.INVOKER_STREAMPROVIDER, repositoryFileStreamProvider);
-        paramMap.put(ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE, inputFile);
-        paramMap.put(ActionUtil.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN, inputFile);
-        paramMap.put("autoCreateUniqueFilename", true);
-        IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = ActionHelper.getStreamProvider(paramMap);
-        Assert.assertEquals(iBackgroundExecutionStreamProvider, repositoryFileStreamProvider);
-    }
+  @Test
+  public void getStreamProviderWithInputAndOutputFileTest() throws IOException {
+    Map<String, Serializable> paramMap = new HashMap<>();
+    RepositoryFileStreamProvider repositoryFileStreamProvider = new RepositoryFileStreamProvider();
+    File inputFile = new File( "example.txt" );
+    BufferedWriter output = new BufferedWriter( new FileWriter( inputFile ) );
+    output.write( "TEST TEXT" );
+    paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER, repositoryFileStreamProvider );
+    paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE, inputFile );
+    paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN, inputFile );
+    paramMap.put( "autoCreateUniqueFilename", true );
+    IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = ActionHelper.getStreamProvider( paramMap );
+    Assert.assertEquals( iBackgroundExecutionStreamProvider, repositoryFileStreamProvider );
+  }
 
 
-    @Test
-    public void getStreamProviderTest() {
-        Map<String, Serializable> paramMap = new HashMap<>();
-        RepositoryFileStreamProvider repositoryFileStreamProvider = new RepositoryFileStreamProvider();
-        paramMap.put(ActionUtil.INVOKER_STREAMPROVIDER, repositoryFileStreamProvider);
-        IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = ActionHelper.getStreamProvider(paramMap);
-        Assert.assertEquals(repositoryFileStreamProvider, iBackgroundExecutionStreamProvider);
-    }
+  @Test
+  public void getStreamProviderTest() {
+    Map<String, Serializable> paramMap = new HashMap<>();
+    RepositoryFileStreamProvider repositoryFileStreamProvider = new RepositoryFileStreamProvider();
+    paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER, repositoryFileStreamProvider );
+    IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = ActionHelper.getStreamProvider( paramMap );
+    Assert.assertEquals( repositoryFileStreamProvider, iBackgroundExecutionStreamProvider );
+  }
 }

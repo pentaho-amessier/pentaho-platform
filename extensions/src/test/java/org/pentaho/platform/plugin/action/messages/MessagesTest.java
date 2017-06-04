@@ -42,9 +42,10 @@ public class MessagesTest {
     final Map<String, String> params = new HashMap<String, String>();
     params.put( "key1", "val1" );
     params.put( "key2", "val2" );
-    Assert.assertEquals( "Running action \"foo\" in background locally: Map = " + NL + "{" + NL + "    key1 = val1 java.lang"
-      + ".String" + NL + "    "  + "key2 = val2 java.lang.String" + NL + "} java.util.HashMap" + NL, messages
-      .getRunningInBackgroundLocally("foo", params ) );
+    Assert.assertEquals(
+      "Running action \"foo\" in background locally: Map = " + NL + "{" + NL + "    key1 = val1 java.lang"
+        + ".String" + NL + "    " + "key2 = val2 java.lang.String" + NL + "} java.util.HashMap" + NL, messages
+        .getRunningInBackgroundLocally( "foo", params ) );
   }
 
   @Test
@@ -78,7 +79,8 @@ public class MessagesTest {
 
   @Test
   public void testGetCantInvokeNullAction() {
-    Assert.assertEquals( "ActionInvoker.ERROR_0005 - Action is null, cannot invoke", messages.getCantInvokeNullAction() );
+    Assert
+      .assertEquals( "ActionInvoker.ERROR_0005 - Action is null, cannot invoke", messages.getCantInvokeNullAction() );
   }
 
   @Test
@@ -92,6 +94,7 @@ public class MessagesTest {
     Assert.assertEquals( "ActionInvoker.ERROR_0008 - Map is null, cannot return stream provider", messages
       .getMapNullCantReturnSp() );
   }
+
   @Test
   public void testGetMissingParamsCantReturnSp() {
 
@@ -100,7 +103,7 @@ public class MessagesTest {
     params.put( "key2", "val2" );
     Assert.assertEquals( "Parameters required to create the stream provider (foo) are not "
       + "available in the map: Map = " + NL + "{" + NL + "    key1 = val1 java.lang.String" + NL + "    key2 = val2 "
-        + "java.lang.String" + NL + "} java.util.HashMap" + NL, messages.getMissingParamsCantReturnSp( "foo", params ) );
+      + "java.lang.String" + NL + "} java.util.HashMap" + NL, messages.getMissingParamsCantReturnSp( "foo", params ) );
   }
 
   @Test

@@ -129,11 +129,11 @@ public class StringUtilTest {
     final Map testMap = getTestMap();
     final String output = StringUtil.getMapAsPrettyString( testMap );
 
-    final String expectedOutput = getExpectedPrettyMapOutput( );
+    final String expectedOutput = getExpectedPrettyMapOutput();
     Assert.assertEquals( expectedOutput, output );
   }
 
-  private String getExpectedPrettyMapOutput( ) {
+  private String getExpectedPrettyMapOutput() {
 
     final String NL = System.getProperty( "line.separator" );
     final StringBuilder expectedOutput = new StringBuilder();
@@ -141,15 +141,15 @@ public class StringUtilTest {
     expectedOutput.append( "{" ).append( NL );
     expectedOutput.append( "    " ).append( " =  java.lang.String" ).append( NL );
     expectedOutput.append( "    " ).append( "null" ).append( " =  java.lang.String" ).append( NL );
-    expectedOutput.append( "    " ).append( "Suzy").append( " = " ).append( "null" ).append( NL );
-    expectedOutput.append( "    " ).append( "John").append( " = " ).append( "Doe java.lang.String" ).append( NL );
-    expectedOutput.append( "    " ).append( "map").append( " = " ).append( NL );
+    expectedOutput.append( "    " ).append( "Suzy" ).append( " = " ).append( "null" ).append( NL );
+    expectedOutput.append( "    " ).append( "John" ).append( " = " ).append( "Doe java.lang.String" ).append( NL );
+    expectedOutput.append( "    " ).append( "map" ).append( " = " ).append( NL );
     expectedOutput.append( "    " ).append( "{" ).append( NL );
     expectedOutput.append( "        " ).append( "John" ).append( " = " ).append( "Doe java.lang.String" ).append( NL );
-    expectedOutput.append( "        " ).append( "testObj").append( " = " ).append( "someVar:testVar org.pentaho"
+    expectedOutput.append( "        " ).append( "testObj" ).append( " = " ).append( "someVar:testVar org.pentaho"
       + ".platform.util.StringUtilTest$TestObject" ).append( NL );
     expectedOutput.append( "    " ).append( "} java.util.TreeMap" ).append( NL );
-    expectedOutput.append( "    " ).append( "testObj2").append( " = " ).append( "someVar:testVar2 org.pentaho"
+    expectedOutput.append( "    " ).append( "testObj2" ).append( " = " ).append( "someVar:testVar2 org.pentaho"
       + ".platform.util.StringUtilTest$TestObject" );
     expectedOutput.append( NL ).append( "} java.util.HashMap" ).append( NL );
     return expectedOutput.toString();
@@ -173,10 +173,12 @@ public class StringUtilTest {
 
   static class TestObject {
     private String someVar;
-    TestObject ( final String someVar ) {
+
+    TestObject( final String someVar ) {
       this.someVar = someVar;
     }
-    public String toString () {
+
+    public String toString() {
       return "someVar:" + this.someVar;
     }
   }

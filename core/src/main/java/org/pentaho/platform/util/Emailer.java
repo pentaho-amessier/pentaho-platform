@@ -154,7 +154,7 @@ public class Emailer {
     props.put( "body", body );
   }
 
-  public String getEmailFromName () {
+  public String getEmailFromName() {
     return Messages.getInstance().getString( "emailFromName" ); //$NON-NLS-1$
   }
 

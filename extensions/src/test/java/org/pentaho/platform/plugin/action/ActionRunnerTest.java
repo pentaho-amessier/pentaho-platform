@@ -141,9 +141,9 @@ public class ActionRunnerTest {
     Map<String, Serializable> paramsMap = createMapWithUserLocale();
     IAction actionBeanSpy = Mockito.spy( new TestAction() );
     IBackgroundExecutionStreamProvider mockStreamProvider = Mockito.mock( IBackgroundExecutionStreamProvider.class );
-    when( mockStreamProvider.getInputStream() ).thenThrow( new Exception("something went wrong") );
+    when( mockStreamProvider.getInputStream() ).thenThrow( new Exception( "something went wrong" ) );
     ActionRunner actionRunner = new ActionRunner( actionBeanSpy, "actionUser", paramsMap, mockStreamProvider );
-    exception.expect(ActionInvocationException.class);
+    exception.expect( ActionInvocationException.class );
     actionRunner.call();
   }
 
