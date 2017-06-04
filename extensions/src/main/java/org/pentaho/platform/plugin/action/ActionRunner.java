@@ -37,6 +37,7 @@ import org.pentaho.platform.engine.services.solution.ActionSequenceCompatibility
 import org.pentaho.platform.plugin.action.messages.Messages;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.scheduler2.quartz.SchedulerOutputPathResolver;
+import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.beans.ActionHarness;
 import org.pentaho.platform.util.messages.LocaleHelper;
 
@@ -60,7 +61,7 @@ public class ActionRunner implements Callable<Boolean> {
   private Object lock = new Object();
 
   public ActionRunner( final IAction actionBean, final String actionUser, final Map<String, Serializable> params, final
-  IBackgroundExecutionStreamProvider streamProvider ) {
+    IBackgroundExecutionStreamProvider streamProvider ) {
     this.actionBean = actionBean;
     this.actionUser = actionUser;
     this.params = params;
@@ -72,7 +73,7 @@ public class ActionRunner implements Callable<Boolean> {
       return callImpl();
     } catch ( final Throwable t ) {
       // ensure that the main thread isn't blocked on lock
-      synchronized( lock ) {
+      synchronized ( lock ) {
         lock.notifyAll();
       }
 
@@ -132,7 +133,7 @@ public class ActionRunner implements Callable<Boolean> {
       if ( stream instanceof ISourcesStreamEvents ) {
         ( (ISourcesStreamEvents) stream ).addListener( new IStreamListener() {
           public void fileCreated( final String filePath ) {
-            synchronized( lock ) {
+            synchronized ( lock ) {
               outputFilePath = filePath;
               lock.notifyAll();
             }
@@ -153,12 +154,12 @@ public class ActionRunner implements Callable<Boolean> {
     }
 
     if ( waitForFileCreated ) {
-      synchronized( lock ) {
+      synchronized ( lock ) {
         if ( outputFilePath == null ) {
           lock.wait();
         }
       }
-      ActionHelper.sendEmail( actionParams, params, outputFilePath );
+      ActionUtil.sendEmail( actionParams, params, outputFilePath );
     }
     if ( actionBean instanceof IPostProcessingAction ) {
       closeContentOutputStreams( (IPostProcessingAction) actionBean );

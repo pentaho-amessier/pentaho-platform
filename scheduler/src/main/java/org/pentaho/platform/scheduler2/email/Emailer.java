@@ -26,7 +26,7 @@ import org.pentaho.platform.scheduler2.messsages.Messages;
 public class Emailer extends org.pentaho.platform.util.Emailer {
 
   @Override
-  public String getEmailFromName () {
+  public String getEmailFromName() {
     return Messages.getInstance().getString( "schedulerEmailFromName" ); //$NON-NLS-1$
   }
 

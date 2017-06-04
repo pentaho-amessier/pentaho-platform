@@ -32,6 +32,10 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 
@@ -89,5 +93,61 @@ public class ActionUtilTest {
   public void createActionBeanHappyPath() throws ActionInvocationException {
     IAction iaction = ActionUtil.createActionBean( MyTestAction.class.getName(), null );
     Assert.assertEquals( iaction.getClass(), MyTestAction.class );
+  }
+
+
+  @Test
+  public void removeFromMapHappyPathTest() throws Exception {
+    Map<String, String> testMap = new HashMap<>();
+    testMap.put( "one", "one" );
+    testMap.put( "two", "two" );
+    ActionUtil.removeFromMap( testMap, "one" );
+    Assert.assertNull( testMap.get( "one" ) );
+    Assert.assertEquals( testMap.get( "two" ), "two" );
+  }
+
+  @Test
+  public void removeFromMapSecondHappyPathTest() throws Exception {
+    Map<String, String> testMap = new HashMap<>();
+    testMap.put( "one", "one" );
+    testMap.put( "two", "two" );
+    testMap.put( "actionClass", "actionClass" );
+    ActionUtil.removeFromMap( testMap, "actionClass" );
+    Assert.assertNull( testMap.get( "actionClass" ) );
+    Assert.assertEquals( testMap.get( "two" ), "two" );
+  }
+
+  @Test
+  public void removeFromMapHappyPathMappedKeyTest() throws Exception {
+    Map<String, String> testMap = new HashMap<>();
+    testMap.put( ActionUtil.QUARTZ_ACTIONCLASS, "one" );
+    testMap.put( "two", "two" );
+    ActionUtil.removeFromMap( testMap, ActionUtil.QUARTZ_ACTIONCLASS );
+    Assert.assertNull( testMap.get(ActionUtil.QUARTZ_ACTIONCLASS ) );
+    Assert.assertEquals( testMap.get( "two" ), "two" );
+  }
+
+  @Test
+  public void removeFromMapNullMapTest() throws Exception {
+    Map<String, String> testMap = null;
+    ActionUtil.removeFromMap( testMap, "one" );
+    Assert.assertNull( testMap );
+  }
+
+  @Test
+  public void prepareMapNullTest() throws Exception {
+    Map<String, Serializable> testMap = null;
+    ActionUtil.prepareMap( testMap );
+    Assert.assertNull( testMap );
+  }
+
+  @Test
+  public void prepareMapTest() throws Exception {
+    Map<String, Serializable> testMap = new HashMap<>();
+    testMap.put( ActionUtil.QUARTZ_ACTIONCLASS, "one" );
+    testMap.put( ActionUtil.QUARTZ_ACTIONUSER, "two" );
+    ActionUtil.prepareMap( testMap );
+    Assert.assertEquals( testMap.get( ActionUtil.QUARTZ_ACTIONCLASS ), null );
+    Assert.assertEquals( testMap.get( ActionUtil.QUARTZ_ACTIONUSER ), null );
   }
 }

@@ -96,7 +96,7 @@ public class ActionResource {
    * @return a {@link RunnableAction} that creates the {@link IAction} and invokes it
    */
   protected RunnableAction createRunnable( final String actionId, final String actionClass, final String user, final
-  String actionParams ) {
+    String actionParams ) {
     return new RunnableAction( this, actionId, actionClass, user, actionParams );
   }
 
@@ -128,7 +128,7 @@ public class ActionResource {
     }
 
     public RunnableAction( final ActionResource resource, final String actionId, final String actionClass, final
-    String user, final String actionParams ) {
+      String user, final String actionParams ) {
       this.resource = resource;
       this.actionClass = actionClass;
       this.actionId = actionId;

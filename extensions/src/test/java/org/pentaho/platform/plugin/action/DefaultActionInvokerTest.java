@@ -22,10 +22,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.pentaho.platform.api.action.ActionInvocationException;
 import org.pentaho.platform.api.action.IAction;
+import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
 import org.pentaho.platform.plugin.action.builtin.ActionSequenceAction;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.util.ActionUtil;
+import org.pentaho.platform.web.http.api.resources.RepositoryFileStreamProvider;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,61 +43,6 @@ public class DefaultActionInvokerTest {
   @Before
   public void initialize() {
     defaultActionInvoker = new DefaultActionInvoker();
-  }
-
-  @Test
-  public void removeFromMapHappyPathTest() throws Exception {
-    Map<String, String> testMap = new HashMap<>();
-    testMap.put( "one", "one" );
-    testMap.put( "two", "two" );
-    DefaultActionInvoker.removeFromMap( testMap, "one" );
-    Assert.assertNull( testMap.get( "one" ) );
-    Assert.assertEquals( testMap.get( "two" ), "two" );
-  }
-
-  @Test
-  public void removeFromMapSecondHappyPathTest() throws Exception {
-    Map<String, String> testMap = new HashMap<>();
-    testMap.put( "one", "one" );
-    testMap.put( "two", "two" );
-    testMap.put( "actionClass", "actionClass" );
-    DefaultActionInvoker.removeFromMap( testMap, "actionClass" );
-    Assert.assertNull( testMap.get( "actionClass" ) );
-    Assert.assertEquals( testMap.get( "two" ), "two" );
-  }
-
-  @Test
-  public void removeFromMapHappyPathMappedKeyTest() throws Exception {
-    Map<String, String> testMap = new HashMap<>();
-    testMap.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, "one" );
-    testMap.put( "two", "two" );
-    DefaultActionInvoker.removeFromMap( testMap, QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS );
-    Assert.assertNull( testMap.get( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS ) );
-    Assert.assertEquals( testMap.get( "two" ), "two" );
-  }
-
-  @Test
-  public void removeFromMapNullMapTest() throws Exception {
-    Map<String, String> testMap = null;
-    DefaultActionInvoker.removeFromMap( testMap, "one" );
-    Assert.assertNull( testMap );
-  }
-
-  @Test
-  public void prepareMapNullTest() throws Exception {
-    Map<String, Serializable> testMap = null;
-    defaultActionInvoker.prepareMap( testMap );
-    Assert.assertNull( testMap );
-  }
-
-  @Test
-  public void prepareMapTest() throws Exception {
-    Map<String, Serializable> testMap = new HashMap<>();
-    testMap.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS, "one" );
-    testMap.put( QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER, "two" );
-    defaultActionInvoker.prepareMap( testMap );
-    Assert.assertEquals( testMap.get( QuartzScheduler.RESERVEDMAPKEY_ACTIONCLASS ), null );
-    Assert.assertEquals( testMap.get( QuartzScheduler.RESERVEDMAPKEY_ACTIONUSER ), null );
   }
 
   @Test
@@ -121,4 +72,49 @@ public class DefaultActionInvokerTest {
     defaultActionInvoker.runInBackground( null, "aUser", null );
   }
 
+
+  @Test
+  public void getStreamProviderNullTest() {
+    Map<String, Serializable> paramMap = new HashMap<>();
+    paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER, null );
+    IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = defaultActionInvoker.getStreamProvider( paramMap );
+    Assert.assertNull( iBackgroundExecutionStreamProvider );
+  }
+
+  @Test
+  public void getStreamProviderNullWithInputFileTest() throws IOException {
+    Map<String, Serializable> paramMap = new HashMap<>();
+    File inputFile = new File( "example.txt" );
+    BufferedWriter output = new BufferedWriter( new FileWriter( inputFile ) );
+    output.write( "TEST TEXT" );
+    paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER, null );
+    paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE, inputFile );
+    IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = defaultActionInvoker.getStreamProvider( paramMap );
+    Assert.assertNull( iBackgroundExecutionStreamProvider );
+  }
+
+  @Test
+  public void getStreamProviderWithInputAndOutputFileTest() throws IOException {
+    Map<String, Serializable> paramMap = new HashMap<>();
+    RepositoryFileStreamProvider repositoryFileStreamProvider = new RepositoryFileStreamProvider();
+    File inputFile = new File( "example.txt" );
+    BufferedWriter output = new BufferedWriter( new FileWriter( inputFile ) );
+    output.write( "TEST TEXT" );
+    paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER, repositoryFileStreamProvider );
+    paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE, inputFile );
+    paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN, inputFile );
+    paramMap.put( ActionUtil.INVOKER_AUTO_CREATE_UNIQUE_FILENAME, true );
+    IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = defaultActionInvoker.getStreamProvider( paramMap );
+    Assert.assertEquals( iBackgroundExecutionStreamProvider, repositoryFileStreamProvider );
+  }
+
+
+  @Test
+  public void getStreamProviderTest() {
+    Map<String, Serializable> paramMap = new HashMap<>();
+    RepositoryFileStreamProvider repositoryFileStreamProvider = new RepositoryFileStreamProvider();
+    paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER, repositoryFileStreamProvider );
+    IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = defaultActionInvoker.getStreamProvider( paramMap );
+    Assert.assertEquals( repositoryFileStreamProvider, iBackgroundExecutionStreamProvider );
+  }
 }
