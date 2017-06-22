@@ -54,10 +54,11 @@ public class WorkItemLifecyclePublisherTest {
     publisherMock.publish( workItemMock );
     // verify that createEvent is called correctly
     Mockito.verify( publisherMock, Mockito.times( 1 ) ).createEvent( workItemMock );
+    // verify that the publishEvent method is called as expected
     Mockito.verify( contextMock, Mockito.times( 1 ) ).publishEvent( eventMock );
 
-    // This isn't ideal, but the only way to verify that the correct listeners (which run in a separate thread) were
-    // invoked
+    // This isn't ideal, but the only way to verify that the correct listeners - those that are wired through spring
+    // (which run in a separate thread) were invoked
     Thread.sleep( 100 );
     Assert.assertTrue( LISTENER_A_CALLED );
     Assert.assertFalse( LISTENER_B_CALLED );
