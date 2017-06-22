@@ -17,7 +17,26 @@
 
 package org.pentaho.platform.core.workitem;
 
-import org.springframework.context.ApplicationEventPublisherAware;
+/**
+ * The public interface for publishing {@link WorkItem} {@link WorkItem.LifecyclePhase} changes.
+ */
+public interface IWorkItemLifecycleEventPublisher {
 
-public interface IWorkItemLifecycleEventPublisher extends ApplicationEventPublisherAware {
+
+  /**
+   * Publishes the change to the {@link WorkItem}'s {@link WorkItem.LifecyclePhase}.
+   *
+   * @param workItem the {@link WorkItem}
+   * @param phase    the {@link WorkItem.LifecyclePhase}
+   */
+  void publish( final WorkItem workItem, final WorkItem.LifecyclePhase phase );
+
+  /**
+   * Publishes the change to the {@link WorkItem}'s {@link WorkItem.LifecyclePhase}.
+   *
+   * @param workItem the {@link WorkItem}
+   * @param phase    the {@link WorkItem.LifecyclePhase}
+   * @param details  any details associated with the state change (example: error message, exception stack trace)
+   */
+  void publish( final WorkItem workItem, final WorkItem.LifecyclePhase phase, final String details );
 }

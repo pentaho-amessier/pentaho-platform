@@ -21,12 +21,15 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+/**
+ * A dummy listener used for testing purposes.
+ */
 @Component
 public class DummyListenerB {
 
   @EventListener
   @Async
-  public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent event) {
+  public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent event ) {
     WorkItemLifecyclePublisherTest.LISTENER_B_CALLED = true;
   }
 }
