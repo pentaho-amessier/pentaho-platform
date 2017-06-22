@@ -12,24 +12,24 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2017 Pentaho Corporation. All rights reserved.
+ * Copyright (c) 2017 Pentaho Corporation..  All rights reserved.
  */
 
-package org.pentaho.platform.core.workitem;
+package org.pentaho.platform.core.workitem.messages;
 
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
+import org.pentaho.platform.util.messages.MessagesBase;
 
-/**
- * A dummy listener used for testing purposes.
- */
-@Component
-public class DummyListenerA {
+public class Messages extends MessagesBase {
 
-  @EventListener
-  @Async
-  public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent event ) {
-    WorkItemLifecyclePublisherTest.LISTENER_A_CALLED = true;
+  private static final String BUNDLE_NAME = Messages.class.getPackage().getName() + ".messages"; //$NON-NLS-1$
+
+  private static Messages instance = new Messages();
+
+  private Messages() {
+    super( BUNDLE_NAME );
+  }
+
+  public static Messages getInstance() {
+    return instance;
   }
 }

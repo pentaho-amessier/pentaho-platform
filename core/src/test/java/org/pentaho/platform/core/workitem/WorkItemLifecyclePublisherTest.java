@@ -30,7 +30,9 @@ public class WorkItemLifecyclePublisherTest {
   private WorkItemLifecycleEventPublisher publisherMock = null;
   private WorkItem workItemMock = null;
   private String uid = "foo";
-  private String details = "foe";
+  private String workItemDetails = "foe";
+  private WorkItem.LifecyclePhase lifecyclePhase = WorkItem.LifecyclePhase.DISPATCHED;
+  private String eventDetails = "foe";
   private WorkItemLifecycleEvent eventMock = null;
 
   public static boolean LISTENER_A_CALLED = false;
@@ -43,17 +45,18 @@ public class WorkItemLifecyclePublisherTest {
     publisherMock = Mockito.spy( new WorkItemLifecycleEventPublisher() );
     publisherMock.setApplicationEventPublisher( contextMock );
 
-    workItemMock = Mockito.spy( new WorkItem( uid, details ) );
+    workItemMock = Mockito.spy( new WorkItem( uid, workItemDetails ) );
 
-    eventMock = Mockito.spy( new WorkItemLifecycleEvent( workItemMock ) );
-    Mockito.when( publisherMock.createEvent( workItemMock ) ).thenReturn( eventMock );
+    eventMock = Mockito.spy( new WorkItemLifecycleEvent( workItemMock, lifecyclePhase, eventDetails ) );
+    Mockito.when( publisherMock.createEvent( workItemMock, lifecyclePhase, eventDetails ) ).thenReturn(
+      eventMock );
   }
 
   @Test
   public void testPublisher() throws InterruptedException {
-    publisherMock.publish( workItemMock );
+    publisherMock.publish( workItemMock, lifecyclePhase, eventDetails );
     // verify that createEvent is called correctly
-    Mockito.verify( publisherMock, Mockito.times( 1 ) ).createEvent( workItemMock );
+    Mockito.verify( publisherMock, Mockito.times( 1 ) ).createEvent( workItemMock, lifecyclePhase, eventDetails );
     // verify that the publishEvent method is called as expected
     Mockito.verify( contextMock, Mockito.times( 1 ) ).publishEvent( eventMock );
 
