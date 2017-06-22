@@ -22,20 +22,31 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class WorkItemLifecycleEventPublisher {
+public class WorkItemLifecycleEventPublisher implements IWorkItemLifecycleEventPublisher {
 
   @Autowired
   private ApplicationEventPublisher publisher = null;
 
-  public void setApplicationEventPublisher( final ApplicationEventPublisher publisher ) {
+  protected void setApplicationEventPublisher( final ApplicationEventPublisher publisher ) {
     this.publisher = publisher;
   }
 
-  public void publish( final WorkItem workItem ) {
-    publisher.publishEvent( createEvent( workItem ) );
+  /**
+   * {@inheritDoc}
+   */
+  public void publish( final WorkItem workItem, final WorkItem.LifecyclePhase phase ) {
+    publish( workItem, phase, null );
   }
 
-  protected WorkItemLifecycleEvent createEvent( final WorkItem workItem  ) {
-    return new WorkItemLifecycleEvent( workItem );
+  /**
+   * {@inheritDoc}
+   */
+  public void publish( final WorkItem workItem, final WorkItem.LifecyclePhase phase, final String details ) {
+    publisher.publishEvent( createEvent( workItem, phase, details ) );
+  }
+
+  protected WorkItemLifecycleEvent createEvent( final WorkItem workItem, final WorkItem.LifecyclePhase phase,
+                                                final String details ) {
+    return new WorkItemLifecycleEvent( workItem, phase, details );
   }
 }

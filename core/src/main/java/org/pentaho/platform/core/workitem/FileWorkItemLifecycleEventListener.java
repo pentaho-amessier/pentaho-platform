@@ -32,6 +32,6 @@ public class FileWorkItemLifecycleEventListener {
   @Async
   public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent event ) {
     // TODO
-    log.debug( "FileWorkItemLifecycleEventListener" );
+    log.debug( "FileWorkItemLifecycleEventListener received a WorkItemLifecycleEvent::" + event.toString() );
   }
 }

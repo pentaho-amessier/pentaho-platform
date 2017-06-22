@@ -32,6 +32,6 @@ public class ProxyWorkItemLifecycleEventListener {
   @Async
   public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent event ) {
     // TODO
-    log.debug( "ProxyWorkItemLifecycleEventListener" );
+    log.debug( "ProxyWorkItemLifecycleEventListener received a WorkItemLifecycleEvent::" + event.toString() );
   }
 }
