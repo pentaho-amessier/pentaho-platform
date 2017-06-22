@@ -17,12 +17,16 @@
 
 package org.pentaho.platform.core.workitem;
 
-import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
-class DummyListenerA implements ApplicationListener<WorkItemLifecycleEvent> {
+@Component
+class DummyListenerA  {
 
-  @Override
-  public void onApplicationEvent( final WorkItemLifecycleEvent loginEvent ) {
+  @EventListener
+  @Async
+  public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent event ) {
     WorkItemLifecyclePublisherTest.LISTENER_A_CALLED = true;
   }
 }

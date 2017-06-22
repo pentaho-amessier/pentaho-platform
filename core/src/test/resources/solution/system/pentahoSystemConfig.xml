@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN"
-"http://www.springframework.org/dtd/spring-beans.dtd">
 
 <!--
 This is the top level Spring configuration file for wiring system listeners, administration tasks,
@@ -10,9 +8,21 @@ files. If you wish to modify the system listeners, adminisration tasks, ar sessi
 used by the system you should edit those files and not this one. This file should not be modified.
 -->
 
-<beans>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+         http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+         http://www.springframework.org/schema/context
+         http://www.springframework.org/schema/context/spring-context-4.3.xsd">
   <bean id="pentahoSystemProxy" class="org.pentaho.platform.engine.core.system.SpringPentahoSystemProxy"/>
-  <bean class="org.pentaho.platform.core.workitem.DummyListenerA" />
   <bean id="IWorkItemLifecycleEventPublisher"
-    class="org.pentaho.platform.core.workitem.WorkItemLifecycleEventPublisher" />
+        class="org.pentaho.platform.core.workitem.WorkItemLifecycleEventPublisher" />
+  <bean class="org.pentaho.platform.core.workitem.DummyListenerA" />
+
+  <context:component-scan base-package="org.pentaho.platform.core.workitem">
+    <context:include-filter type="annotation" expression="org.pentaho.platform.core.workitem.DummyListenerA"/>
+    <context:exclude-filter type="regex" expression=".*"/>
+  </context:component-scan>
+
 </beans>
