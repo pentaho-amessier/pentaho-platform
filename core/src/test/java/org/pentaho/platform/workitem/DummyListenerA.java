@@ -15,23 +15,21 @@
  * Copyright (c) 2017 Pentaho Corporation. All rights reserved.
  */
 
-package org.pentaho.platform.core.workitem;
+package org.pentaho.platform.workitem;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+/**
+ * A dummy listener used for testing purposes.
+ */
 @Component
-public class FileWorkItemLifecycleEventListener {
-
-  private static final Log log = LogFactory.getLog( FileWorkItemLifecycleEventListener.class );
+public class DummyListenerA {
 
   @EventListener
   @Async
   public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent event ) {
-    // TODO
-    log.debug( "FileWorkItemLifecycleEventListener received a WorkItemLifecycleEvent::" + event.toString() );
+    WorkItemLifecyclePublisherTest.LISTENER_A_CALLED = true;
   }
 }

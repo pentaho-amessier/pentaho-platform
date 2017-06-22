@@ -15,22 +15,26 @@
  * Copyright (c) 2017 Pentaho Corporation. All rights reserved.
  */
 
-package org.pentaho.platform.core.workitem;
+package org.pentaho.platform.workitem;
 
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
+import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * A dummy listener used for testing purposes.
- */
-@Component
-public class DummyListenerB {
+public class WorkItemTest {
 
-  @EventListener
-  @Async
-  public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent event ) {
-    WorkItemLifecyclePublisherTest.LISTENER_B_CALLED = true;
+  @Test
+  public void testValidInstaitiation() {
+    final String uid = "My_random_uid";
+    final String details = "My_random_details";
+    final WorkItem workItem = new WorkItem( uid, details );
+    Assert.assertEquals( uid, workItem.getUid() );
+    Assert.assertEquals( details, workItem.getDetails() );
+  }
+
+  @Test
+  public void testNulls() {
+    final WorkItem workItem = new WorkItem( null, null );
+    Assert.assertNull( workItem.getUid() );
+    Assert.assertNull( workItem.getDetails() );
   }
 }
-

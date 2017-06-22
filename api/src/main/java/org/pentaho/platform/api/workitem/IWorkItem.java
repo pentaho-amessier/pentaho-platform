@@ -12,24 +12,14 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2017 Pentaho Corporation..  All rights reserved.
+ * Copyright (c) 2017 Pentaho Corporation. All rights reserved.
  */
 
-package org.pentaho.platform.core.workitem.messages;
+package org.pentaho.platform.api.workitem;
 
-import org.pentaho.platform.util.messages.MessagesBase;
+public interface IWorkItem {
 
-public class Messages extends MessagesBase {
+  String getUid();
 
-  private static final String BUNDLE_NAME = Messages.class.getPackage().getName() + ".messages"; //$NON-NLS-1$
-
-  private static Messages instance = new Messages();
-
-  private Messages() {
-    super( BUNDLE_NAME );
-  }
-
-  public static Messages getInstance() {
-    return instance;
-  }
+  String getDetails();
 }

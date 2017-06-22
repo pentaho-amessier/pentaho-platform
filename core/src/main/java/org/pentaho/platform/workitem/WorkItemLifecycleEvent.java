@@ -15,7 +15,10 @@
  * Copyright (c) 2017 Pentaho Corporation. All rights reserved.
  */
 
-package org.pentaho.platform.core.workitem;
+package org.pentaho.platform.workitem;
+
+import org.pentaho.platform.api.workitem.IWorkItem;
+import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -26,41 +29,38 @@ import java.util.Date;
  */
 public class WorkItemLifecycleEvent {
 
-  private WorkItem workItem;
-  private WorkItem.LifecyclePhase lifecyclePhase;
+  private IWorkItem workItem;
+  private WorkItemLifecyclePhase lifecyclePhase;
   private String details;
   private Date sourceTimestamp;
   private String sourceHostName;
   private String sourceHostIp;
 
-
   /**
-   * An event encapsulating the {@link WorkItem} and a change to its {@link WorkItem.LifecyclePhase}
+   * An event encapsulating the {@link IWorkItem} and a change to its {@link WorkItemLifecyclePhase}
    *
-   * @param workItem       the {@link WorkItem}
-   * @param lifecyclePhase the {@link WorkItem.LifecyclePhase}
+   * @param workItem        the {@link IWorkItem}
+   * @param lifecyclePhase  the {@link WorkItemLifecyclePhase}
+   * @param details         any details associated with the state change (example: error message, exception stack
+   *                        trace)
+   * @param sourceTimestamp the time the event was triggered by the caller; this parameter can e null and will be set to
+   *                        the current {@link Date}, but can also be set explicitly, in cases where the original event
+   *                        may have been generated on another host and propagated via http or some other mechanism.
    */
-  public WorkItemLifecycleEvent( final WorkItem workItem, final WorkItem.LifecyclePhase lifecyclePhase ) {
-    this( workItem, lifecyclePhase, null );
-  }
-
-  /**
-   * An event encapsulating the {@link WorkItem} and a change to its {@link WorkItem.LifecyclePhase}
-   *
-   * @param workItem       the {@link WorkItem}
-   * @param lifecyclePhase the {@link WorkItem.LifecyclePhase}
-   * @param details        any details associated with the state change (example: error message, exception stack trace)
-   */
-  public WorkItemLifecycleEvent( final WorkItem workItem, final WorkItem.LifecyclePhase lifecyclePhase,
-                                 final String details ) {
+  public WorkItemLifecycleEvent( final IWorkItem workItem, final WorkItemLifecyclePhase lifecyclePhase,
+                                 final String details, final Date sourceTimestamp ) {
     this.workItem = workItem;
-    this.lifecyclePhase = lifecyclePhase;
     this.details = details;
+    this.lifecyclePhase = lifecyclePhase;
+    this.sourceTimestamp = sourceTimestamp;
     init();
   }
 
   private void init() {
-    sourceTimestamp = new Date();
+    // Set to current date only if not already provided
+    if ( sourceTimestamp == null ) {
+      sourceTimestamp = new Date();
+    }
     try {
       sourceHostName = InetAddress.getLocalHost().getCanonicalHostName();
       sourceHostIp = InetAddress.getLocalHost().getHostAddress();
@@ -69,11 +69,11 @@ public class WorkItemLifecycleEvent {
     }
   }
 
-  public WorkItem getWorkItem() {
+  public IWorkItem getWorkItem() {
     return workItem;
   }
 
-  public WorkItem.LifecyclePhase getLifecyclePhase() {
+  public WorkItemLifecyclePhase getLifecyclePhase() {
     return lifecyclePhase;
   }
 
@@ -95,12 +95,12 @@ public class WorkItemLifecycleEvent {
 
   public String toString() {
     final StringBuilder info = new StringBuilder();
-    info.append( "workItem=[" ).append( workItem.toString() ).append( "] / " );
-    info.append( "lifecyclePhase=" ).append( lifecyclePhase ).append( " / " );
-    info.append( "details=" ).append( details ).append( " / " );
-    info.append( "sourceTimestamp=" ).append( sourceTimestamp ).append( " / " );
-    info.append( "sourceHostName=" ).append( sourceHostName ).append( " / " );
-    info.append( "sourceHostIp=" ).append( sourceHostIp ).append( " / " );
+    info.append( "workItem: {" ).append( workItem.toString() ).append( "}, " );
+    info.append( "lifecyclePhase: " ).append( lifecyclePhase ).append( ", " );
+    info.append( "details: " ).append( details ).append( ", " );
+    info.append( "sourceTimestamp: " ).append( sourceTimestamp ).append( ", " );
+    info.append( "sourceHostName: " ).append( sourceHostName ).append( ", " );
+    info.append( "sourceHostIp: " ).append( sourceHostIp ).append( ", " );
     return info.toString();
   }
 }
