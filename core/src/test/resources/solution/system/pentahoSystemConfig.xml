@@ -17,12 +17,12 @@ used by the system you should edit those files and not this one. This file shoul
          http://www.springframework.org/schema/context/spring-context-4.3.xsd">
   <bean id="pentahoSystemProxy" class="org.pentaho.platform.engine.core.system.SpringPentahoSystemProxy"/>
   <bean id="IWorkItemLifecycleEventPublisher"
-        class="org.pentaho.platform.core.workitem.WorkItemLifecycleEventPublisher" />
-  <bean class="org.pentaho.platform.core.workitem.DummyListenerA" />
+        class="org.pentaho.platform.workitem.WorkItemLifecycleEventPublisher" />
+  <bean class="org.pentaho.platform.workitem.DummyListenerA" />
 
-  <context:component-scan base-package="org.pentaho.platform.core.workitem">
+  <context:component-scan base-package="org.pentaho.platform.workitem">
     <context:include-filter type="annotation"
-                            expression="org.pentaho.platform.core.workitem.DummyListenerA"/>
+                            expression="org.pentaho.platform.workitem.DummyListenerA"/>
     <context:exclude-filter type="regex" expression=".*"/>
   </context:component-scan>
 

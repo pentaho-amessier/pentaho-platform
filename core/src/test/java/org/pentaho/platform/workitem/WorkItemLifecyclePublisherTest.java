@@ -15,14 +15,17 @@
  * Copyright (c) 2017 Pentaho Corporation. All rights reserved.
  */
 
-package org.pentaho.platform.core.workitem;
+package org.pentaho.platform.workitem;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.pentaho.di.core.util.Assert;
+import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+import java.util.Date;
 
 public class WorkItemLifecyclePublisherTest {
 
@@ -31,8 +34,9 @@ public class WorkItemLifecyclePublisherTest {
   private WorkItem workItemMock = null;
   private String uid = "foo";
   private String workItemDetails = "foe";
-  private WorkItem.LifecyclePhase lifecyclePhase = WorkItem.LifecyclePhase.DISPATCHED;
+  private WorkItemLifecyclePhase lifecyclePhase = WorkItemLifecyclePhase.DISPATCHED;
   private String eventDetails = "foe";
+  private Date currentTimeStamp = new Date();
   private WorkItemLifecycleEvent eventMock = null;
 
   public static boolean LISTENER_A_CALLED = false;
@@ -47,16 +51,19 @@ public class WorkItemLifecyclePublisherTest {
 
     workItemMock = Mockito.spy( new WorkItem( uid, workItemDetails ) );
 
-    eventMock = Mockito.spy( new WorkItemLifecycleEvent( workItemMock, lifecyclePhase, eventDetails ) );
-    Mockito.when( publisherMock.createEvent( workItemMock, lifecyclePhase, eventDetails ) ).thenReturn(
-      eventMock );
+    eventMock =
+      Mockito.spy( new WorkItemLifecycleEvent( workItemMock, lifecyclePhase, eventDetails, currentTimeStamp ) );
+    Mockito.when( publisherMock.createEvent( workItemMock, lifecyclePhase, eventDetails, currentTimeStamp ) )
+      .thenReturn(
+        eventMock );
   }
 
   @Test
   public void testPublisher() throws InterruptedException {
-    publisherMock.publish( workItemMock, lifecyclePhase, eventDetails );
+    publisherMock.publish( workItemMock, lifecyclePhase, eventDetails, currentTimeStamp );
     // verify that createEvent is called correctly
-    Mockito.verify( publisherMock, Mockito.times( 1 ) ).createEvent( workItemMock, lifecyclePhase, eventDetails );
+    Mockito.verify( publisherMock, Mockito.times( 1 ) )
+      .createEvent( workItemMock, lifecyclePhase, eventDetails, currentTimeStamp );
     // verify that the publishEvent method is called as expected
     Mockito.verify( contextMock, Mockito.times( 1 ) ).publishEvent( eventMock );
 

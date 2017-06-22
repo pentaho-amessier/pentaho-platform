@@ -15,11 +15,16 @@
  * Copyright (c) 2017 Pentaho Corporation. All rights reserved.
  */
 
-package org.pentaho.platform.core.workitem;
+package org.pentaho.platform.workitem;
 
+import org.pentaho.platform.api.workitem.IWorkItem;
+import org.pentaho.platform.api.workitem.IWorkItemLifecycleEventPublisher;
+import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.Date;
 
 @Configuration
 public class WorkItemLifecycleEventPublisher implements IWorkItemLifecycleEventPublisher {
@@ -34,19 +39,13 @@ public class WorkItemLifecycleEventPublisher implements IWorkItemLifecycleEventP
   /**
    * {@inheritDoc}
    */
-  public void publish( final WorkItem workItem, final WorkItem.LifecyclePhase phase ) {
-    publish( workItem, phase, null );
+  public void publish( final IWorkItem workItem, final WorkItemLifecyclePhase lifecyclePhase, final String details,
+                       final Date sourceTimestamp ) {
+    publisher.publishEvent( createEvent( workItem, lifecyclePhase, details, sourceTimestamp ) );
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  public void publish( final WorkItem workItem, final WorkItem.LifecyclePhase phase, final String details ) {
-    publisher.publishEvent( createEvent( workItem, phase, details ) );
-  }
-
-  protected WorkItemLifecycleEvent createEvent( final WorkItem workItem, final WorkItem.LifecyclePhase phase,
-                                                final String details ) {
-    return new WorkItemLifecycleEvent( workItem, phase, details );
+  protected WorkItemLifecycleEvent createEvent( final IWorkItem workItem, final WorkItemLifecyclePhase lifecyclePhase,
+                                                final String details, final Date sourceTimestamp ) {
+    return new WorkItemLifecycleEvent( workItem, lifecyclePhase, details, sourceTimestamp );
   }
 }
