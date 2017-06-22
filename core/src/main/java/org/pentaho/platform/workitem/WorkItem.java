@@ -15,15 +15,15 @@
  * Copyright (c) 2017 Pentaho Corporation. All rights reserved.
  */
 
-package org.pentaho.platform.core.workitem;
+package org.pentaho.platform.workitem;
 
-import org.pentaho.platform.core.workitem.messages.Messages;
+import org.pentaho.platform.api.workitem.IWorkItem;
 
 /**
  * This class encapsulates all information pertaining to a "work item" that does not change throughout the work item
  * lifecycle.
  */
-public class WorkItem {
+public class WorkItem implements IWorkItem {
 
   private String uid;
   private String details;
@@ -39,16 +39,8 @@ public class WorkItem {
     this.details = details;
   }
 
-  public void setUid( final String uid ) {
-    this.uid = uid;
-  }
-
   public String getUid() {
     return uid;
-  }
-
-  public void setDetails( final String details ) {
-    this.details = details;
   }
 
   public String getDetails() {
@@ -56,32 +48,6 @@ public class WorkItem {
   }
 
   public String toString() {
-    return String.format( "uid=%s / details=%s", uid, details );
-  }
-
-  /**
-   * An enumeration of the known lifecycle events for the work item.
-   */
-  public enum LifecyclePhase {
-
-    SCHEDULED( "LifecyclePhase.SCHEDULED" ),
-    SUMBITTED( "LifecyclePhase.SUMBITTED" ),
-    DISPATCHED( "LifecyclePhase.DISPATCHED" ),
-    RECEIVED( "LifecyclePhase.RECEIVED" ),
-    REJECTED( "LifecyclePhase.REJECTED" ),
-    IN_PROGRESS( "LifecyclePhase.IN_PROGRESS" ),
-    SUCCEEDED( "LifecyclePhase.SUCCEEDED" ),
-    FAILED( "LifecyclePhase.FAILED" );
-
-    private String nameKey;
-
-    LifecyclePhase( final String nameKey ) {
-      this.nameKey = nameKey;
-    }
-
-    @Override
-    public String toString() {
-      return Messages.getInstance().getString( nameKey );
-    }
+    return String.format( "uid: %s, details: %s", uid, details );
   }
 }

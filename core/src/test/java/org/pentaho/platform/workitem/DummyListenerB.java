@@ -15,7 +15,7 @@
  * Copyright (c) 2017 Pentaho Corporation. All rights reserved.
  */
 
-package org.pentaho.platform.core.workitem;
+package org.pentaho.platform.workitem;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -25,11 +25,12 @@ import org.springframework.stereotype.Component;
  * A dummy listener used for testing purposes.
  */
 @Component
-public class DummyListenerA {
+public class DummyListenerB {
 
   @EventListener
   @Async
   public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent event ) {
-    WorkItemLifecyclePublisherTest.LISTENER_A_CALLED = true;
+    WorkItemLifecyclePublisherTest.LISTENER_B_CALLED = true;
   }
 }
+
