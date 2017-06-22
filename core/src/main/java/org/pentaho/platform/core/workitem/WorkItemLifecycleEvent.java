@@ -17,8 +17,6 @@
 
 package org.pentaho.platform.core.workitem;
 
-import org.springframework.context.ApplicationEvent;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Date;
@@ -26,7 +24,7 @@ import java.util.Date;
 /**
  * The event dispatched when a {@link WorkItem} enters a new lifecycle phase.
  */
-public class WorkItemLifecycleEvent extends ApplicationEvent {
+public class WorkItemLifecycleEvent {
 
   private WorkItem workItem;
   private WorkItem.LifecyclePhase lifecyclePhase;
@@ -55,7 +53,6 @@ public class WorkItemLifecycleEvent extends ApplicationEvent {
    */
   public WorkItemLifecycleEvent( final WorkItem workItem, final WorkItem.LifecyclePhase lifecyclePhase,
                                  final String details ) {
-    super( workItem );
     this.workItem = workItem;
     this.lifecyclePhase = lifecyclePhase;
     this.details = details;
