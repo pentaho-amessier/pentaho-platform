@@ -17,10 +17,14 @@
 
 package org.pentaho.platform.core.workitem;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Configuration;
 
-public class WorkItemLifecycleEventPublisher implements IWorkItemLifecycleEventPublisher {
+@Configuration
+public class WorkItemLifecycleEventPublisher {
 
+  @Autowired
   private ApplicationEventPublisher publisher = null;
 
   public void setApplicationEventPublisher( final ApplicationEventPublisher publisher ) {

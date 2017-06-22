@@ -17,11 +17,21 @@
 
 package org.pentaho.platform.core.workitem;
 
-import org.springframework.context.ApplicationListener;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
-public class FileWorkItemLifecycleEventListener implements ApplicationListener<WorkItemLifecycleEvent> {
+@Component
+public class FileWorkItemLifecycleEventListener {
 
-  public void onApplicationEvent( final WorkItemLifecycleEvent event ) {
+  private static final Log log = LogFactory.getLog( FileWorkItemLifecycleEventListener.class );
+
+  @EventListener
+  @Async
+  public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent event ) {
     // TODO
+    log.debug( "FileWorkItemLifecycleEventListener" );
   }
 }
