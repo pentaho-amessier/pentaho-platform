@@ -45,7 +45,7 @@ public class WorkItemLifecycleRecord implements IWorkItemLifecycleRecord {
    * @param workItemDetails a {@link String} containing details of the {@link WorkItemLifecycleRecord}
    */
   public WorkItemLifecycleRecord( final String workItemUid, final String workItemDetails, final
-    WorkItemLifecyclePhase workItemLifecyclePhase, final String lifecycleDetails, final Date sourceTimestamp ) {
+  WorkItemLifecyclePhase workItemLifecyclePhase, final String lifecycleDetails, final Date sourceTimestamp ) {
     this.workItemUid = workItemUid;
     this.workItemDetails = workItemDetails;
     this.workItemLifecyclePhase = workItemLifecyclePhase;
@@ -60,6 +60,7 @@ public class WorkItemLifecycleRecord implements IWorkItemLifecycleRecord {
       sourceTimestamp = new Date();
     }
     try {
+      // TODO: can this be cached? Does pentaho already have methods for that? otherwise put this in a static block
       sourceHostName = InetAddress.getLocalHost().getCanonicalHostName();
       sourceHostIp = InetAddress.getLocalHost().getHostAddress();
     } catch ( final UnknownHostException uhe ) {
@@ -77,8 +78,22 @@ public class WorkItemLifecycleRecord implements IWorkItemLifecycleRecord {
   /**
    * {@inheritDoc}
    */
+  public void setWorkItemUid( final String workItemUid ) {
+    this.workItemUid = workItemUid;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   public String getWorkItemDetails() {
     return workItemDetails;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void setWorkItemDetails( final String workItemDetails ) {
+    this.workItemDetails = workItemDetails;
   }
 
   /**
@@ -91,8 +106,22 @@ public class WorkItemLifecycleRecord implements IWorkItemLifecycleRecord {
   /**
    * {@inheritDoc}
    */
+  public void setWorkItemLifecyclePhase( final WorkItemLifecyclePhase workItemLifecyclePhase ) {
+    this.workItemLifecyclePhase = workItemLifecyclePhase;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   public String getLifecycleDetails() {
     return lifecycleDetails;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void setLifecycleDetails( final String lifecycleDetails ) {
+    this.lifecycleDetails = lifecycleDetails;
   }
 
   /**
@@ -105,6 +134,13 @@ public class WorkItemLifecycleRecord implements IWorkItemLifecycleRecord {
   /**
    * {@inheritDoc}
    */
+  public void setSourceTimestamp( final Date sourceTimestamp ) {
+    this.sourceTimestamp = sourceTimestamp;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   public String getSourceHostName() {
     return sourceHostName;
   }
@@ -112,8 +148,22 @@ public class WorkItemLifecycleRecord implements IWorkItemLifecycleRecord {
   /**
    * {@inheritDoc}
    */
+  public void setSourceHostName( final String sourceHostName ) {
+    this.sourceHostName = sourceHostName;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   public String getSourceHostIp() {
     return sourceHostIp;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void setSourceHostIp( final String sourceHostIp ) {
+    this.sourceHostIp = sourceHostIp;
   }
 
   public String toString() {

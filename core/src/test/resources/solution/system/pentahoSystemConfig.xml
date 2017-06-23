@@ -15,14 +15,19 @@ used by the system you should edit those files and not this one. This file shoul
          http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
          http://www.springframework.org/schema/context
          http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+
   <bean id="pentahoSystemProxy" class="org.pentaho.platform.engine.core.system.SpringPentahoSystemProxy"/>
-  <bean id="IWorkItemLifecycleEventPublisher"
-        class="org.pentaho.platform.workitem.WorkItemLifecycleEventPublisher" />
+
+  <bean id="workItemLifecyclePublisher" class="org.pentaho.platform.workitem.util.WorkItemLifecycleUtil" />
   <bean class="org.pentaho.platform.workitem.DummyListenerA" />
+  <bean class="org.pentaho.platform.workitem.DummyListenerB" />
 
   <context:component-scan base-package="org.pentaho.platform.workitem">
+    <context:include-filter type="annotation" expression="org.pentaho.platform.workitem.util.WorkItemLifecycleUtil"/>
     <context:include-filter type="annotation"
                             expression="org.pentaho.platform.workitem.DummyListenerA"/>
+    <context:include-filter type="annotation"
+                            expression="org.pentaho.platform.workitem.DummyListenerB"/>
     <context:exclude-filter type="regex" expression=".*"/>
   </context:component-scan>
 

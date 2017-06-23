@@ -15,14 +15,66 @@
  * Copyright (c) 2017 Pentaho Corporation. All rights reserved.
  */
 
-package org.pentaho.platform.workitem;
+package org.pentaho.platform.workitem.util;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.pentaho.platform.api.workitem.IWorkItemLifecycleRecord;
 import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
-import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
+import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
+import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
+import org.springframework.context.support.AbstractApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+import java.util.Date;
 
 public class WorkItemLifecycleUtilTest {
+
+  private AbstractApplicationContext contextMock = null;
+  private WorkItemLifecycleUtil publisherUtilMock = null;
+  private IWorkItemLifecycleRecord workItemLifecycleRecordMock = null;
+  private String workItemUid = "foo";
+  private String workItemDetails = "foe";
+  private WorkItemLifecyclePhase lifecyclePhase = WorkItemLifecyclePhase.DISPATCHED;
+  private String lifecycleDetails = "foe";
+  private Date currentTimeStamp = new Date();
+  private WorkItemLifecycleEvent eventMock = null;
+
+  public static boolean LISTENER_A_CALLED = false;
+  public static boolean LISTENER_B_CALLED = false;
+  public static boolean LISTENER_C_CALLED = false;
+
+  @Before
+  public void setup() throws Exception {
+    contextMock = Mockito.spy( new ClassPathXmlApplicationContext( "/solution/system/pentahoSystemConfig.xml" ) );
+
+    publisherUtilMock = Mockito.spy( contextMock.getBean( WorkItemLifecycleUtil.class ) );
+    publisherUtilMock.setApplicationEventPublisher( contextMock );
+
+    workItemLifecycleRecordMock = Mockito.spy( new WorkItemLifecycleRecord( workItemUid, workItemDetails,
+      lifecyclePhase, lifecycleDetails, currentTimeStamp ) );
+
+    eventMock = Mockito.spy( new WorkItemLifecycleEvent( workItemLifecycleRecordMock ) );
+    Mockito.when( publisherUtilMock.createEvent( workItemLifecycleRecordMock ) ).thenReturn( eventMock );
+  }
+
+  @Test
+  public void testPublisher() throws InterruptedException {
+    publisherUtilMock.publish( workItemLifecycleRecordMock );
+    // verify that createEvent is called correctly
+    Mockito.verify( publisherUtilMock, Mockito.times( 1 ) ).createEvent( workItemLifecycleRecordMock );
+    // verify that the publishEvent method is called as expected
+    Mockito.verify( contextMock, Mockito.times( 1 ) ).publishEvent( eventMock );
+
+    // This isn't ideal, but the only way to verify that the correct listeners - those that are wired through spring
+    // (which run in a separate thread) were invoked, and that those that were not wired are not invoked
+    Thread.sleep( 100 );
+    org.pentaho.di.core.util.Assert.assertTrue( LISTENER_A_CALLED );
+    org.pentaho.di.core.util.Assert.assertTrue( LISTENER_B_CALLED );
+    org.pentaho.di.core.util.Assert.assertFalse( LISTENER_C_CALLED );
+  }
 
   @Test
   public void testLifecycleNames() {
@@ -59,6 +111,5 @@ public class WorkItemLifecycleUtilTest {
       WorkItemLifecycleUtil.getLifecyclePhaseDescription( WorkItemLifecyclePhase.SUCCEEDED ) );
     Assert.assertEquals( "The work item execution has failed",
       WorkItemLifecycleUtil.getLifecyclePhaseDescription( WorkItemLifecyclePhase.FAILED ) );
-
   }
 }

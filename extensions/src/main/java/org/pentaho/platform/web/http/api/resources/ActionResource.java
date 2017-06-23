@@ -75,21 +75,23 @@ public class ActionResource {
   @Path( "/invoke" )
   @Consumes( { TEXT_PLAIN } )
   @StatusCodes( {
-      @ResponseCode( code = 200, condition = "Action invoked successfully." ),
-      @ResponseCode( code = 400, condition = "Bad input - could not invoke action." ),
-      @ResponseCode( code = 401, condition = "User does not have permissions to invoke action" ),
-      @ResponseCode( code = 500, condition = "Error while retrieving system resources." ),
-    } )
+    @ResponseCode( code = 200, condition = "Action invoked successfully." ),
+    @ResponseCode( code = 400, condition = "Bad input - could not invoke action." ),
+    @ResponseCode( code = 401, condition = "User does not have permissions to invoke action" ),
+    @ResponseCode( code = 500, condition = "Error while retrieving system resources." ),
+  } )
   public Response invokeAction(
-    @QueryParam( ActionUtil.INVOKER_ASYNC_EXEC ) @DefaultValue( ActionUtil.INVOKER_DEFAULT_ASYNC_EXEC_VALUE ) String async,
+    @QueryParam( ActionUtil.INVOKER_ASYNC_EXEC ) @DefaultValue( ActionUtil.INVOKER_DEFAULT_ASYNC_EXEC_VALUE )
+      String async,
     @QueryParam( ActionUtil.INVOKER_ACTIONID ) String actionId,
     @QueryParam( ActionUtil.INVOKER_ACTIONCLASS ) String actionClass,
     @QueryParam( ActionUtil.INVOKER_ACTIONUSER ) String actionUser,
     final String actionParams ) {
 
     // TODO: add unique work item ID
-    WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, actionParams, WorkItemLifecyclePhase.RECEIVED,
-      null, new Date() ) );
+    WorkItemLifecycleUtil.getInstance()
+      .publish( new WorkItemLifecycleRecord( null, actionParams, WorkItemLifecyclePhase.RECEIVED,
+        null, new Date() ) );
 
     // https://docs.oracle.com/javase/7/docs/api/java/lang/Boolean.html#parseBoolean(java.lang.String)
     boolean isAsyncExecution = Boolean.parseBoolean( async );
@@ -106,22 +108,23 @@ public class ActionResource {
       try {
 
         IActionInvokeStatus status = createCallable( actionId, actionClass, actionUser, actionParams ).call();
-        httpStatus = ( status != null && status.getThrowable() == null ) ? HttpStatus.SC_OK : HttpStatus.SC_INTERNAL_SERVER_ERROR;
+        httpStatus =
+          ( status != null && status.getThrowable() == null ) ? HttpStatus.SC_OK : HttpStatus.SC_INTERNAL_SERVER_ERROR;
         if ( httpStatus == HttpStatus.SC_OK ) {
 
           // TODO: add unique work item ID
-          WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, actionParams,
+          WorkItemLifecycleUtil.getInstance().publish( new WorkItemLifecycleRecord( null, actionParams,
             WorkItemLifecyclePhase.SUCCEEDED, null, new Date() ) );
         } else {
           // TODO: add unique work item ID
-          WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, actionParams,
-            WorkItemLifecyclePhase.FAILED, status != null && status.getThrowable() != null ?  status.getThrowable()
+          WorkItemLifecycleUtil.getInstance().publish( new WorkItemLifecycleRecord( null, actionParams,
+            WorkItemLifecyclePhase.FAILED, status != null && status.getThrowable() != null ? status.getThrowable()
             .getLocalizedMessage() : null, new Date() ) );
         }
 
       } catch ( Throwable t ) {
         // TODO: add unique work item ID
-        WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, actionParams,
+        WorkItemLifecycleUtil.getInstance().publish( new WorkItemLifecycleRecord( null, actionParams,
           WorkItemLifecyclePhase.FAILED, t.getLocalizedMessage(), new Date() ) );
         getLogger().error( t );
       }
@@ -140,7 +143,7 @@ public class ActionResource {
    * @return a {@link CallableAction} that creates the {@link IAction} and invokes it
    */
   protected CallableAction createCallable( final String actionId, final String actionClass, final String user, final
-    String actionParams ) {
+  String actionParams ) {
     return new CallableAction( this, actionId, actionClass, user, actionParams );
   }
 
@@ -172,7 +175,7 @@ public class ActionResource {
     }
 
     public CallableAction( final ActionResource resource, final String actionId, final String actionClass, final
-      String user, final String actionParams ) {
+    String user, final String actionParams ) {
       this.resource = resource;
       this.actionClass = actionClass;
       this.actionId = actionId;
@@ -185,7 +188,7 @@ public class ActionResource {
     }
 
     Map<String, Serializable> deserialize( final IAction action, final String actionParams )
-            throws IOException, ActionInvocationException {
+      throws IOException, ActionInvocationException {
       return ActionParams.deserialize( action, ActionParams.fromJson( actionParams ) );
     }
 
@@ -201,16 +204,18 @@ public class ActionResource {
 
         if ( status != null && status.getThrowable() == null ) {
           // TODO: add unique work item ID
-          WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, actionParams, WorkItemLifecyclePhase
-            .SUCCEEDED, null, new Date() ) );
+          WorkItemLifecycleUtil.getInstance()
+            .publish( new WorkItemLifecycleRecord( null, actionParams, WorkItemLifecyclePhase
+              .SUCCEEDED, null, new Date() ) );
           getLogger().info( Messages.getInstance().getRunningInBgLocallySuccess( action.getClass().getName(), params ),
-                  status.getThrowable() );
+            status.getThrowable() );
         } else {
           final String failureMessage = Messages.getInstance().getCouldNotInvokeActionLocally( action.getClass()
             .getName(), params );
           // TODO: add unique work item ID
-          WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, actionParams, WorkItemLifecyclePhase
-            .FAILED, failureMessage, new Date() ) );
+          WorkItemLifecycleUtil.getInstance()
+            .publish( new WorkItemLifecycleRecord( null, actionParams, WorkItemLifecyclePhase
+              .FAILED, failureMessage, new Date() ) );
           getLogger().error( failureMessage, ( status != null ? status.getThrowable() : null ) );
         }
 
@@ -218,11 +223,12 @@ public class ActionResource {
 
       } catch ( final Throwable thr ) {
         // TODO: add unique work item ID
-        WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, actionParams, WorkItemLifecyclePhase
-          .FAILED, thr.getLocalizedMessage(), new Date() ) );
+        WorkItemLifecycleUtil.getInstance()
+          .publish( new WorkItemLifecycleRecord( null, actionParams, WorkItemLifecyclePhase
+            .FAILED, thr.getLocalizedMessage(), new Date() ) );
         getLogger()
-                .error( Messages.getInstance().getCouldNotInvokeActionLocallyUnexpected( ( StringUtil.isEmpty( actionClass )
-                        ? actionId : actionClass ), actionParams ), thr );
+          .error( Messages.getInstance().getCouldNotInvokeActionLocallyUnexpected( ( StringUtil.isEmpty( actionClass )
+            ? actionId : actionClass ), actionParams ), thr );
       }
 
       return null;

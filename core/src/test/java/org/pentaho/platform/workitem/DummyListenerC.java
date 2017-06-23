@@ -15,17 +15,23 @@
  * Copyright (c) 2017 Pentaho Corporation. All rights reserved.
  */
 
-package org.pentaho.platform.api.workitem;
+package org.pentaho.platform.workitem;
+
+import org.pentaho.platform.workitem.util.WorkItemLifecycleUtilTest;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
 /**
- * The public interface for publishing changes to the work item lifecycle.
+ * A dummy listener used for testing purposes.
  */
-public interface IWorkItemLifecycleEventPublisher {
+@Component
+public class DummyListenerC {
 
-  /**
-   * Publishes the change to the work item lifecycle.
-   *
-   * @param workItemLifecycleRecord the {@link IWorkItemLifecycleRecord}
-   */
-  void publish( final IWorkItemLifecycleRecord workItemLifecycleRecord );
+  @EventListener
+  @Async
+  public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent event ) {
+    WorkItemLifecycleUtilTest.LISTENER_C_CALLED = true;
+  }
 }
+
