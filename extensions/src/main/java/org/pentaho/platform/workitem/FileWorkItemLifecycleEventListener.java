@@ -49,7 +49,6 @@ public class FileWorkItemLifecycleEventListener {
     final PatternLayout layout = new PatternLayout();
     layout.setConversionPattern( "%m%n" );
 
-
     final DailyRollingFileAppender fileAppender = new DailyRollingFileAppender();
     fileAppender.setFile( "../logs/work-item-status.log" );
     // TODO: why is this not working?
@@ -74,7 +73,7 @@ public class FileWorkItemLifecycleEventListener {
 
     final IWorkItemLifecycleRecord workItemLifecycleRecord = event.getWorkItemLifecycleRecord();
     if ( workItemLifecycleRecord == null ) {
-      log.error( Messages.getInstance().getErrorString( "ERROR_0001_MISSING_WORK_ITEM_LIFECYCLE" ) );
+      log.error( getMessageBundle().getErrorString( "ERROR_0001_MISSING_WORK_ITEM_LIFECYCLE" ) );
       return;
     }
 
@@ -96,5 +95,9 @@ public class FileWorkItemLifecycleEventListener {
     workItemLogger.info( targetTimeStamp + "|" + workItemUid + "|" + workItemDetails + "|" + lifecyclePhase + "|"
       + lifeCyclePhaseName + "|" + lifeCyclePhaseDesc + "|" + lifecycleDetails + "|" + sourceTimestamp + "|"
       + sourceHostName + "|" + sourceHostIp );
+  }
+
+  protected Messages getMessageBundle() {
+    return Messages.getInstance();
   }
 }

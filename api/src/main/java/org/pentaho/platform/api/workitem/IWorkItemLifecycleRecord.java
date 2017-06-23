@@ -22,18 +22,32 @@ import java.util.Date;
 public interface IWorkItemLifecycleRecord {
 
   /**
-   * The unique identifier for the work item.
+   * Returns the unique identifier for the work item.
    *
-   * @return the {@link String} work item identifier
+   * @return the {@link String} unique identifier for the work item
    */
   String getWorkItemUid();
 
   /**
-   * Returns details associated with the work item, if any.
+   * Sets the unique identifier for the work item.
    *
-   * @return the {@link String} containing details associated with the work item, if any
+   * @param workItemUid the {@link String} unique identifier for the work item
+   */
+  void setWorkItemUid( final String workItemUid );
+
+  /**
+   * Returns the details associated with the work item, if any.
+   *
+   * @return a {@link String} containing details associated with the work item, if any
    */
   String getWorkItemDetails();
+
+  /**
+   * Sets the details associated with the work item, if any
+   *
+   * @param workItemDetails the {@link String} containing details associated with the work item, if any
+   */
+  void setWorkItemDetails( final String workItemDetails );
 
   /**
    * Returns the {@link WorkItemLifecyclePhase} representing the work item's current lifecycle phase.
@@ -43,31 +57,68 @@ public interface IWorkItemLifecycleRecord {
   WorkItemLifecyclePhase getWorkItemLifecyclePhase();
 
   /**
-   * Returns details associated with the work item lifecycle change (example: error message, exception stack trace);
+   * Sets the {@link WorkItemLifecyclePhase} representing the work item's current lifecycle phase
+   *
+   * @param workItemLifecyclePhase the {@link WorkItemLifecyclePhase} representing the work item's current lifecycle
+   *                               phase
+   */
+  void setWorkItemLifecyclePhase( final WorkItemLifecyclePhase workItemLifecyclePhase );
+
+  /**
+   * Returns the details associated with the work item lifecycle change (example: error message, exception stack trace);
    * this field can be null
    *
-   * @return details associated with the work item lifecycle change or null
+   * @return a {@link String} containing details associated with the work item lifecycle change or null
    */
   String getLifecycleDetails();
 
   /**
+   * Sets the details associated with the work item lifecycle change (example: error message, exception stack trace);
+   * this field can be null
+   *
+   * @param lifecycleDetails a {@link String} containing details associated with the work item lifecycle change or null
+   */
+  void setLifecycleDetails( final String lifecycleDetails );
+
+  /**
    * Returns the time the lifecycle change was triggered by the caller.
    *
-   * @return the time the lifecycle change was triggered by the caller
+   * @return a {@link Date} representing the time the lifecycle change was triggered by the caller
    */
   Date getSourceTimestamp();
 
   /**
+   * Sets the time the lifecycle change was triggered by the caller.
+   *
+   * @param sourceTimestamp the {@link Date} representing the time the lifecycle change was triggered by the caller
+   */
+  void setSourceTimestamp( final Date sourceTimestamp );
+
+  /**
    * Returns the host name of the host where the lifecycle change occurred.
    *
-   * @return the host name of the host where the lifecycle change occurred
+   * @return a {@link String} host name of the host where the lifecycle change occurred
    */
   String getSourceHostName();
 
   /**
+   * Sets the host name of the host where the lifecycle change occurred.
+   *
+   * @param sourceHostName the {@link String} host name of the host where the lifecycle change occurred
+   */
+  void setSourceHostName( final String sourceHostName );
+
+  /**
    * Returns the IP of the host where the lifecycle change occurred.
    *
-   * @return the IP of the host where the lifecycle change occurred
+   * @return a {@link String} IP of the host where the lifecycle change occurred
    */
   String getSourceHostIp();
+
+  /**
+   * Sets the IP of the host where the lifecycle change occurred.
+   *
+   * @param sourceHostIp the {@link String} IP of the host where the lifecycle change occurred
+   */
+  void setSourceHostIp( final String sourceHostIp );
 }
