@@ -23,8 +23,6 @@ import org.apache.log4j.DailyRollingFileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
-import org.pentaho.platform.api.workitem.IWorkItemLifecycleRecord;
-import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.workitem.messages.Messages;
 import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 import org.springframework.context.event.EventListener;
@@ -71,7 +69,7 @@ public class FileWorkItemLifecycleEventListener {
         .toString() ) );
     }
 
-    final IWorkItemLifecycleRecord workItemLifecycleRecord = event.getWorkItemLifecycleRecord();
+    final WorkItemLifecycleRecord workItemLifecycleRecord = event.getWorkItemLifecycleRecord();
     if ( workItemLifecycleRecord == null ) {
       log.error( getMessageBundle().getErrorString( "ERROR_0001_MISSING_WORK_ITEM_LIFECYCLE" ) );
       return;

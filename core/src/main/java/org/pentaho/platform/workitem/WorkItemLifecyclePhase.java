@@ -15,7 +15,7 @@
  * Copyright (c) 2017 Pentaho Corporation. All rights reserved.
  */
 
-package org.pentaho.platform.api.workitem;
+package org.pentaho.platform.workitem;
 
 /**
  * An enumeration of the known lifecycle events for the work item. Each instance contains the a message key for

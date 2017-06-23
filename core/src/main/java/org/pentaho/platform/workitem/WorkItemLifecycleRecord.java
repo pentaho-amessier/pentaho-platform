@@ -17,8 +17,6 @@
 
 package org.pentaho.platform.workitem;
 
-import org.pentaho.platform.api.workitem.IWorkItemLifecycleRecord;
-import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 
 import java.net.InetAddress;
@@ -28,7 +26,7 @@ import java.util.Date;
 /**
  * This class encapsulates all information pertaining to a "work item" at a specific point in its lifecycle.
  */
-public class WorkItemLifecycleRecord implements IWorkItemLifecycleRecord {
+public class WorkItemLifecycleRecord {
 
   private String workItemUid;
   private String workItemDetails;
@@ -52,6 +50,9 @@ public class WorkItemLifecycleRecord implements IWorkItemLifecycleRecord {
     this.lifecycleDetails = lifecycleDetails;
     this.sourceTimestamp = sourceTimestamp;
     init();
+  }
+
+  public WorkItemLifecycleRecord() {
   }
 
   private void init() {

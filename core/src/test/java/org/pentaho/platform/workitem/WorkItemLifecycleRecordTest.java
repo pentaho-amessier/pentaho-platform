@@ -19,8 +19,6 @@ package org.pentaho.platform.workitem;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.pentaho.platform.api.workitem.IWorkItemLifecycleRecord;
-import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
 
 import java.util.Date;
 
@@ -34,7 +32,7 @@ public class WorkItemLifecycleRecordTest {
 
   @Test
   public void testValidInstaitiation() {
-    final IWorkItemLifecycleRecord workItemLifecycleRecord = new WorkItemLifecycleRecord( workItemUid,
+    final WorkItemLifecycleRecord workItemLifecycleRecord = new WorkItemLifecycleRecord( workItemUid,
       workItemDetails, lifecyclePhase, lifecycleDetails, currentTimeStamp );
     Assert.assertEquals( workItemUid, workItemLifecycleRecord.getWorkItemUid() );
     Assert.assertEquals( workItemDetails, workItemLifecycleRecord.getWorkItemDetails() );
@@ -49,7 +47,7 @@ public class WorkItemLifecycleRecordTest {
 
   @Test
   public void testNulls() {
-    final IWorkItemLifecycleRecord workItemLifecycleRecord = new WorkItemLifecycleRecord( null, null, null, null,
+    final WorkItemLifecycleRecord workItemLifecycleRecord = new WorkItemLifecycleRecord( null, null, null, null,
       null );
     Assert.assertNull( workItemLifecycleRecord.getWorkItemUid() );
     Assert.assertNull( workItemLifecycleRecord.getWorkItemDetails() );

@@ -17,6 +17,7 @@
 
 package org.pentaho.platform.web.http.api.resources;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,7 +27,7 @@ import org.pentaho.platform.api.action.ActionInvocationException;
 import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
-import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
+import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.action.ActionParams;
@@ -34,6 +35,7 @@ import org.pentaho.platform.plugin.action.DefaultActionInvoker;
 import org.pentaho.platform.plugin.action.messages.Messages;
 import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.StringUtil;
+import org.slf4j.MDC;
 import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
 import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 
@@ -47,6 +49,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -60,7 +63,8 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 public class ActionResource {
   protected static final Log logger = LogFactory.getLog( ActionResource.class );
   protected static final int MAX_THREADS = 8;
-  protected static ExecutorService executorService = Executors.newFixedThreadPool( MAX_THREADS );
+  protected static ExecutorService executorService = Executors.newFixedThreadPool( MAX_THREADS,
+    new ThreadFactoryBuilder().setNameFormat( "worker-thread-%d" ).build() );
 
   /**
    * Runs the action defined within the provided json feed in the background asynchronously.
@@ -170,6 +174,7 @@ public class ActionResource {
     protected String actionClass;
     protected String user;
     protected String actionParams;
+    private Map<String, String> mdcContextMap = MDC.getCopyOfContextMap();
 
     CallableAction() {
     }
@@ -195,6 +200,10 @@ public class ActionResource {
     @Override
     public IActionInvokeStatus call() throws Exception {
       try {
+        Optional.ofNullable( mdcContextMap ).ifPresent( s -> MDC.setContextMap( mdcContextMap ) );
+        if ( logger.isDebugEnabled() ) {
+          logger.debug( "Running action: " + actionId );
+        }
         // instantiate the DefaultActionInvoker directly to force local invocation of the action
         final IActionInvoker actionInvoker = resource.getDefaultActionInvoker();
         final IAction action = createActionBean( actionClass, actionId );

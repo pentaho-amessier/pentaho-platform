@@ -17,29 +17,30 @@
 
 package org.pentaho.platform.workitem;
 
-import org.pentaho.platform.api.workitem.IWorkItemLifecycleRecord;
-
 /**
  * The event dispatched when a work item enters a new lifecycle phase.
  */
 public class WorkItemLifecycleEvent {
 
-  private IWorkItemLifecycleRecord workItemLifecycleRecord;
+  private WorkItemLifecycleRecord workItemLifecycleRecord;
 
   /**
    * An event encapsulating the work item lifecycle change.
    *
-   * @param workItemLifecycleRecord the {@link IWorkItemLifecycleRecord}
+   * @param workItemLifecycleRecord the {@link WorkItemLifecycleRecord}
    */
-  public WorkItemLifecycleEvent( final IWorkItemLifecycleRecord workItemLifecycleRecord ) {
+  public WorkItemLifecycleEvent( final WorkItemLifecycleRecord workItemLifecycleRecord ) {
     this.workItemLifecycleRecord = workItemLifecycleRecord;
   }
 
-  public void setWorkItemLifecycleRecord( final IWorkItemLifecycleRecord workItemLifecycleRecord ) {
+  public WorkItemLifecycleEvent() {
+  }
+
+  public void setWorkItemLifecycleRecord( final WorkItemLifecycleRecord workItemLifecycleRecord ) {
     this.workItemLifecycleRecord = workItemLifecycleRecord;
   }
 
-  public IWorkItemLifecycleRecord getWorkItemLifecycleRecord() {
+  public WorkItemLifecycleRecord getWorkItemLifecycleRecord() {
     return workItemLifecycleRecord;
   }
 
