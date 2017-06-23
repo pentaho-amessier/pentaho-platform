@@ -19,44 +19,68 @@ package org.pentaho.platform.workitem.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.pentaho.platform.api.workitem.IWorkItemLifecycleEventPublisher;
 import org.pentaho.platform.api.workitem.IWorkItemLifecycleRecord;
 import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
-import org.pentaho.platform.util.Messages;
+import org.pentaho.platform.util.messages.Messages;
+import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * A class for common utility methods related to work item lifecycles.
  */
+// TODO: do we need this annotation?
+@Configuration
 public class WorkItemLifecycleUtil {
 
-  private static String PUBLISHER_BEAN_NAME = "IWorkItemLifecycleEventPublisher";
+  private static String PUBLISHER_BEAN_NAME = "workItemLifecyclePublisher";
   private static final Log log = LogFactory.getLog( WorkItemLifecycleUtil.class );
 
-  /**
-   * A convenience method for publishing changes to the work item's lifecycles. Fetches the available instance of
-   * {@link IWorkItemLifecycleEventPublisher}, and if available, calls its
-   * {@link IWorkItemLifecycleEventPublisher#publish(IWorkItemLifecycleRecord)} method. Otherwise does nothing, as the
-   * {@link IWorkItemLifecycleEventPublisher} may not be available, which is a perfectly valid cenario.
-   *
-   * @param workItemLifecycleRecord        the {@link IWorkItemLifecycleRecord}
-   * @see IWorkItemLifecycleEventPublisher#publish(IWorkItemLifecycleRecord)
-   */
-  public static void publish( final IWorkItemLifecycleRecord workItemLifecycleRecord ) {
+  public static WorkItemLifecycleUtil getInstance() {
+    return PentahoSystem.get( WorkItemLifecycleUtil.class, PUBLISHER_BEAN_NAME, PentahoSessionHolder.getSession() );
+  }
 
-    final IWorkItemLifecycleEventPublisher publisher = PentahoSystem.get( IWorkItemLifecycleEventPublisher.class,
-      PUBLISHER_BEAN_NAME, PentahoSessionHolder.getSession() );
-    if ( publisher != null ) {
-      publisher.publish( workItemLifecycleRecord );
+  @Autowired
+  private ApplicationEventPublisher publisher = null;
+
+  protected void setApplicationEventPublisher( final ApplicationEventPublisher publisher ) {
+    this.publisher = publisher;
+  }
+
+  protected ApplicationEventPublisher getApplicationEventPublisher() {
+    return this.publisher;
+  }
+
+  /**
+   * A convenience method for publishing changes to the work item's lifecycles. Fetches the available
+   * {@link ApplicationEventPublisher}, and if available, calls its
+   * {@link ApplicationEventPublisher#publishEvent(Object)} method, where the Object passed to the method is the
+   * {@link WorkItemLifecycleEvent} representing the {@link IWorkItemLifecycleRecord}.  Otherwise does nothing, as the
+   * {@link ApplicationEventPublisher} may not be available, which is a perfectly valid scenario, if we do not care
+   * about publishing {@link WorkItemLifecycleEvent}'s.
+   *
+   * @param workItemLifecycleRecord the {@link IWorkItemLifecycleRecord}
+   */
+  public void publish( final IWorkItemLifecycleRecord workItemLifecycleRecord ) {
+
+    if ( getApplicationEventPublisher() != null ) {
+      getApplicationEventPublisher().publishEvent( createEvent( workItemLifecycleRecord ) );
     } else {
       log.debug( String.format( "'%s' bean is not available, unable to publish work item "
         + "lifecycle: %s", PUBLISHER_BEAN_NAME, workItemLifecycleRecord.toString() ) );
     }
   }
 
+  protected WorkItemLifecycleEvent createEvent( final IWorkItemLifecycleRecord workItemLifecycleRecord ) {
+    return new WorkItemLifecycleEvent( workItemLifecycleRecord );
+  }
+
   /**
    * Returns the short "pretty" name for the requested {@link WorkItemLifecyclePhase}.
+   *
    * @param lifecyclePhase the {@link WorkItemLifecyclePhase}
    * @return a "pretty" short name for the {@link WorkItemLifecyclePhase}
    */
@@ -66,6 +90,7 @@ public class WorkItemLifecycleUtil {
 
   /**
    * Returns the short "pretty" full description for the requested {@link WorkItemLifecyclePhase}.
+   *
    * @param lifecyclePhase the {@link WorkItemLifecyclePhase}
    * @return a "pretty" ull description for the {@link WorkItemLifecyclePhase}
    */

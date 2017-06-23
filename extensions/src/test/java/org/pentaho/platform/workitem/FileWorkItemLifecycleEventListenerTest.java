@@ -17,6 +17,31 @@
 
 package org.pentaho.platform.workitem;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 public class FileWorkItemLifecycleEventListenerTest {
-  // TODO
+
+  private FileWorkItemLifecycleEventListener listener = null;
+
+  @Before
+  public void setup() {
+    listener = new FileWorkItemLifecycleEventListener();
+  }
+
+  @After
+  public void teardown() {
+    listener = null;
+  }
+
+  @Test
+  public void testResources() {
+    Assert.assertEquals(
+      "ERROR_0001_MISSING_WORK_ITEM_LIFECYCLE - Work item lifecycle information is missing, cannot publish", listener
+        .getMessageBundle().getErrorString( "ERROR_0001_MISSING_WORK_ITEM_LIFECYCLE" ) );
+  }
+
+  // TODO: finish
 }

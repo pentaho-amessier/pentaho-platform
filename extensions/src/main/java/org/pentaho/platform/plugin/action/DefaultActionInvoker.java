@@ -108,7 +108,7 @@ public class DefaultActionInvoker implements IActionInvoker {
    */
   @Override
   public IActionInvokeStatus invokeAction( final IAction actionBean, final String actionUser, final
-    Map<String, Serializable> params ) throws Exception {
+  Map<String, Serializable> params ) throws Exception {
     ActionUtil.prepareMap( params );
     // call getStreamProvider, in addition to creating the provider, this method also adds values to the map that
     // serialize the stream provider and make it possible to deserialize and recreate it for remote execution.
@@ -126,16 +126,18 @@ public class DefaultActionInvoker implements IActionInvoker {
    * @throws Exception when the {@code IAction} cannot be invoked for some reason.
    */
   protected IActionInvokeStatus invokeActionImpl( final IAction actionBean, final String actionUser, final
-    Map<String, Serializable> params ) throws Exception {
+  Map<String, Serializable> params ) throws Exception {
     // TODO: add unique work item ID
-    WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
-      WorkItemLifecyclePhase.IN_PROGRESS, null, new Date() ) );
+    WorkItemLifecycleUtil.getInstance()
+      .publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
+        WorkItemLifecyclePhase.IN_PROGRESS, null, new Date() ) );
 
     if ( actionBean == null || params == null ) {
       final String failureMessage = Messages.getInstance().getCantInvokeNullAction();
-        // TODO: add unique work item ID
-      WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
-        WorkItemLifecyclePhase.FAILED, failureMessage, new Date() ) );
+      // TODO: add unique work item ID
+      WorkItemLifecycleUtil.getInstance()
+        .publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
+          WorkItemLifecyclePhase.FAILED, failureMessage, new Date() ) );
       throw new ActionInvocationException( failureMessage );
     }
 
@@ -170,12 +172,14 @@ public class DefaultActionInvoker implements IActionInvoker {
       try {
         requiresUpdate = SecurityHelper.getInstance().runAsUser( actionUser, actionBeanRunner );
         // TODO: add unique work item ID
-        WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
-          WorkItemLifecyclePhase.SUCCEEDED, null, new Date() ) );
+        WorkItemLifecycleUtil.getInstance()
+          .publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
+            WorkItemLifecyclePhase.SUCCEEDED, null, new Date() ) );
       } catch ( final Throwable t ) {
         // TODO: add unique work item ID
-        WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
-          WorkItemLifecyclePhase.FAILED, t.getLocalizedMessage(), new Date() ) );
+        WorkItemLifecycleUtil.getInstance()
+          .publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
+            WorkItemLifecyclePhase.FAILED, t.getLocalizedMessage(), new Date() ) );
         status.setThrowable( t );
       }
     }

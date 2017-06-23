@@ -35,6 +35,10 @@ public class WorkItemLifecycleEvent {
     this.workItemLifecycleRecord = workItemLifecycleRecord;
   }
 
+  public void setWorkItemLifecycleRecord( final IWorkItemLifecycleRecord workItemLifecycleRecord ) {
+    this.workItemLifecycleRecord = workItemLifecycleRecord;
+  }
+
   public IWorkItemLifecycleRecord getWorkItemLifecycleRecord() {
     return workItemLifecycleRecord;
   }

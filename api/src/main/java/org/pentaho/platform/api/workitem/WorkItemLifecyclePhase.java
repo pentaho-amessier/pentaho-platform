@@ -30,10 +30,10 @@ public enum WorkItemLifecyclePhase {
    */
   SCHEDULED( "LifecyclePhase.SCHEDULED", "LifecyclePhase.SCHEDULED_DESC" ),
   /**
-   * The work item has been submitted for execution; shortNameMessageKey=LifecyclePhase.SUBMITTED,
-   * descriptionMessageKey=SUMBITTED_DESC.
+   * The work item has been submitted for execution; shortNameMessageKey=LifecyclePhase.SUBMITTE,
+   * descriptionMessageKey=SUBMITTED_DESC.
    */
-  SUBMITTED( "LifecyclePhase.SUMBITTED", "LifecyclePhase.SUMBITTED_DESC" ),
+  SUBMITTED( "LifecyclePhase.SUBMITTED", "LifecyclePhase.SUBMITTED_DESC" ),
   /**
    * The work item has been dispatched to the component responsible for its execution;
    * shortNameMessageKey=LifecyclePhase .DISPATCHED, descriptionMessageKey=DISPATCHED_DESC.
