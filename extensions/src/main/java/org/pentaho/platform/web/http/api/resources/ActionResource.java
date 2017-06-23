@@ -27,6 +27,7 @@ import org.pentaho.platform.api.action.ActionInvocationException;
 import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
+import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.action.ActionParams;
@@ -35,6 +36,8 @@ import org.pentaho.platform.plugin.action.messages.Messages;
 import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.StringUtil;
 import org.slf4j.MDC;
+import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
+import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -44,6 +47,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -60,7 +64,7 @@ public class ActionResource {
   protected static final Log logger = LogFactory.getLog( ActionResource.class );
   protected static final int MAX_THREADS = 8;
   protected static ExecutorService executorService = Executors.newFixedThreadPool( MAX_THREADS,
-      new ThreadFactoryBuilder().setNameFormat( "worker-thread-%d" ).build() );
+    new ThreadFactoryBuilder().setNameFormat( "worker-thread-%d" ).build() );
 
   /**
    * Runs the action defined within the provided json feed in the background asynchronously.
@@ -75,17 +79,23 @@ public class ActionResource {
   @Path( "/invoke" )
   @Consumes( { TEXT_PLAIN } )
   @StatusCodes( {
-      @ResponseCode( code = 200, condition = "Action invoked successfully." ),
-      @ResponseCode( code = 400, condition = "Bad input - could not invoke action." ),
-      @ResponseCode( code = 401, condition = "User does not have permissions to invoke action" ),
-      @ResponseCode( code = 500, condition = "Error while retrieving system resources." ),
-    } )
+    @ResponseCode( code = 200, condition = "Action invoked successfully." ),
+    @ResponseCode( code = 400, condition = "Bad input - could not invoke action." ),
+    @ResponseCode( code = 401, condition = "User does not have permissions to invoke action" ),
+    @ResponseCode( code = 500, condition = "Error while retrieving system resources." ),
+  } )
   public Response invokeAction(
-    @QueryParam( ActionUtil.INVOKER_ASYNC_EXEC ) @DefaultValue( ActionUtil.INVOKER_DEFAULT_ASYNC_EXEC_VALUE ) String async,
+    @QueryParam( ActionUtil.INVOKER_ASYNC_EXEC ) @DefaultValue( ActionUtil.INVOKER_DEFAULT_ASYNC_EXEC_VALUE )
+      String async,
     @QueryParam( ActionUtil.INVOKER_ACTIONID ) String actionId,
     @QueryParam( ActionUtil.INVOKER_ACTIONCLASS ) String actionClass,
     @QueryParam( ActionUtil.INVOKER_ACTIONUSER ) String actionUser,
     final String actionParams ) {
+
+    // TODO: add unique work item ID
+    WorkItemLifecycleUtil.getInstance()
+      .publish( new WorkItemLifecycleRecord( null, actionParams, WorkItemLifecyclePhase.RECEIVED,
+        null, new Date() ) );
 
     // https://docs.oracle.com/javase/7/docs/api/java/lang/Boolean.html#parseBoolean(java.lang.String)
     boolean isAsyncExecution = Boolean.parseBoolean( async );
@@ -102,9 +112,24 @@ public class ActionResource {
       try {
 
         IActionInvokeStatus status = createCallable( actionId, actionClass, actionUser, actionParams ).call();
-        httpStatus = ( status != null && status.getThrowable() == null ) ? HttpStatus.SC_OK : HttpStatus.SC_INTERNAL_SERVER_ERROR;
+        httpStatus =
+          ( status != null && status.getThrowable() == null ) ? HttpStatus.SC_OK : HttpStatus.SC_INTERNAL_SERVER_ERROR;
+        if ( httpStatus == HttpStatus.SC_OK ) {
+
+          // TODO: add unique work item ID
+          WorkItemLifecycleUtil.getInstance().publish( new WorkItemLifecycleRecord( null, actionParams,
+            WorkItemLifecyclePhase.SUCCEEDED, null, new Date() ) );
+        } else {
+          // TODO: add unique work item ID
+          WorkItemLifecycleUtil.getInstance().publish( new WorkItemLifecycleRecord( null, actionParams,
+            WorkItemLifecyclePhase.FAILED, status != null && status.getThrowable() != null ? status.getThrowable()
+            .getLocalizedMessage() : null, new Date() ) );
+        }
 
       } catch ( Throwable t ) {
+        // TODO: add unique work item ID
+        WorkItemLifecycleUtil.getInstance().publish( new WorkItemLifecycleRecord( null, actionParams,
+          WorkItemLifecyclePhase.FAILED, t.getLocalizedMessage(), new Date() ) );
         getLogger().error( t );
       }
     }
@@ -122,7 +147,7 @@ public class ActionResource {
    * @return a {@link CallableAction} that creates the {@link IAction} and invokes it
    */
   protected CallableAction createCallable( final String actionId, final String actionClass, final String user, final
-    String actionParams ) {
+  String actionParams ) {
     return new CallableAction( this, actionId, actionClass, user, actionParams );
   }
 
@@ -150,11 +175,12 @@ public class ActionResource {
     protected String user;
     protected String actionParams;
     private Map<String, String> mdcContextMap = MDC.getCopyOfContextMap();
+
     CallableAction() {
     }
 
     public CallableAction( final ActionResource resource, final String actionId, final String actionClass, final
-      String user, final String actionParams ) {
+    String user, final String actionParams ) {
       this.resource = resource;
       this.actionClass = actionClass;
       this.actionId = actionId;
@@ -167,7 +193,7 @@ public class ActionResource {
     }
 
     Map<String, Serializable> deserialize( final IAction action, final String actionParams )
-            throws IOException, ActionInvocationException {
+      throws IOException, ActionInvocationException {
       return ActionParams.deserialize( action, ActionParams.fromJson( actionParams ) );
     }
 
@@ -186,19 +212,32 @@ public class ActionResource {
         IActionInvokeStatus status = actionInvoker.invokeAction( action, user, params );
 
         if ( status != null && status.getThrowable() == null ) {
+          // TODO: add unique work item ID
+          WorkItemLifecycleUtil.getInstance()
+            .publish( new WorkItemLifecycleRecord( null, actionParams, WorkItemLifecyclePhase
+              .SUCCEEDED, null, new Date() ) );
           getLogger().info( Messages.getInstance().getRunningInBgLocallySuccess( action.getClass().getName(), params ),
-                  status.getThrowable() );
+            status.getThrowable() );
         } else {
-          getLogger().error( Messages.getInstance().getCouldNotInvokeActionLocally( action.getClass().getName(), params ),
-                  ( status != null ? status.getThrowable() : null ) );
+          final String failureMessage = Messages.getInstance().getCouldNotInvokeActionLocally( action.getClass()
+            .getName(), params );
+          // TODO: add unique work item ID
+          WorkItemLifecycleUtil.getInstance()
+            .publish( new WorkItemLifecycleRecord( null, actionParams, WorkItemLifecyclePhase
+              .FAILED, failureMessage, new Date() ) );
+          getLogger().error( failureMessage, ( status != null ? status.getThrowable() : null ) );
         }
 
         return status;
 
       } catch ( final Throwable thr ) {
+        // TODO: add unique work item ID
+        WorkItemLifecycleUtil.getInstance()
+          .publish( new WorkItemLifecycleRecord( null, actionParams, WorkItemLifecyclePhase
+            .FAILED, thr.getLocalizedMessage(), new Date() ) );
         getLogger()
-                .error( Messages.getInstance().getCouldNotInvokeActionLocallyUnexpected( ( StringUtil.isEmpty( actionClass )
-                        ? actionId : actionClass ), actionParams ), thr );
+          .error( Messages.getInstance().getCouldNotInvokeActionLocallyUnexpected( ( StringUtil.isEmpty( actionClass )
+            ? actionId : actionClass ), actionParams ), thr );
       }
 
       return null;

@@ -25,14 +25,18 @@ import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
 import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
+import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.engine.security.SecurityHelper;
 import org.pentaho.platform.plugin.action.messages.Messages;
 import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.StringUtil;
 import org.pentaho.platform.util.messages.LocaleHelper;
 import org.pentaho.platform.web.http.api.resources.RepositoryFileStreamProvider;
+import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
+import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -123,9 +127,16 @@ public class DefaultActionInvoker implements IActionInvoker {
    */
   protected IActionInvokeStatus invokeActionImpl( final IAction actionBean, final String actionUser, final
     Map<String, Serializable> params ) throws Exception {
+    // TODO: add unique work item ID
+    WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
+      WorkItemLifecyclePhase.IN_PROGRESS, null, new Date() ) );
 
     if ( actionBean == null || params == null ) {
-      throw new ActionInvocationException( Messages.getInstance().getCantInvokeNullAction() );
+      final String failureMessage = Messages.getInstance().getCantInvokeNullAction();
+        // TODO: add unique work item ID
+      WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
+        WorkItemLifecyclePhase.FAILED, failureMessage, new Date() ) );
+      throw new ActionInvocationException( failureMessage );
     }
 
     if ( logger.isDebugEnabled() ) {
@@ -158,7 +169,13 @@ public class DefaultActionInvoker implements IActionInvoker {
     } else {
       try {
         requiresUpdate = SecurityHelper.getInstance().runAsUser( actionUser, actionBeanRunner );
+        // TODO: add unique work item ID
+        WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
+          WorkItemLifecyclePhase.SUCCEEDED, null, new Date() ) );
       } catch ( final Throwable t ) {
+        // TODO: add unique work item ID
+        WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
+          WorkItemLifecyclePhase.FAILED, t.getLocalizedMessage(), new Date() ) );
         status.setThrowable( t );
       }
     }

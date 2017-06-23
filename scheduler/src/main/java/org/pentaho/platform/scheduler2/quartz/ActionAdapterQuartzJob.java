@@ -27,6 +27,7 @@ import org.pentaho.platform.api.scheduler2.IBlockoutManager;
 import org.pentaho.platform.api.scheduler2.IJobTrigger;
 import org.pentaho.platform.api.scheduler2.IScheduler;
 import org.pentaho.platform.api.scheduler2.SimpleJobTrigger;
+import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.engine.security.SecurityHelper;
@@ -34,6 +35,8 @@ import org.pentaho.platform.scheduler2.blockout.BlockoutAction;
 import org.pentaho.platform.scheduler2.messsages.Messages;
 import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.StringUtil;
+import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
+import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -120,18 +123,30 @@ public class ActionAdapterQuartzJob implements Job {
     final IActionInvoker actionInvoker = PentahoSystem.get( IActionInvoker.class, "IActionInvoker", PentahoSessionHolder
       .getSession() );
     if ( actionInvoker == null ) {
-      throw new LoggingJobExecutionException( Messages.getInstance().getErrorString(
+      final String failureMessage = Messages.getInstance().getErrorString(
         "ActionAdapterQuartzJob.ERROR_0002_FAILED_TO_CREATE_ACTION", //$NON-NLS-1$
-        getActionIdentifier( null, actionClassName, actionId ), StringUtil.getMapAsPrettyString( params ) ) );
+        getActionIdentifier( null, actionClassName, actionId ), StringUtil.getMapAsPrettyString( params ) );
+      // TODO: add unique work item ID
+      WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
+        WorkItemLifecyclePhase.FAILED, failureMessage, new Date() ) );
+      throw new LoggingJobExecutionException( failureMessage );
     }
 
     // Instantiate the requested IAction bean
     final IAction actionBean = (IAction) ActionUtil.createActionBean( actionClassName, actionId );
     if ( actionBean == null ) {
-      throw new LoggingJobExecutionException( Messages.getInstance().getErrorString(
+      final String failureMessage = Messages.getInstance().getErrorString(
         "ActionAdapterQuartzJob.ERROR_0002_FAILED_TO_CREATE_ACTION", //$NON-NLS-1$
-        getActionIdentifier( actionBean, actionClassName, actionId ), StringUtil.getMapAsPrettyString( params ) ) );
+        getActionIdentifier( actionBean, actionClassName, actionId ), StringUtil.getMapAsPrettyString( params ) );
+        // TODO: add unique work item ID
+      WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
+        WorkItemLifecyclePhase.FAILED, failureMessage, new Date() ) );
+      throw new LoggingJobExecutionException( failureMessage );
     }
+
+    // TODO: add unique work item ID
+    WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
+      WorkItemLifecyclePhase.SUBMITTED, null, new Date() ) );
 
     // Invoke the action and get the status of the invocation
     final IActionInvokeStatus status = actionInvoker.invokeAction( actionBean, actionUser, params );
@@ -192,6 +207,7 @@ public class ActionAdapterQuartzJob implements Job {
     scheduler.fireJobCompleted( actionBean, actionUser, params, streamProvider );
 
     if ( requiresUpdate ) {
+      // TODO log restart work item status?
       log.warn( "Output path for job: " + context.getJobDetail().getName() + " has changed. Job requires update" );
       try {
         final IJobTrigger trigger = scheduler.getJob( context.getJobDetail().getName() ).getJobTrigger();
