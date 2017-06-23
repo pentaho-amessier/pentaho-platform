@@ -19,19 +19,50 @@ package org.pentaho.platform.workitem;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.pentaho.platform.api.workitem.IWorkItem;
+import org.apache.log4j.DailyRollingFileAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
+import org.pentaho.platform.api.workitem.IWorkItemLifecycleRecord;
 import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.workitem.messages.Messages;
+import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
+/**
+ * This component listens for {@link WorkItemLifecycleEvent}s and writes the information stored within the event into
+ * a log file.
+ */
 @Component
 public class FileWorkItemLifecycleEventListener {
 
   private static final Log log = LogFactory.getLog( FileWorkItemLifecycleEventListener.class );
+
+  private static String WORK_ITEM_LOG_FILE = "work-item-status";
+  private static final Logger workItemLogger = Logger.getLogger( FileWorkItemLifecycleEventListener.class );
+
+  static {
+    final PatternLayout layout = new PatternLayout();
+    layout.setConversionPattern( "%m%n" );
+
+
+    final DailyRollingFileAppender fileAppender = new DailyRollingFileAppender();
+    fileAppender.setFile( "../logs/work-item-status.log" );
+    // TODO: why is this not working?
+    //fileAppender.setFile( ".." + File.pathSeparator + "logs" + File.pathSeparator + WORK_ITEM_LOG_FILE + ".log" );
+    fileAppender.setLayout( layout );
+    fileAppender.activateOptions();
+    fileAppender.setAppend( true );
+    fileAppender.setDatePattern( "'.'yyyy-MM-dd" );
+
+    // configures the root logger
+    workItemLogger.setLevel( Level.INFO );
+    workItemLogger.addAppender( fileAppender );
+  }
 
   @EventListener
   @Async
@@ -41,57 +72,29 @@ public class FileWorkItemLifecycleEventListener {
         .toString() ) );
     }
 
-    final IWorkItem workItem = event.getWorkItem();
-    if ( workItem == null ) {
-      log.error( Messages.getInstance().getErrorString( "ERROR_0001_MISSING_WORK_ITEM" ) );
+    final IWorkItemLifecycleRecord workItemLifecycleRecord = event.getWorkItemLifecycleRecord();
+    if ( workItemLifecycleRecord == null ) {
+      log.error( Messages.getInstance().getErrorString( "ERROR_0001_MISSING_WORK_ITEM_LIFECYCLE" ) );
       return;
     }
 
-    final String workItemUid = workItem.getUid();
-    final String workItemDetails = workItem.getDetails();
-    final WorkItemLifecyclePhase lifecyclePhase = event.getLifecyclePhase();
-    final String details = event.getDetails();
-    final Date sourceTimestamp = event.getSourceTimestamp();
-    final String sourceHostName = event.getSourceHostName();
-    final String sourceHostIp = event.getSourceHostIp();
+    // TODO: null checks
+    final String workItemUid = workItemLifecycleRecord.getWorkItemUid();
+    final String workItemDetails = workItemLifecycleRecord.getWorkItemDetails();
+    final WorkItemLifecyclePhase lifecyclePhase = workItemLifecycleRecord.getWorkItemLifecyclePhase();
+    final String lifeCyclePhaseName = WorkItemLifecycleUtil.getLifecyclePhaseName( lifecyclePhase );
+    final String lifeCyclePhaseDesc = WorkItemLifecycleUtil.getLifecyclePhaseDescription( lifecyclePhase );
+    final String lifecycleDetails = workItemLifecycleRecord.getLifecycleDetails();
+    final Date sourceTimestamp = workItemLifecycleRecord.getSourceTimestamp();
+    final String sourceHostName = workItemLifecycleRecord.getSourceHostName();
+    final String sourceHostIp = workItemLifecycleRecord.getSourceHostIp();
 
     // the current date may be off from the time the event was generated, let's track both
     final Date targetTimeStamp = new Date();
 
+    // TODO: come up with a better/standard way to format the message content (cvs? json?...)
+    workItemLogger.info( targetTimeStamp + "|" + workItemUid + "|" + workItemDetails + "|" + lifecyclePhase + "|"
+      + lifeCyclePhaseName + "|" + lifeCyclePhaseDesc + "|" + lifecycleDetails + "|" + sourceTimestamp + "|"
+      + sourceHostName + "|" + sourceHostIp );
   }
 }
-
-
-
-/*
-TODO: remove - this is temp stuff...
-public static void main(String[] args) {
-        // creates pattern layout
-        PatternLayout layout = new PatternLayout();
-        String conversionPattern = "%-7p %d [%t] %c %x - %m%n";
-        layout.setConversionPattern(conversionPattern);
-
-        // creates console appender
-        ConsoleAppender consoleAppender = new ConsoleAppender();
-        consoleAppender.setLayout(layout);
-        consoleAppender.activateOptions();
-
-        // creates file appender
-        FileAppender fileAppender = new FileAppender();
-        fileAppender.setFile("applog3.txt");
-        fileAppender.setLayout(layout);
-        fileAppender.activateOptions();
-
-        // configures the root logger
-        Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(consoleAppender);
-        rootLogger.addAppender(fileAppender);
-
-        // creates a custom logger and log messages
-        Logger logger = Logger.getLogger(ProgrammaticLog4jExample.class);
-        logger.debug("this is a debug log message");
-        logger.info("this is a information log message");
-        logger.warn("this is a warning log message");
-    }
- */
