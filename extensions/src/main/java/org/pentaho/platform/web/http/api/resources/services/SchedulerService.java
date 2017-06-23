@@ -35,6 +35,7 @@ import org.pentaho.platform.api.scheduler2.IScheduler;
 import org.pentaho.platform.api.scheduler2.Job;
 import org.pentaho.platform.api.scheduler2.Job.JobState;
 import org.pentaho.platform.api.scheduler2.SchedulerException;
+import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.engine.security.SecurityHelper;
@@ -44,6 +45,7 @@ import org.pentaho.platform.scheduler2.blockout.BlockoutAction;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.security.policy.rolebased.actions.AdministerSecurityAction;
 import org.pentaho.platform.security.policy.rolebased.actions.SchedulerAction;
+import org.pentaho.platform.util.StringUtil;
 import org.pentaho.platform.util.messages.LocaleHelper;
 import org.pentaho.platform.web.http.api.resources.ComplexJobTriggerProxy;
 import org.pentaho.platform.web.http.api.resources.JobRequest;
@@ -54,6 +56,8 @@ import org.pentaho.platform.web.http.api.resources.SchedulerOutputPathResolver;
 import org.pentaho.platform.web.http.api.resources.SchedulerResourceUtil;
 import org.pentaho.platform.web.http.api.resources.SessionResource;
 import org.pentaho.platform.web.http.api.resources.proxies.BlockStatusProxy;
+import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
+import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -163,6 +167,9 @@ public class SchedulerService {
       }
     }
 
+    // TODO: add unique work item ID
+    WorkItemLifecycleUtil.publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( parameterMap ),
+      WorkItemLifecyclePhase.SCHEDULED, null, new Date() ) );
     return job;
   }
 

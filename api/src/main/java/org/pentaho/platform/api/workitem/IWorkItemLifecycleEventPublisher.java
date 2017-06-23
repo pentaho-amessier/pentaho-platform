@@ -17,25 +17,15 @@
 
 package org.pentaho.platform.api.workitem;
 
-import java.util.Date;
-
 /**
- * The public interface for publishing {@link IWorkItem} {@link WorkItemLifecyclePhase} changes.
+ * The public interface for publishing changes to the work item lifecycle.
  */
 public interface IWorkItemLifecycleEventPublisher {
 
   /**
-   * Publishes the change to the {@link IWorkItem}'s {@link WorkItemLifecyclePhase}.
+   * Publishes the change to the work item lifecycle.
    *
-   * @param workItem        the {@link IWorkItem}
-   * @param phase           the {@link WorkItemLifecyclePhase}
-   * @param details         any details associated with the state change (example: error message, exception stack
-   *                        trace); this field can be null
-   * @param sourceTimestamp the time the event was triggered by the caller; this parameter can be null and will be set
-   *                        to the current {@link Date}, but can also be set explicitly, in cases where the original
-   *                        event may have been generated on another host and propagated via http or some other
-   *                        mechanism.
+   * @param workItemLifecycleRecord the {@link IWorkItemLifecycleRecord}
    */
-  void publish( final IWorkItem workItem, final WorkItemLifecyclePhase phase, final String details,
-                final Date sourceTimestamp );
+  void publish( final IWorkItemLifecycleRecord workItemLifecycleRecord );
 }

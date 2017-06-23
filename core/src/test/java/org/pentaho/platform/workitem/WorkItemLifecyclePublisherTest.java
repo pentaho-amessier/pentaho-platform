@@ -21,6 +21,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.pentaho.di.core.util.Assert;
+import org.pentaho.platform.api.workitem.IWorkItemLifecycleRecord;
 import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -31,11 +32,11 @@ public class WorkItemLifecyclePublisherTest {
 
   private AbstractApplicationContext contextMock = null;
   private WorkItemLifecycleEventPublisher publisherMock = null;
-  private WorkItem workItemMock = null;
-  private String uid = "foo";
+  private IWorkItemLifecycleRecord workItemLifecycleRecordMock = null;
+  private String workItemUid = "foo";
   private String workItemDetails = "foe";
   private WorkItemLifecyclePhase lifecyclePhase = WorkItemLifecyclePhase.DISPATCHED;
-  private String eventDetails = "foe";
+  private String lifecycleDetails = "foe";
   private Date currentTimeStamp = new Date();
   private WorkItemLifecycleEvent eventMock = null;
 
@@ -49,21 +50,18 @@ public class WorkItemLifecyclePublisherTest {
     publisherMock = Mockito.spy( new WorkItemLifecycleEventPublisher() );
     publisherMock.setApplicationEventPublisher( contextMock );
 
-    workItemMock = Mockito.spy( new WorkItem( uid, workItemDetails ) );
+    workItemLifecycleRecordMock = Mockito.spy( new WorkItemLifecycleRecord( workItemUid, workItemDetails,
+      lifecyclePhase, lifecycleDetails, currentTimeStamp ) );
 
-    eventMock =
-      Mockito.spy( new WorkItemLifecycleEvent( workItemMock, lifecyclePhase, eventDetails, currentTimeStamp ) );
-    Mockito.when( publisherMock.createEvent( workItemMock, lifecyclePhase, eventDetails, currentTimeStamp ) )
-      .thenReturn(
-        eventMock );
+    eventMock = Mockito.spy( new WorkItemLifecycleEvent( workItemLifecycleRecordMock ) );
+    Mockito.when( publisherMock.createEvent( workItemLifecycleRecordMock ) ).thenReturn( eventMock );
   }
 
   @Test
   public void testPublisher() throws InterruptedException {
-    publisherMock.publish( workItemMock, lifecyclePhase, eventDetails, currentTimeStamp );
+    publisherMock.publish( workItemLifecycleRecordMock );
     // verify that createEvent is called correctly
-    Mockito.verify( publisherMock, Mockito.times( 1 ) )
-      .createEvent( workItemMock, lifecyclePhase, eventDetails, currentTimeStamp );
+    Mockito.verify( publisherMock, Mockito.times( 1 ) ).createEvent( workItemLifecycleRecordMock );
     // verify that the publishEvent method is called as expected
     Mockito.verify( contextMock, Mockito.times( 1 ) ).publishEvent( eventMock );
 
