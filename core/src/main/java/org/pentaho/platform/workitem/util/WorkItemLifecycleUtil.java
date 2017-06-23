@@ -19,12 +19,12 @@ package org.pentaho.platform.workitem.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.pentaho.platform.api.workitem.IWorkItemLifecycleRecord;
-import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
+import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.util.messages.Messages;
 import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
+import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Configuration;
@@ -58,13 +58,13 @@ public class WorkItemLifecycleUtil {
    * A convenience method for publishing changes to the work item's lifecycles. Fetches the available
    * {@link ApplicationEventPublisher}, and if available, calls its
    * {@link ApplicationEventPublisher#publishEvent(Object)} method, where the Object passed to the method is the
-   * {@link WorkItemLifecycleEvent} representing the {@link IWorkItemLifecycleRecord}.  Otherwise does nothing, as the
+   * {@link WorkItemLifecycleEvent} representing the {@link WorkItemLifecycleRecord}.  Otherwise does nothing, as the
    * {@link ApplicationEventPublisher} may not be available, which is a perfectly valid scenario, if we do not care
    * about publishing {@link WorkItemLifecycleEvent}'s.
    *
-   * @param workItemLifecycleRecord the {@link IWorkItemLifecycleRecord}
+   * @param workItemLifecycleRecord the {@link WorkItemLifecycleRecord}
    */
-  public void publish( final IWorkItemLifecycleRecord workItemLifecycleRecord ) {
+  public void publish( final WorkItemLifecycleRecord workItemLifecycleRecord ) {
 
     if ( getApplicationEventPublisher() != null ) {
       getApplicationEventPublisher().publishEvent( createEvent( workItemLifecycleRecord ) );
@@ -74,7 +74,7 @@ public class WorkItemLifecycleUtil {
     }
   }
 
-  protected WorkItemLifecycleEvent createEvent( final IWorkItemLifecycleRecord workItemLifecycleRecord ) {
+  protected WorkItemLifecycleEvent createEvent( final WorkItemLifecycleRecord workItemLifecycleRecord ) {
     return new WorkItemLifecycleEvent( workItemLifecycleRecord );
   }
 

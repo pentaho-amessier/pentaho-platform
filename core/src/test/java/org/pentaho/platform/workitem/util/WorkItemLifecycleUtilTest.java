@@ -21,8 +21,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.pentaho.platform.api.workitem.IWorkItemLifecycleRecord;
-import org.pentaho.platform.api.workitem.WorkItemLifecyclePhase;
+import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
 import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
 import org.springframework.context.support.AbstractApplicationContext;
@@ -34,7 +33,7 @@ public class WorkItemLifecycleUtilTest {
 
   private AbstractApplicationContext contextMock = null;
   private WorkItemLifecycleUtil publisherUtilMock = null;
-  private IWorkItemLifecycleRecord workItemLifecycleRecordMock = null;
+  private WorkItemLifecycleRecord workItemLifecycleRecordMock = null;
   private String workItemUid = "foo";
   private String workItemDetails = "foe";
   private WorkItemLifecyclePhase lifecyclePhase = WorkItemLifecyclePhase.DISPATCHED;
