@@ -25,18 +25,17 @@ import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
 import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
-import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.engine.security.SecurityHelper;
 import org.pentaho.platform.plugin.action.messages.Messages;
 import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.StringUtil;
 import org.pentaho.platform.util.messages.LocaleHelper;
 import org.pentaho.platform.web.http.api.resources.RepositoryFileStreamProvider;
+import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
 import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.Map;
 
 /**
@@ -108,7 +107,7 @@ public class DefaultActionInvoker implements IActionInvoker {
    */
   @Override
   public IActionInvokeStatus invokeAction( final IAction actionBean, final String actionUser, final
-  Map<String, Serializable> params ) throws Exception {
+    Map<String, Serializable> params ) throws Exception {
     ActionUtil.prepareMap( params );
     // call getStreamProvider, in addition to creating the provider, this method also adds values to the map that
     // serialize the stream provider and make it possible to deserialize and recreate it for remote execution.
@@ -126,7 +125,7 @@ public class DefaultActionInvoker implements IActionInvoker {
    * @throws Exception when the {@code IAction} cannot be invoked for some reason.
    */
   protected IActionInvokeStatus invokeActionImpl( final IAction actionBean, final String actionUser, final
-  Map<String, Serializable> params ) throws Exception {
+    Map<String, Serializable> params ) throws Exception {
 
     final String workItemUid = WorkItemLifecycleRecord.getUidFromMap( params );
     final WorkItemLifecycleRecord workItemLifecycleRecord = new WorkItemLifecycleRecord( workItemUid, StringUtil
