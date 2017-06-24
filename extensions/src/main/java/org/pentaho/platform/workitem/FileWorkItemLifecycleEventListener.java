@@ -24,7 +24,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.pentaho.platform.workitem.messages.Messages;
-import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -79,8 +78,8 @@ public class FileWorkItemLifecycleEventListener {
     final String workItemUid = workItemLifecycleRecord.getWorkItemUid();
     final String workItemDetails = workItemLifecycleRecord.getWorkItemDetails();
     final WorkItemLifecyclePhase lifecyclePhase = workItemLifecycleRecord.getWorkItemLifecyclePhase();
-    final String lifeCyclePhaseName = WorkItemLifecycleUtil.getLifecyclePhaseName( lifecyclePhase );
-    final String lifeCyclePhaseDesc = WorkItemLifecycleUtil.getLifecyclePhaseDescription( lifecyclePhase );
+    final String lifeCyclePhaseName = lifecyclePhase.getShortName();
+    final String lifeCyclePhaseDesc = lifecyclePhase.getDescription();
     final String lifecycleDetails = workItemLifecycleRecord.getLifecycleDetails();
     final Date sourceTimestamp = workItemLifecycleRecord.getSourceTimestamp();
     final String sourceHostName = workItemLifecycleRecord.getSourceHostName();
