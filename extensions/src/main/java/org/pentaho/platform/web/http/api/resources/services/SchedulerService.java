@@ -134,6 +134,13 @@ public class SchedulerService {
     IJobTrigger jobTrigger = SchedulerResourceUtil.convertScheduleRequestToJobTrigger( scheduleRequest, scheduler );
 
     HashMap<String, Serializable> parameterMap = new HashMap<String, Serializable>();
+
+    // create the WorkItemLifecycleRecord with null uid, so that it can be generated within
+    final WorkItemLifecycleRecord workItemLifecycleRecord = new WorkItemLifecycleRecord( null, StringUtil
+      .getMapAsPrettyString( parameterMap ) );
+    // put the workItemUid in the map so that it can be retrieved within the quartz scheduler and beyond
+    workItemLifecycleRecord.addUidToMap( parameterMap );
+
     for ( JobScheduleParam param : scheduleRequest.getJobParameters() ) {
       parameterMap.put( param.getName(), param.getValue() );
     }
@@ -167,10 +174,8 @@ public class SchedulerService {
       }
     }
 
-    // TODO: add unique work item ID
-    WorkItemLifecycleUtil.getInstance()
-      .publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( parameterMap ),
-        WorkItemLifecyclePhase.SCHEDULED, null, new Date() ) );
+    workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SCHEDULED );
+    WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
     return job;
   }
 
