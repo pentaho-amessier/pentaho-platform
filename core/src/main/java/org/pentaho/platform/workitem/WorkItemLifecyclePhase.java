@@ -17,66 +17,57 @@
 
 package org.pentaho.platform.workitem;
 
+import org.pentaho.platform.util.messages.Messages;
+
 /**
- * An enumeration of the known lifecycle events for the work item. Each instance contains the a message key for
- * the short name and a long description of the phase. Both of these keys are expected to be present within the
- * resources of the caller and used to construct the "pretty" name and message describing the lifecycle phase.
+ * An enumeration of the known lifecycle events for the work item.
  */
 public enum WorkItemLifecyclePhase {
 
   /**
-   * The work item has been scheduled for execution; shortNameMessageKey=LifecyclePhase.SCHEDULED,
-   * descriptionMessageKey=SCHEDULED_DESC.
+   * The work item has been scheduled for execution
    */
-  SCHEDULED( "LifecyclePhase.SCHEDULED", "LifecyclePhase.SCHEDULED_DESC" ),
+  SCHEDULED( "LifecyclePhase.SCHEDULED" ),
   /**
-   * The work item has been submitted for execution; shortNameMessageKey=LifecyclePhase.SUBMITTE,
-   * descriptionMessageKey=SUBMITTED_DESC.
+   * The work item has been submitted for execution
    */
-  SUBMITTED( "LifecyclePhase.SUBMITTED", "LifecyclePhase.SUBMITTED_DESC" ),
+  SUBMITTED( "LifecyclePhase.SUBMITTED" ),
   /**
-   * The work item has been dispatched to the component responsible for its execution;
-   * shortNameMessageKey=LifecyclePhase .DISPATCHED, descriptionMessageKey=DISPATCHED_DESC.
+   * The work item has been dispatched to the component responsible for its execution
    */
-  DISPATCHED( "LifecyclePhase.DISPATCHED", "LifecyclePhase.DISPATCHED_DESC" ),
+  DISPATCHED( "LifecyclePhase.DISPATCHED" ),
   /**
-   * The work item has been received by the component responsible for its execution; shortNameMessageKey=LifecyclePhase
-   * .RECEIVED, descriptionMessageKey=RECEIVED_DESC.
+   * The work item has been received by the component responsible for its execution
    */
-  RECEIVED( "LifecyclePhase.RECEIVED", "LifecyclePhase.RECEIVED_DESC" ),
+  RECEIVED( "LifecyclePhase.RECEIVED" ),
   /**
-   * The work item execution has been rejected; shortNameMessageKey=LifecyclePhase.REJECTED,
-   * descriptionMessageKey=REJECTED_DESC.
+   * The work item execution has been rejected
    */
-  REJECTED( "LifecyclePhase.REJECTED", "LifecyclePhase.REJECTED_DESC" ),
+  REJECTED( "LifecyclePhase.REJECTED" ),
   /**
-   * The work item execution is in progress; shortNameMessageKey=LifecyclePhase.IN_PROGRESS,
-   * descriptionMessageKey=IN_PROGRESS_DESC.
+   * The work item execution is in progress
    */
-  IN_PROGRESS( "LifecyclePhase.IN_PROGRESS", "LifecyclePhase.IN_PROGRESS_DESC" ),
+  IN_PROGRESS( "LifecyclePhase.IN_PROGRESS" ),
   /**
-   * The work item execution has succeeded; shortNameMessageKey=LifecyclePhase.SUCCEEDED,
-   * descriptionMessageKey=SUCCEEDED_DESC.
+   * The work item execution has succeeded
    */
-  SUCCEEDED( "LifecyclePhase.SUCCEEDED", "LifecyclePhase.SUCCEEDED_DESC" ),
+  SUCCEEDED( "LifecyclePhase.SUCCEEDED" ),
   /**
-   * The work item execution has failed; shortNameMessageKey=LifecyclePhase.FAILED, descriptionMessageKey=FAILED_DESC.
+   * The work item execution has failed
    */
-  FAILED( "LifecyclePhase.FAILED", "LifecyclePhase.FAILED_DESC" );
+  FAILED( "LifecyclePhase.FAILED" );
 
   private String shortNameMessageKey;
-  private String descriptionMessageKey;
 
-  WorkItemLifecyclePhase( final String shortNameMessageKey, final String descriptionMessageKey ) {
+  WorkItemLifecyclePhase( final String shortNameMessageKey ) {
     this.shortNameMessageKey = shortNameMessageKey;
-    this.descriptionMessageKey = descriptionMessageKey;
   }
 
-  public String getShortNameMessageKey() {
-    return shortNameMessageKey;
+  public String getShortName() {
+    return Messages.getInstance().getString( shortNameMessageKey );
   }
 
-  public String getDescriptionMessageKey() {
-    return descriptionMessageKey;
+  public String getDescription() {
+    return Messages.getInstance().getString( shortNameMessageKey + "_DESC" );
   }
 }

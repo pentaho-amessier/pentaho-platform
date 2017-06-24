@@ -19,10 +19,8 @@ package org.pentaho.platform.workitem.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
-import org.pentaho.platform.util.messages.Messages;
 import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
 import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +48,14 @@ public class WorkItemLifecycleUtil {
     return this.publisher;
   }
 
-
+  /**
+   * A convenience method for publishing changes to the work item's lifecycles. Fetches the
+   * {@link WorkItemLifecycleUtil} bean, and if available, calls its {@link #publishImpl(WorkItemLifecycleRecord)}
+   * method. Otherwise does nothing, as the {@link WorkItemLifecycleUtil} bean may not be available, which is a
+   * perfectly valid scenario, if we do not care about publishing {@link WorkItemLifecycleEvent}'s.
+   *
+   * @param workItemLifecycleRecord the {@link WorkItemLifecycleRecord}
+   */
   public static void publish( final WorkItemLifecycleRecord workItemLifecycleRecord ) {
     final WorkItemLifecycleUtil util = PentahoSystem.get( WorkItemLifecycleUtil.class, PUBLISHER_BEAN_NAME,
       PentahoSessionHolder.getSession() );
@@ -66,7 +71,7 @@ public class WorkItemLifecycleUtil {
    * A convenience method for publishing changes to the work item's lifecycles. Fetches the available
    * {@link ApplicationEventPublisher}, and if available, calls its
    * {@link ApplicationEventPublisher#publishEvent(Object)} method, where the Object passed to the method is the
-   * {@link WorkItemLifecycleEvent} representing the {@link WorkItemLifecycleRecord}.  Otherwise does nothing, as the
+   * {@link WorkItemLifecycleEvent} representing the {@link WorkItemLifecycleRecord}. Otherwise does nothing, as the
    * {@link ApplicationEventPublisher} may not be available, which is a perfectly valid scenario, if we do not care
    * about publishing {@link WorkItemLifecycleEvent}'s.
    *
@@ -84,25 +89,5 @@ public class WorkItemLifecycleUtil {
 
   protected WorkItemLifecycleEvent createEvent( final WorkItemLifecycleRecord workItemLifecycleRecord ) {
     return new WorkItemLifecycleEvent( workItemLifecycleRecord );
-  }
-
-  /**
-   * Returns the short "pretty" name for the requested {@link WorkItemLifecyclePhase}.
-   *
-   * @param lifecyclePhase the {@link WorkItemLifecyclePhase}
-   * @return a "pretty" short name for the {@link WorkItemLifecyclePhase}
-   */
-  public static String getLifecyclePhaseName( final WorkItemLifecyclePhase lifecyclePhase ) {
-    return Messages.getInstance().getString( lifecyclePhase.getShortNameMessageKey() );
-  }
-
-  /**
-   * Returns the short "pretty" full description for the requested {@link WorkItemLifecyclePhase}.
-   *
-   * @param lifecyclePhase the {@link WorkItemLifecyclePhase}
-   * @return a "pretty" ull description for the {@link WorkItemLifecyclePhase}
-   */
-  public static String getLifecyclePhaseDescription( final WorkItemLifecyclePhase lifecyclePhase ) {
-    return Messages.getInstance().getString( lifecyclePhase.getDescriptionMessageKey() );
   }
 }

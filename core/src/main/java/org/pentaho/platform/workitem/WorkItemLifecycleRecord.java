@@ -20,7 +20,6 @@ package org.pentaho.platform.workitem;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.pentaho.platform.util.ActionUtil;
-import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -229,10 +228,8 @@ public class WorkItemLifecycleRecord {
     final StringBuilder info = new StringBuilder();
     info.append( "workItemUid: " ).append( workItemUid ).append( ", " );
     info.append( "workItemDetails: " ).append( workItemDetails ).append( ", " );
-    info.append( "workItemLifecyclePhase.name: " ).append( WorkItemLifecycleUtil.getLifecyclePhaseName(
-      workItemLifecyclePhase ) ).append( ", " );
-    info.append( "workItemLifecyclePhase.description: " ).append( WorkItemLifecycleUtil.getLifecyclePhaseDescription(
-      workItemLifecyclePhase ) ).append( ", " );
+    info.append( "workItemLifecyclePhase.name: " ).append( workItemLifecyclePhase.getShortName() ).append( ", " );
+    info.append( "workItemLifecyclePhase.description: " ).append( workItemLifecyclePhase.getDescription() ).append( ", " );
     info.append( "lifecycleDetails: " ).append( lifecycleDetails ).append( ", " );
     info.append( "sourceTimestamp: " ).append( sourceTimestamp ).append( ", " );
     info.append( "sourceHostName: " ).append( sourceHostName ).append( ", " );
