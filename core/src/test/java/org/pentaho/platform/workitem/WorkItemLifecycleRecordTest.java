@@ -31,9 +31,12 @@ public class WorkItemLifecycleRecordTest {
   private Date currentTimeStamp = new Date();
 
   @Test
-  public void testValidInstaitiation() {
+  public void testValidInstantiation() {
     final WorkItemLifecycleRecord workItemLifecycleRecord = new WorkItemLifecycleRecord( workItemUid,
-      workItemDetails, lifecyclePhase, lifecycleDetails, currentTimeStamp );
+      workItemDetails, currentTimeStamp );
+    workItemLifecycleRecord.setWorkItemLifecyclePhase( lifecyclePhase );
+    workItemLifecycleRecord.setLifecycleDetails( lifecycleDetails );
+    workItemLifecycleRecord.setSourceTimestamp( currentTimeStamp );
     Assert.assertEquals( workItemUid, workItemLifecycleRecord.getWorkItemUid() );
     Assert.assertEquals( workItemDetails, workItemLifecycleRecord.getWorkItemDetails() );
     Assert.assertEquals( lifecyclePhase, workItemLifecycleRecord.getWorkItemLifecyclePhase() );
@@ -47,13 +50,13 @@ public class WorkItemLifecycleRecordTest {
 
   @Test
   public void testNulls() {
-    final WorkItemLifecycleRecord workItemLifecycleRecord = new WorkItemLifecycleRecord( null, null, null, null,
-      null );
-    Assert.assertNull( workItemLifecycleRecord.getWorkItemUid() );
+    final WorkItemLifecycleRecord workItemLifecycleRecord = new WorkItemLifecycleRecord( null, null, currentTimeStamp );
     Assert.assertNull( workItemLifecycleRecord.getWorkItemDetails() );
     Assert.assertNull( workItemLifecycleRecord.getWorkItemLifecyclePhase() );
     Assert.assertNull( workItemLifecycleRecord.getLifecycleDetails() );
 
+    // workItemUid should be generated, if one is not provided in the constructor
+    Assert.assertNotNull( workItemLifecycleRecord.getWorkItemUid() );
     // if null sourceTimestamp is passed, it is initialized when the WorkItemLifecycleRecord is initialized
     Assert.assertNotNull( workItemLifecycleRecord.getSourceTimestamp() );
     // source host name and ip should be set within the constructor

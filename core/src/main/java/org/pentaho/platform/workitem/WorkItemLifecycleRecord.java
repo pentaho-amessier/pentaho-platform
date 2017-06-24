@@ -17,16 +17,23 @@
 
 package org.pentaho.platform.workitem;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Date;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * This class encapsulates all information pertaining to a "work item" at a specific point in its lifecycle.
  */
 public class WorkItemLifecycleRecord {
+
+  private static final Log logger = LogFactory.getLog( WorkItemLifecycleRecord.class );
 
   private String workItemUid;
   private String workItemDetails;
@@ -35,38 +42,89 @@ public class WorkItemLifecycleRecord {
   private Date sourceTimestamp;
   private String sourceHostName;
   private String sourceHostIp;
+  private static String HOST_NAME;
+  private static String HOST_IP;
+
+  static {
+    try {
+      HOST_NAME = InetAddress.getLocalHost().getCanonicalHostName();
+      HOST_IP = InetAddress.getLocalHost().getHostAddress();
+    } catch ( final UnknownHostException uhe ) {
+      logger.error( uhe.getLocalizedMessage() );
+    }
+  }
+
+  /**
+   * Creates the {@link WorkItemLifecycleRecord} with all the required parameters. The {@code sourceTimestmap} is
+   * set to the current date.
+   *
+   * @param workItemUid     a {@link String} containing unique identifier for the {@link WorkItemLifecycleRecord}
+   * @param workItemDetails a {@link String} containing details of the {@link WorkItemLifecycleRecord}
+   */
+  public WorkItemLifecycleRecord( final String workItemUid, final String workItemDetails ) {
+    this( workItemUid, workItemDetails, new Date() );
+  }
 
   /**
    * Creates the {@link WorkItemLifecycleRecord} with all the required parameters.
    *
    * @param workItemUid     a {@link String} containing unique identifier for the {@link WorkItemLifecycleRecord}
    * @param workItemDetails a {@link String} containing details of the {@link WorkItemLifecycleRecord}
+   * @param sourceTimestamp a {@link Date} representing the time the lifecycle change occured.
    */
-  public WorkItemLifecycleRecord( final String workItemUid, final String workItemDetails, final
-  WorkItemLifecyclePhase workItemLifecyclePhase, final String lifecycleDetails, final Date sourceTimestamp ) {
+
+  public WorkItemLifecycleRecord( final String workItemUid, final String workItemDetails, final Date sourceTimestamp ) {
     this.workItemUid = workItemUid;
     this.workItemDetails = workItemDetails;
-    this.workItemLifecyclePhase = workItemLifecyclePhase;
-    this.lifecycleDetails = lifecycleDetails;
     this.sourceTimestamp = sourceTimestamp;
-    init();
+
+    // if the workItemUid is null, generate it
+    if ( this.workItemUid == null ) {
+      this.workItemUid = generateWorkItemId();
+    }
+    // Set sourceTimestamp to current date only if not already provided
+    if ( this.sourceTimestamp == null ) {
+      this.sourceTimestamp = new Date();
+    }
+
+    // set the default values for host name and ip, they can be changed directly if needed
+    this.sourceHostName = HOST_NAME;
+    this.sourceHostIp = HOST_IP;
   }
 
-  public WorkItemLifecycleRecord() {
+  public static String generateWorkItemId() {
+    return String.format( ActionUtil.REQUEST_ID_FORMAT, UUID.randomUUID().toString() );
   }
 
-  private void init() {
-    // Set to current date only if not already provided
-    if ( sourceTimestamp == null ) {
-      sourceTimestamp = new Date();
+  /**
+   * Adds the {@code workItemUid} to the given {@link Map}.
+   *
+   * @param map the {@link Map} to which the {@code workItemUid} is being added
+   */
+  public void addUidToMap( final Map map ) {
+    if ( map != null ) {
+      map.put( ActionUtil.REQUEST_ID, getWorkItemUid() );
     }
-    try {
-      // TODO: can this be cached? Does pentaho already have methods for that? otherwise put this in a static block
-      sourceHostName = InetAddress.getLocalHost().getCanonicalHostName();
-      sourceHostIp = InetAddress.getLocalHost().getHostAddress();
-    } catch ( final UnknownHostException uhe ) {
-      // TODO
+  }
+
+  /**
+   * Looks up the {@code ActionUtil.REQUEST_ID} within the {@link Map}. If available, the value is returned,
+   * otherwise a new uid is generated.
+   *
+   * @param map a {@link Map} that may contain the {@code ActionUtil.REQUEST_ID}
+   * @return {@code ActionUtil.REQUEST_ID} from the {@link Map} or a new uid
+   */
+  public static String getUidFromMap( final Map map ) {
+    String workItemUid = null;
+    if ( map == null ) {
+      workItemUid = generateWorkItemId();
+    } else {
+      workItemUid = (String) map.get( ActionUtil.REQUEST_ID );
+      if ( workItemUid == null ) {
+        workItemUid = generateWorkItemId();
+      }
     }
+    return workItemUid;
   }
 
   /**

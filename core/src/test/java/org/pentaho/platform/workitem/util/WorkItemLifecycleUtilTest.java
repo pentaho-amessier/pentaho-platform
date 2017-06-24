@@ -52,8 +52,9 @@ public class WorkItemLifecycleUtilTest {
     publisherUtilMock = Mockito.spy( contextMock.getBean( WorkItemLifecycleUtil.class ) );
     publisherUtilMock.setApplicationEventPublisher( contextMock );
 
-    workItemLifecycleRecordMock = Mockito.spy( new WorkItemLifecycleRecord( workItemUid, workItemDetails,
-      lifecyclePhase, lifecycleDetails, currentTimeStamp ) );
+    workItemLifecycleRecordMock = Mockito.spy( new WorkItemLifecycleRecord( workItemUid, workItemDetails ) );
+    workItemLifecycleRecordMock.setWorkItemLifecyclePhase( lifecyclePhase );
+    workItemLifecycleRecordMock.setLifecycleDetails( lifecycleDetails );
 
     eventMock = Mockito.spy( new WorkItemLifecycleEvent( workItemLifecycleRecordMock ) );
     Mockito.when( publisherUtilMock.createEvent( workItemLifecycleRecordMock ) ).thenReturn( eventMock );
@@ -61,7 +62,7 @@ public class WorkItemLifecycleUtilTest {
 
   @Test
   public void testPublisher() throws InterruptedException {
-    publisherUtilMock.publish( workItemLifecycleRecordMock );
+    publisherUtilMock.publishImpl( workItemLifecycleRecordMock );
     // verify that createEvent is called correctly
     Mockito.verify( publisherUtilMock, Mockito.times( 1 ) ).createEvent( workItemLifecycleRecordMock );
     // verify that the publishEvent method is called as expected

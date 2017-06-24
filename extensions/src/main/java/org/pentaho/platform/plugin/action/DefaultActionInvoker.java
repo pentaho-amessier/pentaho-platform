@@ -127,17 +127,19 @@ public class DefaultActionInvoker implements IActionInvoker {
    */
   protected IActionInvokeStatus invokeActionImpl( final IAction actionBean, final String actionUser, final
   Map<String, Serializable> params ) throws Exception {
-    // TODO: add unique work item ID
-    WorkItemLifecycleUtil.getInstance()
-      .publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
-        WorkItemLifecyclePhase.IN_PROGRESS, null, new Date() ) );
+
+    final String workItemUid = WorkItemLifecycleRecord.getUidFromMap( params );
+    final WorkItemLifecycleRecord workItemLifecycleRecord = new WorkItemLifecycleRecord( workItemUid, StringUtil
+      .getMapAsPrettyString( params ) );
+
+    workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.IN_PROGRESS );
+    WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
 
     if ( actionBean == null || params == null ) {
       final String failureMessage = Messages.getInstance().getCantInvokeNullAction();
-      // TODO: add unique work item ID
-      WorkItemLifecycleUtil.getInstance()
-        .publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
-          WorkItemLifecyclePhase.FAILED, failureMessage, new Date() ) );
+      workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
+      workItemLifecycleRecord.setLifecycleDetails( failureMessage );
+      WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
       throw new ActionInvocationException( failureMessage );
     }
 
@@ -171,15 +173,12 @@ public class DefaultActionInvoker implements IActionInvoker {
     } else {
       try {
         requiresUpdate = SecurityHelper.getInstance().runAsUser( actionUser, actionBeanRunner );
-        // TODO: add unique work item ID
-        WorkItemLifecycleUtil.getInstance()
-          .publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
-            WorkItemLifecyclePhase.SUCCEEDED, null, new Date() ) );
+        workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SUCCEEDED );
+        WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
       } catch ( final Throwable t ) {
-        // TODO: add unique work item ID
-        WorkItemLifecycleUtil.getInstance()
-          .publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
-            WorkItemLifecyclePhase.FAILED, t.getLocalizedMessage(), new Date() ) );
+        workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
+        workItemLifecycleRecord.setLifecycleDetails( t.getLocalizedMessage() );
+        WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
         status.setThrowable( t );
       }
     }

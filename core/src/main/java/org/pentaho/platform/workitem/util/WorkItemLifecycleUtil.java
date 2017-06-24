@@ -39,19 +39,27 @@ public class WorkItemLifecycleUtil {
   private static String PUBLISHER_BEAN_NAME = "workItemLifecyclePublisher";
   private static final Log log = LogFactory.getLog( WorkItemLifecycleUtil.class );
 
-  public static WorkItemLifecycleUtil getInstance() {
-    return PentahoSystem.get( WorkItemLifecycleUtil.class, PUBLISHER_BEAN_NAME, PentahoSessionHolder.getSession() );
-  }
-
   @Autowired
   private ApplicationEventPublisher publisher = null;
 
-  protected void setApplicationEventPublisher( final ApplicationEventPublisher publisher ) {
+  public void setApplicationEventPublisher( final ApplicationEventPublisher publisher ) {
     this.publisher = publisher;
   }
 
-  protected ApplicationEventPublisher getApplicationEventPublisher() {
+  public ApplicationEventPublisher getApplicationEventPublisher() {
     return this.publisher;
+  }
+
+
+  public static void publish( final WorkItemLifecycleRecord workItemLifecycleRecord ) {
+    final WorkItemLifecycleUtil util = PentahoSystem.get( WorkItemLifecycleUtil.class, PUBLISHER_BEAN_NAME,
+      PentahoSessionHolder.getSession() );
+    if ( util != null ) {
+      util.publishImpl( workItemLifecycleRecord );
+    } else {
+      log.debug( String.format( "'%s' publisher bean is not available, unable to publish work item  lifecycle: %s",
+        PUBLISHER_BEAN_NAME, workItemLifecycleRecord.toString() ) );
+    }
   }
 
   /**
@@ -64,13 +72,13 @@ public class WorkItemLifecycleUtil {
    *
    * @param workItemLifecycleRecord the {@link WorkItemLifecycleRecord}
    */
-  public void publish( final WorkItemLifecycleRecord workItemLifecycleRecord ) {
+  protected void publishImpl( final WorkItemLifecycleRecord workItemLifecycleRecord ) {
 
     if ( getApplicationEventPublisher() != null ) {
       getApplicationEventPublisher().publishEvent( createEvent( workItemLifecycleRecord ) );
     } else {
-      log.debug( String.format( "'%s' bean is not available, unable to publish work item "
-        + "lifecycle: %s", PUBLISHER_BEAN_NAME, workItemLifecycleRecord.toString() ) );
+      log.debug( String.format( "Publisher in bean '%s' is not available, unable to publish work item lifecycle: "
+        + "%s", PUBLISHER_BEAN_NAME, workItemLifecycleRecord.toString() ) );
     }
   }
 

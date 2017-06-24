@@ -117,7 +117,10 @@ public class ActionAdapterQuartzJob implements Job {
    * @throws Exception when the {@code IAction} cannot be invoked for some reason.
    */
   protected void invokeAction( final String actionClassName, final String actionId, final String actionUser, final
-  JobExecutionContext context, final Map<String, Serializable> params ) throws Exception {
+    JobExecutionContext context, final Map<String, Serializable> params ) throws Exception {
+
+    final WorkItemLifecycleRecord workItemLifecycleRecord = new WorkItemLifecycleRecord( WorkItemLifecycleRecord
+      .getUidFromMap( params ), StringUtil.getMapAsPrettyString( params ) );
 
     // create an instance of IActionInvoker, which knows know to invoke this IAction
     final IActionInvoker actionInvoker = PentahoSystem.get( IActionInvoker.class, "IActionInvoker", PentahoSessionHolder
@@ -126,10 +129,8 @@ public class ActionAdapterQuartzJob implements Job {
       final String failureMessage = Messages.getInstance().getErrorString(
         "ActionAdapterQuartzJob.ERROR_0002_FAILED_TO_CREATE_ACTION", //$NON-NLS-1$
         getActionIdentifier( null, actionClassName, actionId ), StringUtil.getMapAsPrettyString( params ) );
-      // TODO: add unique work item ID
-      WorkItemLifecycleUtil.getInstance()
-        .publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
-          WorkItemLifecyclePhase.FAILED, failureMessage, new Date() ) );
+      workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
+      WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
       throw new LoggingJobExecutionException( failureMessage );
     }
 
@@ -139,17 +140,16 @@ public class ActionAdapterQuartzJob implements Job {
       final String failureMessage = Messages.getInstance().getErrorString(
         "ActionAdapterQuartzJob.ERROR_0002_FAILED_TO_CREATE_ACTION", //$NON-NLS-1$
         getActionIdentifier( actionBean, actionClassName, actionId ), StringUtil.getMapAsPrettyString( params ) );
-      // TODO: add unique work item ID
-      WorkItemLifecycleUtil.getInstance()
-        .publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
-          WorkItemLifecyclePhase.FAILED, failureMessage, new Date() ) );
+
+      workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
+      workItemLifecycleRecord.setLifecycleDetails( failureMessage );
+      WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
+
       throw new LoggingJobExecutionException( failureMessage );
     }
 
-    // TODO: add unique work item ID
-    WorkItemLifecycleUtil.getInstance()
-      .publish( new WorkItemLifecycleRecord( null, StringUtil.getMapAsPrettyString( params ),
-        WorkItemLifecyclePhase.SUBMITTED, null, new Date() ) );
+    workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SUBMITTED );
+    WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
 
     // Invoke the action and get the status of the invocation
     final IActionInvokeStatus status = actionInvoker.invokeAction( actionBean, actionUser, params );
