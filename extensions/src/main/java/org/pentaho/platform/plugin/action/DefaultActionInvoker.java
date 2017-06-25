@@ -32,7 +32,7 @@ import org.pentaho.platform.util.StringUtil;
 import org.pentaho.platform.util.messages.LocaleHelper;
 import org.pentaho.platform.web.http.api.resources.RepositoryFileStreamProvider;
 import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
-import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
+import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
 import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 
 import java.io.Serializable;
@@ -127,18 +127,18 @@ public class DefaultActionInvoker implements IActionInvoker {
   protected IActionInvokeStatus invokeActionImpl( final IAction actionBean, final String actionUser, final
     Map<String, Serializable> params ) throws Exception {
 
-    final String workItemUid = WorkItemLifecycleRecord.getUidFromMap( params );
-    final WorkItemLifecycleRecord workItemLifecycleRecord = new WorkItemLifecycleRecord( workItemUid, StringUtil
+    final String workItemUid = WorkItemLifecycleEvent.getUidFromMap( params );
+    final WorkItemLifecycleEvent workItemLifecycleEvent = new WorkItemLifecycleEvent( workItemUid, StringUtil
       .getMapAsPrettyString( params ) );
 
-    workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.IN_PROGRESS );
-    WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
+    workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.IN_PROGRESS );
+    WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
 
     if ( actionBean == null || params == null ) {
       final String failureMessage = Messages.getInstance().getCantInvokeNullAction();
-      workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
-      workItemLifecycleRecord.setLifecycleDetails( failureMessage );
-      WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
+      workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
+      workItemLifecycleEvent.setLifecycleDetails( failureMessage );
+      WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
       throw new ActionInvocationException( failureMessage );
     }
 
@@ -172,12 +172,12 @@ public class DefaultActionInvoker implements IActionInvoker {
     } else {
       try {
         requiresUpdate = SecurityHelper.getInstance().runAsUser( actionUser, actionBeanRunner );
-        workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SUCCEEDED );
-        WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
+        workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SUCCEEDED );
+        WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
       } catch ( final Throwable t ) {
-        workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
-        workItemLifecycleRecord.setLifecycleDetails( t.getLocalizedMessage() );
-        WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
+        workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
+        workItemLifecycleEvent.setLifecycleDetails( t.getLocalizedMessage() );
+        WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
         status.setThrowable( t );
       }
     }

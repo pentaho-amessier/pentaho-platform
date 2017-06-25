@@ -17,6 +17,7 @@
 
 package org.pentaho.platform.workitem;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
 import org.pentaho.platform.util.messages.Messages;
 
 /**
@@ -69,5 +70,12 @@ public enum WorkItemLifecyclePhase {
 
   public String getDescription() {
     return Messages.getInstance().getString( shortNameMessageKey + "_DESC" );
+  }
+
+  public String toString() {
+    return new ToStringBuilder( this )
+      .append( "name", this.getShortName() )
+      .append( "description", this.getDescription() )
+      .toString();
   }
 }

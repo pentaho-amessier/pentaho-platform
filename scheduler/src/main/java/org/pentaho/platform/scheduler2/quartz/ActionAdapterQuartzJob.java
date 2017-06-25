@@ -27,6 +27,7 @@ import org.pentaho.platform.api.scheduler2.IBlockoutManager;
 import org.pentaho.platform.api.scheduler2.IJobTrigger;
 import org.pentaho.platform.api.scheduler2.IScheduler;
 import org.pentaho.platform.api.scheduler2.SimpleJobTrigger;
+import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
 import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
@@ -35,7 +36,6 @@ import org.pentaho.platform.scheduler2.blockout.BlockoutAction;
 import org.pentaho.platform.scheduler2.messsages.Messages;
 import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.StringUtil;
-import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
 import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
@@ -119,7 +119,7 @@ public class ActionAdapterQuartzJob implements Job {
   protected void invokeAction( final String actionClassName, final String actionId, final String actionUser, final
     JobExecutionContext context, final Map<String, Serializable> params ) throws Exception {
 
-    final WorkItemLifecycleRecord workItemLifecycleRecord = new WorkItemLifecycleRecord( WorkItemLifecycleRecord
+    final WorkItemLifecycleEvent workItemLifecycleEvent = new WorkItemLifecycleEvent( WorkItemLifecycleEvent
       .getUidFromMap( params ), StringUtil.getMapAsPrettyString( params ) );
 
     // create an instance of IActionInvoker, which knows know to invoke this IAction
@@ -129,8 +129,8 @@ public class ActionAdapterQuartzJob implements Job {
       final String failureMessage = Messages.getInstance().getErrorString(
         "ActionAdapterQuartzJob.ERROR_0002_FAILED_TO_CREATE_ACTION", //$NON-NLS-1$
         getActionIdentifier( null, actionClassName, actionId ), StringUtil.getMapAsPrettyString( params ) );
-      workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
-      WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
+      workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
+      WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
       throw new LoggingJobExecutionException( failureMessage );
     }
 
@@ -141,15 +141,15 @@ public class ActionAdapterQuartzJob implements Job {
         "ActionAdapterQuartzJob.ERROR_0002_FAILED_TO_CREATE_ACTION", //$NON-NLS-1$
         getActionIdentifier( actionBean, actionClassName, actionId ), StringUtil.getMapAsPrettyString( params ) );
 
-      workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
-      workItemLifecycleRecord.setLifecycleDetails( failureMessage );
-      WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
+      workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
+      workItemLifecycleEvent.setLifecycleDetails( failureMessage );
+      WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
 
       throw new LoggingJobExecutionException( failureMessage );
     }
 
-    workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SUBMITTED );
-    WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
+    workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SUBMITTED );
+    WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
 
     // Invoke the action and get the status of the invocation
     final IActionInvokeStatus status = actionInvoker.invokeAction( actionBean, actionUser, params );
