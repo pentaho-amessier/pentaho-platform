@@ -44,6 +44,8 @@ public class FileWorkItemLifecycleEventListener {
 
   static {
     final PatternLayout layout = new PatternLayout();
+    // TODO: make message configurable, use variable names of WorkItemLifecycleRecord and resolve using reflection
+    // make sure to encode properly (escape the separator)
     layout.setConversionPattern( "%m%n" );
 
     final DailyRollingFileAppender fileAppender = new DailyRollingFileAppender();
@@ -55,7 +57,9 @@ public class FileWorkItemLifecycleEventListener {
     fileAppender.setAppend( true );
     fileAppender.setDatePattern( "'.'yyyy-MM-dd" );
 
+    // TODO: why are the logs written to std out? remove...
     // configures the root logger
+    // TODO: make log configurable
     workItemLogger.setLevel( Level.INFO );
     workItemLogger.addAppender( fileAppender );
   }
@@ -89,8 +93,8 @@ public class FileWorkItemLifecycleEventListener {
     final Date targetTimeStamp = new Date();
 
     // TODO: come up with a better/standard way to format the message content (cvs? json?...)
-    workItemLogger.info( targetTimeStamp + "|" + workItemUid + "|" + workItemDetails + "|" + lifecyclePhase + "|"
-      + lifeCyclePhaseName + "|" + lifeCyclePhaseDesc + "|" + lifecycleDetails + "|" + sourceTimestamp + "|"
+    workItemLogger.info( targetTimeStamp.getTime() + "|" + workItemUid + "|" + workItemDetails + "|"
+      +  lifeCyclePhaseName + "|" + lifecycleDetails + "|" + sourceTimestamp.getTime() + "|"
       + sourceHostName + "|" + sourceHostIp );
   }
 

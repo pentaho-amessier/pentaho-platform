@@ -18,6 +18,7 @@ package org.pentaho.platform.web.http.filters;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
 import org.slf4j.MDC;
 
@@ -32,8 +33,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
 
-import static org.pentaho.platform.util.ActionUtil.*;
-
 public class RequestIdFilter implements Filter {
 
   private static final Log logger = LogFactory.getLog( RequestIdFilter.class );
@@ -41,18 +40,20 @@ public class RequestIdFilter implements Filter {
   public void destroy() {
   }
 
-  public void doFilter( ServletRequest req, ServletResponse resp, FilterChain chain ) throws ServletException, IOException {
+  public void doFilter( ServletRequest req, ServletResponse resp, FilterChain chain )
+    throws ServletException, IOException {
 
     HttpServletRequest request = (HttpServletRequest) req;
-    String requestId = Optional.ofNullable( request.getHeader( X_REQUEST_ID ) ).orElse( WorkItemLifecycleRecord
-      .generateWorkItemId() );
+    String requestId = Optional.ofNullable( request.getHeader( ActionUtil.X_REQUEST_ID ) ).orElse(
+      WorkItemLifecycleRecord
+        .generateWorkItemId() );
 
     try {
 
       if ( logger.isDebugEnabled() ) {
         logger.debug( "received request with request id of: " + requestId );
       }
-      MDC.put( REQUEST_ID, requestId );
+      MDC.put( ActionUtil.REQUEST_ID, requestId );
 
       chain.doFilter( req, resp );
 
@@ -61,8 +62,8 @@ public class RequestIdFilter implements Filter {
       if ( logger.isDebugEnabled() ) {
         logger.debug( "Exiting request with request id of: " + requestId );
       }
-      ( (HttpServletResponse) resp ).setHeader( X_REQUEST_ID, requestId );
-      MDC.remove( X_REQUEST_ID );
+      ( (HttpServletResponse) resp ).setHeader( ActionUtil.X_REQUEST_ID, requestId );
+      MDC.remove( ActionUtil.X_REQUEST_ID );
     }
   }
 
