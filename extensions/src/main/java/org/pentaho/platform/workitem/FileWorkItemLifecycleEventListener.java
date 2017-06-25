@@ -66,35 +66,34 @@ public class FileWorkItemLifecycleEventListener {
 
   @EventListener
   @Async
-  public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent event ) {
+  public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent workItemLifecycleEvent ) {
     if ( log.isDebugEnabled() ) {
-      log.debug( String.format( "%s received a WorkItemLifecycleEvent:: %s", this.getClass().getName(), event
+      log.debug( String.format( "%s received a WorkItemLifecycleEvent:: %s", this.getClass().getName(), workItemLifecycleEvent
         .toString() ) );
     }
 
-    final WorkItemLifecycleRecord workItemLifecycleRecord = event.getWorkItemLifecycleRecord();
-    if ( workItemLifecycleRecord == null ) {
+    if ( workItemLifecycleEvent == null ) {
       log.error( getMessageBundle().getErrorString( "ERROR_0001_MISSING_WORK_ITEM_LIFECYCLE" ) );
       return;
     }
 
+    final String workItemUid = workItemLifecycleEvent.getWorkItemUid();
+    final String workItemDetails = workItemLifecycleEvent.getWorkItemDetails();
+    final WorkItemLifecyclePhase lifecyclePhase = workItemLifecycleEvent.getWorkItemLifecyclePhase();
     // TODO: null checks
-    final String workItemUid = workItemLifecycleRecord.getWorkItemUid();
-    final String workItemDetails = workItemLifecycleRecord.getWorkItemDetails();
-    final WorkItemLifecyclePhase lifecyclePhase = workItemLifecycleRecord.getWorkItemLifecyclePhase();
     final String lifeCyclePhaseName = lifecyclePhase.getShortName();
     final String lifeCyclePhaseDesc = lifecyclePhase.getDescription();
-    final String lifecycleDetails = workItemLifecycleRecord.getLifecycleDetails();
-    final Date sourceTimestamp = workItemLifecycleRecord.getSourceTimestamp();
-    final String sourceHostName = workItemLifecycleRecord.getSourceHostName();
-    final String sourceHostIp = workItemLifecycleRecord.getSourceHostIp();
+    final String lifecycleDetails = workItemLifecycleEvent.getLifecycleDetails();
+    final Date sourceTimestamp = workItemLifecycleEvent.getSourceTimestamp();
+    final String sourceHostName = workItemLifecycleEvent.getSourceHostName();
+    final String sourceHostIp = workItemLifecycleEvent.getSourceHostIp();
 
     // the current date may be off from the time the event was generated, let's track both
     final Date targetTimeStamp = new Date();
 
     // TODO: come up with a better/standard way to format the message content (cvs? json?...)
-    workItemLogger.info( targetTimeStamp.getTime() + "|" + workItemUid + "|" + workItemDetails + "|"
-      +  lifeCyclePhaseName + "|" + lifecycleDetails + "|" + sourceTimestamp.getTime() + "|"
+    workItemLogger.info( targetTimeStamp + "|" + workItemUid + "|" + workItemDetails + "|"
+      +  lifeCyclePhaseName + "|" + lifecycleDetails + "|" + sourceTimestamp + "|"
       + sourceHostName + "|" + sourceHostIp );
   }
 

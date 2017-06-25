@@ -27,6 +27,7 @@ import org.pentaho.platform.api.action.ActionInvocationException;
 import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
+import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
 import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
@@ -36,7 +37,6 @@ import org.pentaho.platform.plugin.action.messages.Messages;
 import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.StringUtil;
 import org.slf4j.MDC;
-import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
 import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 
 import javax.ws.rs.Consumes;
@@ -91,9 +91,9 @@ public class ActionResource {
     final String actionParams ) {
 
     final String workItemUid = MDC.get( ActionUtil.REQUEST_ID );
-    final WorkItemLifecycleRecord workItemLifecycleRecord = new WorkItemLifecycleRecord( workItemUid, actionParams );
-    workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.RECEIVED );
-    WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
+    final WorkItemLifecycleEvent workItemLifecycleEvent = new WorkItemLifecycleEvent( workItemUid, actionParams );
+    workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.RECEIVED );
+    WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
 
     // https://docs.oracle.com/javase/7/docs/api/java/lang/Boolean.html#parseBoolean(java.lang.String)
     final boolean isAsyncExecution = Boolean.parseBoolean( async );
@@ -174,7 +174,7 @@ public class ActionResource {
 
     @Override
     public IActionInvokeStatus call() {
-      WorkItemLifecycleRecord workItemLifecycleRecord = null;
+      WorkItemLifecycleEvent workItemLifecycleEvent = null;
       try {
 
         Optional.ofNullable( mdcContextMap ).ifPresent( s -> MDC.setContextMap( mdcContextMap ) );
@@ -186,22 +186,22 @@ public class ActionResource {
         final IAction action = createActionBean( actionClass, actionId );
         final Map<String, Serializable> params = deserialize( action, actionParams );
 
-        workItemLifecycleRecord = new WorkItemLifecycleRecord( WorkItemLifecycleRecord.getUidFromMap( params ),
+        workItemLifecycleEvent = new WorkItemLifecycleEvent( WorkItemLifecycleEvent.getUidFromMap( params ),
           StringUtil.getMapAsPrettyString( params ) );
 
         IActionInvokeStatus status = actionInvoker.invokeAction( action, user, params );
 
         if ( status != null && status.getThrowable() == null ) {
-          workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SUCCEEDED );
-          WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
+          workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SUCCEEDED );
+          WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
           getLogger().info( Messages.getInstance().getRunningInBgLocallySuccess( action.getClass().getName(), params ),
             status.getThrowable() );
         } else {
           final String failureMessage = Messages.getInstance().getCouldNotInvokeActionLocally( action.getClass()
             .getName(), params );
-          workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
-          workItemLifecycleRecord.setLifecycleDetails( failureMessage );
-          WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
+          workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
+          workItemLifecycleEvent.setLifecycleDetails( failureMessage );
+          WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
           getLogger().error( failureMessage, ( status != null ? status.getThrowable() : null ) );
         }
 
@@ -210,12 +210,12 @@ public class ActionResource {
       } catch ( final Throwable thr ) {
         // this should never occur, but in case it does, we can create a dummy WorkItemLifecycleRecord without a
         // proper uid
-        if ( workItemLifecycleRecord != null ) {
-          workItemLifecycleRecord = new WorkItemLifecycleRecord( "?", null );
+        if ( workItemLifecycleEvent != null ) {
+          workItemLifecycleEvent = new WorkItemLifecycleEvent( "?", null );
         }
-        workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
-        workItemLifecycleRecord.setLifecycleDetails( thr.getLocalizedMessage() );
-        WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
+        workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
+        workItemLifecycleEvent.setLifecycleDetails( thr.getLocalizedMessage() );
+        WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
         getLogger()
           .error( Messages.getInstance().getCouldNotInvokeActionLocallyUnexpected( ( StringUtil.isEmpty( actionClass )
             ? actionId : actionClass ), actionParams ), thr );

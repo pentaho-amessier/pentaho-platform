@@ -56,7 +56,7 @@ import org.pentaho.platform.web.http.api.resources.SchedulerOutputPathResolver;
 import org.pentaho.platform.web.http.api.resources.SchedulerResourceUtil;
 import org.pentaho.platform.web.http.api.resources.SessionResource;
 import org.pentaho.platform.web.http.api.resources.proxies.BlockStatusProxy;
-import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
+import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
 import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
 
 import java.io.FileNotFoundException;
@@ -135,11 +135,11 @@ public class SchedulerService {
 
     HashMap<String, Serializable> parameterMap = new HashMap<String, Serializable>();
 
-    // create the WorkItemLifecycleRecord with null uid, so that it can be generated within
-    final WorkItemLifecycleRecord workItemLifecycleRecord = new WorkItemLifecycleRecord( null, StringUtil
+    // create the WorkItemLifecycleEvent with null uid, so that it can be generated within
+    final WorkItemLifecycleEvent workItemLifecycleEvent = new WorkItemLifecycleEvent( null, StringUtil
       .getMapAsPrettyString( parameterMap ) );
     // put the workItemUid in the map so that it can be retrieved within the quartz scheduler and beyond
-    workItemLifecycleRecord.addUidToMap( parameterMap );
+    workItemLifecycleEvent.addUidToMap( parameterMap );
 
     for ( JobScheduleParam param : scheduleRequest.getJobParameters() ) {
       parameterMap.put( param.getName(), param.getValue() );
@@ -174,8 +174,8 @@ public class SchedulerService {
       }
     }
 
-    workItemLifecycleRecord.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SCHEDULED );
-    WorkItemLifecycleUtil.publish( workItemLifecycleRecord );
+    workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SCHEDULED );
+    WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
     return job;
   }
 

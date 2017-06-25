@@ -22,7 +22,6 @@ import org.apache.commons.logging.LogFactory;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
-import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Configuration;
@@ -50,20 +49,20 @@ public class WorkItemLifecycleUtil {
 
   /**
    * A convenience method for publishing changes to the work item's lifecycles. Fetches the
-   * {@link WorkItemLifecycleUtil} bean, and if available, calls its {@link #publishImpl(WorkItemLifecycleRecord)}
+   * {@link WorkItemLifecycleUtil} bean, and if available, calls its {@link #publishImpl(WorkItemLifecycleEvent)}
    * method. Otherwise does nothing, as the {@link WorkItemLifecycleUtil} bean may not be available, which is a
    * perfectly valid scenario, if we do not care about publishing {@link WorkItemLifecycleEvent}'s.
    *
-   * @param workItemLifecycleRecord the {@link WorkItemLifecycleRecord}
+   * @param workItemLifecycleEvent the {@link WorkItemLifecycleEvent}
    */
-  public static void publish( final WorkItemLifecycleRecord workItemLifecycleRecord ) {
+  public static void publish( final WorkItemLifecycleEvent workItemLifecycleEvent ) {
     final WorkItemLifecycleUtil util = PentahoSystem.get( WorkItemLifecycleUtil.class, PUBLISHER_BEAN_NAME,
       PentahoSessionHolder.getSession() );
     if ( util != null ) {
-      util.publishImpl( workItemLifecycleRecord );
+      util.publishImpl( workItemLifecycleEvent );
     } else {
       log.debug( String.format( "'%s' publisher bean is not available, unable to publish work item  lifecycle: %s",
-        PUBLISHER_BEAN_NAME, workItemLifecycleRecord.toString() ) );
+        PUBLISHER_BEAN_NAME, workItemLifecycleEvent.toString() ) );
     }
   }
 
@@ -71,23 +70,19 @@ public class WorkItemLifecycleUtil {
    * A convenience method for publishing changes to the work item's lifecycles. Fetches the available
    * {@link ApplicationEventPublisher}, and if available, calls its
    * {@link ApplicationEventPublisher#publishEvent(Object)} method, where the Object passed to the method is the
-   * {@link WorkItemLifecycleEvent} representing the {@link WorkItemLifecycleRecord}. Otherwise does nothing, as the
+   * {@link WorkItemLifecycleEvent} representing the {@link WorkItemLifecycleEvent}. Otherwise does nothing, as the
    * {@link ApplicationEventPublisher} may not be available, which is a perfectly valid scenario, if we do not care
    * about publishing {@link WorkItemLifecycleEvent}'s.
    *
-   * @param workItemLifecycleRecord the {@link WorkItemLifecycleRecord}
+   * @param workItemLifecycleEvent the {@link WorkItemLifecycleEvent}
    */
-  protected void publishImpl( final WorkItemLifecycleRecord workItemLifecycleRecord ) {
+  protected void publishImpl( final WorkItemLifecycleEvent workItemLifecycleEvent ) {
 
     if ( getApplicationEventPublisher() != null ) {
-      getApplicationEventPublisher().publishEvent( createEvent( workItemLifecycleRecord ) );
+      getApplicationEventPublisher().publishEvent( workItemLifecycleEvent );
     } else {
       log.debug( String.format( "Publisher in bean '%s' is not available, unable to publish work item lifecycle: "
-        + "%s", PUBLISHER_BEAN_NAME, workItemLifecycleRecord.toString() ) );
+        + "%s", PUBLISHER_BEAN_NAME, workItemLifecycleEvent.toString() ) );
     }
-  }
-
-  protected WorkItemLifecycleEvent createEvent( final WorkItemLifecycleRecord workItemLifecycleRecord ) {
-    return new WorkItemLifecycleEvent( workItemLifecycleRecord );
   }
 }

@@ -19,7 +19,7 @@ package org.pentaho.platform.web.http.filters;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.pentaho.platform.util.ActionUtil;
-import org.pentaho.platform.workitem.WorkItemLifecycleRecord;
+import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
 import org.slf4j.MDC;
 
 import javax.servlet.Filter;
@@ -45,8 +45,7 @@ public class RequestIdFilter implements Filter {
 
     HttpServletRequest request = (HttpServletRequest) req;
     String requestId = Optional.ofNullable( request.getHeader( ActionUtil.X_REQUEST_ID ) ).orElse(
-      WorkItemLifecycleRecord
-        .generateWorkItemId() );
+      WorkItemLifecycleEvent.generateWorkItemId() );
 
     try {
 
