@@ -37,7 +37,7 @@ import org.pentaho.platform.plugin.action.messages.Messages;
 import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.StringUtil;
 import org.slf4j.MDC;
-import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
+import org.pentaho.platform.workitem.WorkItemLifecyclePublisher;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -93,7 +93,7 @@ public class ActionResource {
     final String workItemUid = MDC.get( ActionUtil.REQUEST_ID );
     final WorkItemLifecycleEvent workItemLifecycleEvent = new WorkItemLifecycleEvent( workItemUid, actionParams );
     workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.RECEIVED );
-    WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
+    WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
 
     // https://docs.oracle.com/javase/7/docs/api/java/lang/Boolean.html#parseBoolean(java.lang.String)
     final boolean isAsyncExecution = Boolean.parseBoolean( async );
@@ -193,7 +193,7 @@ public class ActionResource {
 
         if ( status != null && status.getThrowable() == null ) {
           workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SUCCEEDED );
-          WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
+          WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
           getLogger().info( Messages.getInstance().getRunningInBgLocallySuccess( action.getClass().getName(), params ),
             status.getThrowable() );
         } else {
@@ -201,7 +201,7 @@ public class ActionResource {
             .getName(), params );
           workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
           workItemLifecycleEvent.setLifecycleDetails( failureMessage );
-          WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
+          WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
           getLogger().error( failureMessage, ( status != null ? status.getThrowable() : null ) );
         }
 
@@ -215,7 +215,7 @@ public class ActionResource {
         }
         workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
         workItemLifecycleEvent.setLifecycleDetails( thr.getLocalizedMessage() );
-        WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
+        WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
         getLogger()
           .error( Messages.getInstance().getCouldNotInvokeActionLocallyUnexpected( ( StringUtil.isEmpty( actionClass )
             ? actionId : actionClass ), actionParams ), thr );

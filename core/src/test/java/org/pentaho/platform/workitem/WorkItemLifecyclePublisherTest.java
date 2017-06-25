@@ -15,22 +15,20 @@
  * Copyright (c) 2017 Pentaho Corporation. All rights reserved.
  */
 
-package org.pentaho.platform.workitem.util;
+package org.pentaho.platform.workitem;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
-import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.Date;
 
-public class WorkItemLifecycleUtilTest {
+public class WorkItemLifecyclePublisherTest {
 
   private AbstractApplicationContext contextMock = null;
-  private WorkItemLifecycleUtil publisherUtilMock = null;
+  private WorkItemLifecyclePublisher publisherMock = null;
   private WorkItemLifecycleEvent workItemLifecycleEventMock = null;
   private String workItemUid = "foo";
   private String workItemDetails = "foe";
@@ -46,8 +44,8 @@ public class WorkItemLifecycleUtilTest {
   public void setup() throws Exception {
     contextMock = Mockito.spy( new ClassPathXmlApplicationContext( "/solution/system/pentahoSystemConfig.xml" ) );
 
-    publisherUtilMock = Mockito.spy( contextMock.getBean( WorkItemLifecycleUtil.class ) );
-    publisherUtilMock.setApplicationEventPublisher( contextMock );
+    publisherMock = Mockito.spy( contextMock.getBean( WorkItemLifecyclePublisher.class ) );
+    publisherMock.setApplicationEventPublisher( contextMock );
 
     workItemLifecycleEventMock = Mockito.spy( new WorkItemLifecycleEvent( workItemUid, workItemDetails ) );
     workItemLifecycleEventMock.setWorkItemLifecyclePhase( lifecyclePhase );
@@ -56,7 +54,7 @@ public class WorkItemLifecycleUtilTest {
 
   @Test
   public void testPublisher() throws InterruptedException {
-    publisherUtilMock.publishImpl( workItemLifecycleEventMock );
+    publisherMock.publishImpl( workItemLifecycleEventMock );
     // verify that the publishEvent method is called as expected
     Mockito.verify( contextMock, Mockito.times( 1 ) ).publishEvent( workItemLifecycleEventMock );
 

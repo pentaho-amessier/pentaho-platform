@@ -57,7 +57,7 @@ import org.pentaho.platform.web.http.api.resources.SchedulerResourceUtil;
 import org.pentaho.platform.web.http.api.resources.SessionResource;
 import org.pentaho.platform.web.http.api.resources.proxies.BlockStatusProxy;
 import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
-import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
+import org.pentaho.platform.workitem.WorkItemLifecyclePublisher;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -175,7 +175,7 @@ public class SchedulerService {
     }
 
     workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SCHEDULED );
-    WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
+    WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
     return job;
   }
 

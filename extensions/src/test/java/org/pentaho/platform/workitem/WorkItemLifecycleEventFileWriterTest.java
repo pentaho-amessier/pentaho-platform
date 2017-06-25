@@ -22,13 +22,13 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class FileWorkItemLifecycleEventListenerTest {
+public class WorkItemLifecycleEventFileWriterTest {
 
-  private FileWorkItemLifecycleEventListener listener = null;
+  private WorkItemLifecycleEventFileWriter listener = null;
 
   @Before
   public void setup() {
-    listener = new FileWorkItemLifecycleEventListener();
+    listener = new WorkItemLifecycleEventFileWriter();
   }
 
   @After
