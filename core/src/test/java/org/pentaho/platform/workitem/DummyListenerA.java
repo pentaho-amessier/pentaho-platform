@@ -17,7 +17,6 @@
 
 package org.pentaho.platform.workitem;
 
-import org.pentaho.platform.workitem.util.WorkItemLifecycleUtilTest;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -31,6 +30,6 @@ public class DummyListenerA {
   @EventListener
   @Async
   public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent event ) {
-    WorkItemLifecycleUtilTest.LISTENER_A_CALLED = true;
+    WorkItemLifecyclePublisherTest.LISTENER_A_CALLED = true;
   }
 }

@@ -35,12 +35,12 @@ import java.util.Date;
  * a log file.
  */
 @Component
-public class FileWorkItemLifecycleEventListener {
+public class WorkItemLifecycleEventFileWriter {
 
-  private static final Log log = LogFactory.getLog( FileWorkItemLifecycleEventListener.class );
+  private static final Log log = LogFactory.getLog( WorkItemLifecycleEventFileWriter.class );
 
   private static String WORK_ITEM_LOG_FILE = "work-item-status";
-  private static final Logger workItemLogger = Logger.getLogger( FileWorkItemLifecycleEventListener.class );
+  private static final Logger workItemLogger = Logger.getLogger( WorkItemLifecycleEventFileWriter.class );
 
   static {
     final PatternLayout layout = new PatternLayout();

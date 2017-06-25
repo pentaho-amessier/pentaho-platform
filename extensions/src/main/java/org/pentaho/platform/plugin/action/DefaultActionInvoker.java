@@ -33,7 +33,7 @@ import org.pentaho.platform.util.messages.LocaleHelper;
 import org.pentaho.platform.web.http.api.resources.RepositoryFileStreamProvider;
 import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
-import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
+import org.pentaho.platform.workitem.WorkItemLifecyclePublisher;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -132,13 +132,13 @@ public class DefaultActionInvoker implements IActionInvoker {
       .getMapAsPrettyString( params ) );
 
     workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.IN_PROGRESS );
-    WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
+    WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
 
     if ( actionBean == null || params == null ) {
       final String failureMessage = Messages.getInstance().getCantInvokeNullAction();
       workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
       workItemLifecycleEvent.setLifecycleDetails( failureMessage );
-      WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
+      WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
       throw new ActionInvocationException( failureMessage );
     }
 
@@ -173,11 +173,11 @@ public class DefaultActionInvoker implements IActionInvoker {
       try {
         requiresUpdate = SecurityHelper.getInstance().runAsUser( actionUser, actionBeanRunner );
         workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SUCCEEDED );
-        WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
+        WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
       } catch ( final Throwable t ) {
         workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
         workItemLifecycleEvent.setLifecycleDetails( t.getLocalizedMessage() );
-        WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
+        WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
         status.setThrowable( t );
       }
     }

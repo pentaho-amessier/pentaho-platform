@@ -36,7 +36,7 @@ import org.pentaho.platform.scheduler2.blockout.BlockoutAction;
 import org.pentaho.platform.scheduler2.messsages.Messages;
 import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.StringUtil;
-import org.pentaho.platform.workitem.util.WorkItemLifecycleUtil;
+import org.pentaho.platform.workitem.WorkItemLifecyclePublisher;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -130,7 +130,7 @@ public class ActionAdapterQuartzJob implements Job {
         "ActionAdapterQuartzJob.ERROR_0002_FAILED_TO_CREATE_ACTION", //$NON-NLS-1$
         getActionIdentifier( null, actionClassName, actionId ), StringUtil.getMapAsPrettyString( params ) );
       workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
-      WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
+      WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
       throw new LoggingJobExecutionException( failureMessage );
     }
 
@@ -143,13 +143,13 @@ public class ActionAdapterQuartzJob implements Job {
 
       workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
       workItemLifecycleEvent.setLifecycleDetails( failureMessage );
-      WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
+      WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
 
       throw new LoggingJobExecutionException( failureMessage );
     }
 
     workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SUBMITTED );
-    WorkItemLifecycleUtil.publish( workItemLifecycleEvent );
+    WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
 
     // Invoke the action and get the status of the invocation
     final IActionInvokeStatus status = actionInvoker.invokeAction( actionBean, actionUser, params );

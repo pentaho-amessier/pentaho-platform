@@ -15,13 +15,12 @@
  * Copyright (c) 2017 Pentaho Corporation. All rights reserved.
  */
 
-package org.pentaho.platform.workitem.util;
+package org.pentaho.platform.workitem;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
-import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Configuration;
@@ -31,10 +30,10 @@ import org.springframework.context.annotation.Configuration;
  */
 // TODO: do we need this annotation?
 @Configuration
-public class WorkItemLifecycleUtil {
+public class WorkItemLifecyclePublisher {
 
   private static String PUBLISHER_BEAN_NAME = "workItemLifecyclePublisher";
-  private static final Log log = LogFactory.getLog( WorkItemLifecycleUtil.class );
+  private static final Log log = LogFactory.getLog( WorkItemLifecyclePublisher.class );
 
   @Autowired
   private ApplicationEventPublisher publisher = null;
@@ -49,14 +48,14 @@ public class WorkItemLifecycleUtil {
 
   /**
    * A convenience method for publishing changes to the work item's lifecycles. Fetches the
-   * {@link WorkItemLifecycleUtil} bean, and if available, calls its {@link #publishImpl(WorkItemLifecycleEvent)}
-   * method. Otherwise does nothing, as the {@link WorkItemLifecycleUtil} bean may not be available, which is a
+   * {@link WorkItemLifecyclePublisher} bean, and if available, calls its {@link #publishImpl(WorkItemLifecycleEvent)}
+   * method. Otherwise does nothing, as the {@link WorkItemLifecyclePublisher} bean may not be available, which is a
    * perfectly valid scenario, if we do not care about publishing {@link WorkItemLifecycleEvent}'s.
    *
    * @param workItemLifecycleEvent the {@link WorkItemLifecycleEvent}
    */
   public static void publish( final WorkItemLifecycleEvent workItemLifecycleEvent ) {
-    final WorkItemLifecycleUtil util = PentahoSystem.get( WorkItemLifecycleUtil.class, PUBLISHER_BEAN_NAME,
+    final WorkItemLifecyclePublisher util = PentahoSystem.get( WorkItemLifecyclePublisher.class, PUBLISHER_BEAN_NAME,
       PentahoSessionHolder.getSession() );
     if ( util != null ) {
       util.publishImpl( workItemLifecycleEvent );
