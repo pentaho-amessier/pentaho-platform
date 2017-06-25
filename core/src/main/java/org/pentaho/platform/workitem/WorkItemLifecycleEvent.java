@@ -47,4 +47,17 @@ public class WorkItemLifecycleEvent {
   public String toString() {
     return workItemLifecycleRecord.toString();
   }
+
+  @Override
+  public boolean equals( final Object other ) {
+    if ( this == other ) {
+      return true;
+    } else {
+      if ( other instanceof WorkItemLifecycleEvent ) {
+        return toString().equals( other.toString() );
+      } else {
+        return false;
+      }
+    }
+  }
 }
