@@ -24,14 +24,14 @@ public class WorkItemLifecyclePhaseTest {
 
   @Test
   public void testLifecycleNames() {
-    Assert.assertEquals( "Scheduled", WorkItemLifecyclePhase.SCHEDULED.getShortName() );
-    Assert.assertEquals( "Submitted", WorkItemLifecyclePhase.SUBMITTED.getShortName() );
-    Assert.assertEquals( "Dispatched", WorkItemLifecyclePhase.DISPATCHED.getShortName() );
-    Assert.assertEquals( "Received", WorkItemLifecyclePhase.RECEIVED.getShortName() );
-    Assert.assertEquals( "Rejected", WorkItemLifecyclePhase.REJECTED.getShortName() );
-    Assert.assertEquals( "In progress", WorkItemLifecyclePhase.IN_PROGRESS.getShortName() );
-    Assert.assertEquals( "Succeeded", WorkItemLifecyclePhase.SUCCEEDED.getShortName() );
-    Assert.assertEquals( "Failed", WorkItemLifecyclePhase.FAILED.getShortName() );
+    Assert.assertEquals( "Scheduled", WorkItemLifecyclePhase.SCHEDULED.getName() );
+    Assert.assertEquals( "Submitted", WorkItemLifecyclePhase.SUBMITTED.getName() );
+    Assert.assertEquals( "Dispatched", WorkItemLifecyclePhase.DISPATCHED.getName() );
+    Assert.assertEquals( "Received", WorkItemLifecyclePhase.RECEIVED.getName() );
+    Assert.assertEquals( "Rejected", WorkItemLifecyclePhase.REJECTED.getName() );
+    Assert.assertEquals( "In progress", WorkItemLifecyclePhase.IN_PROGRESS.getName() );
+    Assert.assertEquals( "Succeeded", WorkItemLifecyclePhase.SUCCEEDED.getName() );
+    Assert.assertEquals( "Failed", WorkItemLifecyclePhase.FAILED.getName() );
 
   }
 
@@ -55,5 +55,21 @@ public class WorkItemLifecyclePhaseTest {
       WorkItemLifecyclePhase.SUCCEEDED.getDescription() );
     Assert.assertEquals( "The work item execution has failed",
       WorkItemLifecyclePhase.FAILED.getDescription() );
+  }
+
+
+  @Test
+  public void testGet() {
+
+    Assert.assertNull( WorkItemLifecyclePhase.get( "foo" ) );
+    Assert.assertNull( WorkItemLifecyclePhase.get( "" ) );
+    Assert.assertNull( WorkItemLifecyclePhase.get( null ) );
+
+    Assert.assertEquals( WorkItemLifecyclePhase.FAILED, WorkItemLifecyclePhase.get( WorkItemLifecyclePhase
+      .getMessageBundle().getString( "LifecyclePhase.FAILED" ) ) );
+    Assert.assertEquals( WorkItemLifecyclePhase.SUBMITTED, WorkItemLifecyclePhase.get( WorkItemLifecyclePhase
+      .getMessageBundle().getString( "LifecyclePhase.SUBMITTED" ) ) );
+    Assert.assertEquals( WorkItemLifecyclePhase.DISPATCHED, WorkItemLifecyclePhase.get( WorkItemLifecyclePhase
+      .getMessageBundle().getString( "LifecyclePhase.DISPATCHED" ) ) );
   }
 }

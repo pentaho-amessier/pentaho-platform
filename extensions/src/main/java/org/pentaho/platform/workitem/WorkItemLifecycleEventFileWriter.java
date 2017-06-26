@@ -17,6 +17,10 @@
 
 package org.pentaho.platform.workitem;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import groovy.text.SimpleTemplateEngine;
+import groovy.text.TemplateEngine;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.DailyRollingFileAppender;
@@ -28,7 +32,11 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This component listens for {@link WorkItemLifecycleEvent}s and writes the information stored within the event into
@@ -40,61 +48,115 @@ public class WorkItemLifecycleEventFileWriter {
   private static final Log log = LogFactory.getLog( WorkItemLifecycleEventFileWriter.class );
 
   private static String WORK_ITEM_LOG_FILE = "work-item-status";
-  private static final Logger workItemLogger = Logger.getLogger( WorkItemLifecycleEventFileWriter.class );
+
+  private static final String DEFAULT_FIELD_DELIMITER = "|";
+
+  private static List<String> DEFAULT_MESSAGE_FIELDS = new ArrayList<String>();
 
   static {
-    final PatternLayout layout = new PatternLayout();
-    // TODO: make message configurable, use variable names of WorkItemLifecycleRecord and resolve using reflection
-    // make sure to encode properly (escape the separator)
-    layout.setConversionPattern( "%m%n" );
+    DEFAULT_MESSAGE_FIELDS.add( "targetTimestamp" );
+    DEFAULT_MESSAGE_FIELDS.add( "workItemUid" );
+    DEFAULT_MESSAGE_FIELDS.add( "workItemDetails" );
+    DEFAULT_MESSAGE_FIELDS.add( "workItemLifecyclePhaseName" );
+    DEFAULT_MESSAGE_FIELDS.add( "lifecycleDetails" );
+    DEFAULT_MESSAGE_FIELDS.add( "sourceTimestamp" );
+    DEFAULT_MESSAGE_FIELDS.add( "sourceHostName" );
+    DEFAULT_MESSAGE_FIELDS.add( "sourceHostIp" );
+  }
 
-    final DailyRollingFileAppender fileAppender = new DailyRollingFileAppender();
-    fileAppender.setFile( "../logs/work-item-status.log" );
-    // TODO: why is this not working?
-    //fileAppender.setFile( ".." + File.pathSeparator + "logs" + File.pathSeparator + WORK_ITEM_LOG_FILE + ".log" );
-    fileAppender.setLayout( layout );
-    fileAppender.activateOptions();
-    fileAppender.setAppend( true );
-    fileAppender.setDatePattern( "'.'yyyy-MM-dd" );
+  // TODO: add environment variables that may be docker / mesos / framework specific
 
-    // TODO: why are the logs written to std out? remove...
-    // configures the root logger
-    // TODO: make log configurable
-    workItemLogger.setLevel( Level.INFO );
-    workItemLogger.addAppender( fileAppender );
+  private String fieldDelimiter = DEFAULT_FIELD_DELIMITER;
+  private List<String> messageFields = DEFAULT_MESSAGE_FIELDS;
+
+  public void setMessageFields( final List<String> messageFields ) {
+    this.messageFields = messageFields;
+  }
+
+  public List<String> getMessageFields() {
+    return CollectionUtils.isEmpty( this.messageFields ) ? DEFAULT_MESSAGE_FIELDS : this.messageFields;
+  }
+
+  public void setFieldDelimiter( final String fieldDelimiter ) {
+    this.fieldDelimiter = fieldDelimiter;
+  }
+
+  public String getFieldDelimiter() {
+    return this.fieldDelimiter == null ? DEFAULT_FIELD_DELIMITER : this.fieldDelimiter;
   }
 
   @EventListener
   @Async
   public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent workItemLifecycleEvent ) {
-    if ( log.isDebugEnabled() ) {
-      log.debug( String.format( "%s received a WorkItemLifecycleEvent:: %s", this.getClass().getName(), workItemLifecycleEvent
-        .toString() ) );
-    }
 
     if ( workItemLifecycleEvent == null ) {
       log.error( getMessageBundle().getErrorString( "ERROR_0001_MISSING_WORK_ITEM_LIFECYCLE" ) );
       return;
     }
 
-    final String workItemUid = workItemLifecycleEvent.getWorkItemUid();
-    final String workItemDetails = workItemLifecycleEvent.getWorkItemDetails();
-    final WorkItemLifecyclePhase lifecyclePhase = workItemLifecycleEvent.getWorkItemLifecyclePhase();
-    // TODO: null checks
-    final String lifeCyclePhaseName = lifecyclePhase.getShortName();
-    final String lifeCyclePhaseDesc = lifecyclePhase.getDescription();
-    final String lifecycleDetails = workItemLifecycleEvent.getLifecycleDetails();
-    final Date sourceTimestamp = workItemLifecycleEvent.getSourceTimestamp();
-    final String sourceHostName = workItemLifecycleEvent.getSourceHostName();
-    final String sourceHostIp = workItemLifecycleEvent.getSourceHostIp();
+    if ( log.isDebugEnabled() ) {
+      log.debug( String.format( "%s received a WorkItemLifecycleEvent:: %s", this.getClass().getName(),
+        workItemLifecycleEvent.toString() ) );
+    }
 
-    // the current date may be off from the time the event was generated, let's track both
-    final Date targetTimeStamp = new Date();
+    final String actualMessagePattern = getContent( getMessageFields(), getFieldDelimiter(), workItemLifecycleEvent );
+    getLogger().info( actualMessagePattern );
+  }
 
-    // TODO: come up with a better/standard way to format the message content (cvs? json?...)
-    workItemLogger.info( targetTimeStamp + "|" + workItemUid + "|" + workItemDetails + "|"
-      +  lifeCyclePhaseName + "|" + lifecycleDetails + "|" + sourceTimestamp + "|"
-      + sourceHostName + "|" + sourceHostIp );
+  private Logger getLogger() {
+    final Logger workItemLogger = Logger.getLogger( WorkItemLifecycleEventFileWriter.class );
+
+    final PatternLayout layout = new PatternLayout();
+    layout.setConversionPattern( "%m%n" );
+
+    final DailyRollingFileAppender fileAppender = new DailyRollingFileAppender();
+    fileAppender.setFile( ".." + File.separator + "logs" + File.separator + WORK_ITEM_LOG_FILE + ".log" );
+    fileAppender.setLayout( layout );
+    fileAppender.activateOptions();
+    fileAppender.setAppend( true );
+    fileAppender.setDatePattern( "'.'yyyy-MM-dd" );
+
+    // TODO: why are the logs written to std out? remove...
+
+    // The log level is arbitrary, it just needs to match the level used to log the work item lifecycle event
+    workItemLogger.setLevel( Level.INFO );
+    workItemLogger.addAppender( fileAppender );
+    return workItemLogger;
+  }
+
+  protected static String getContent( final List<String> messageFields, final String fieldDelimiter,
+                                      final Object... data ) {
+    final StringBuilder content = new StringBuilder();
+    try {
+      final ObjectMapper mapper = new ObjectMapper();
+      final TemplateEngine engine = new SimpleTemplateEngine();
+      final Map dataMap = new HashMap();
+      for ( final Object currentData : data ) {
+        dataMap.putAll( mapper.convertValue( currentData, Map.class ) );
+      }
+      String actualDelimiter = "";
+      for ( final String fieldName : messageFields ) {
+        String fieldContent = getContent( engine, dataMap, fieldName );
+        if ( fieldContent == null ) {
+          fieldContent = "?";
+        }
+        content.append( actualDelimiter ).append( fieldContent );
+        actualDelimiter = fieldDelimiter;
+      }
+      return content.toString();
+    } catch ( final Exception e ) {
+      log.error( e.getLocalizedMessage() );
+      return null;
+    }
+  }
+
+  protected static String getContent( final TemplateEngine engine, final Map dataMap, final String fieldName ) {
+    try {
+      return engine.createTemplate( "${" + fieldName + "}" ).make( dataMap ).toString();
+    } catch ( final Exception e ) {
+      log.error( e.getLocalizedMessage() );
+      return null;
+    }
   }
 
   protected Messages getMessageBundle() {
