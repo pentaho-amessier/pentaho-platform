@@ -31,7 +31,6 @@ import java.util.UUID;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.pentaho.platform.util.ActionUtil.X_REQUEST_ID;
 
 
 public class RequestIdFilterTest {
@@ -53,17 +52,17 @@ public class RequestIdFilterTest {
     RequestIdFilter requestIdFilter = new RequestIdFilter( );
     requestIdFilter.doFilter( request, response, chain );
 
-    verify( response ).setHeader( eq(  X_REQUEST_ID ), anyString() );
+    verify( response ).setHeader( eq(  RequestIdFilter.X_REQUEST_ID ), anyString() );
   }
 
   @Test
   public void testRequestFilterIdProvided() throws ServletException, IOException {
 
     String requestId = UUID.randomUUID().toString();
-    when( request.getHeader( X_REQUEST_ID ) ).thenReturn( requestId );
+    when( request.getHeader( RequestIdFilter.X_REQUEST_ID ) ).thenReturn( requestId );
     RequestIdFilter requestIdFilter = new RequestIdFilter();
     requestIdFilter.doFilter( request, response, chain );
 
-    verify( response ).setHeader( eq( X_REQUEST_ID ), eq( requestId ) );
+    verify( response ).setHeader( eq( RequestIdFilter.X_REQUEST_ID ), eq( requestId ) );
   }
 }

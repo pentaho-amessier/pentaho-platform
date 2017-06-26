@@ -25,10 +25,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Date;
+
 /**
  * A class for common utility methods related to work item lifecycles.
  */
-// TODO: do we need this annotation?
 @Configuration
 public class WorkItemLifecyclePublisher {
 
@@ -47,6 +48,53 @@ public class WorkItemLifecyclePublisher {
   }
 
   /**
+   * A convenience method for publishing changes to the work item's lifecycles that calls
+   * {@link #publish(String, String, WorkItemLifecyclePhase, String, Date)} with a null {@code lifecycleDetails} and
+   * {@code sourceTimestamp}
+   *
+   * @param workItemUid            a {@link String} containing unique identifier for the {@link WorkItemLifecycleEvent}
+   * @param workItemDetails        a {@link String} containing details of the {@link WorkItemLifecycleEvent}
+   * @param workItemLifecyclePhase a {@link WorkItemLifecyclePhase} representing the lifecycle event
+   */
+  public static void publish( final String workItemUid, final String workItemDetails, final WorkItemLifecyclePhase
+    workItemLifecyclePhase ) {
+    publish( workItemUid, workItemDetails, workItemLifecyclePhase, null, null );
+  }
+
+  /**
+   * A convenience method for publishing changes to the work item's lifecycles that calls
+   * {@link #publish(String, String, WorkItemLifecyclePhase, String, Date)} with a null {@code sourceTimestamp}
+   *
+   * @param workItemUid            a {@link String} containing unique identifier for the {@link WorkItemLifecycleEvent}
+   * @param workItemDetails        a {@link String} containing details of the {@link WorkItemLifecycleEvent}
+   * @param workItemLifecyclePhase a {@link WorkItemLifecyclePhase} representing the lifecycle event
+   * @param lifecycleDetails       a {@link String} containing any additional details about the lifecycle event, such as
+   *                               pertinent failure messages
+   */
+  public static void publish( final String workItemUid, final String workItemDetails, final WorkItemLifecyclePhase
+    workItemLifecyclePhase, final String lifecycleDetails ) {
+    publish( workItemUid, workItemDetails, workItemLifecyclePhase, lifecycleDetails, null );
+  }
+
+  /**
+   * A convenience method for publishing changes to the work item's lifecycles that creates an instance of
+   * {@link WorkItemLifecycleEvent} and calls the {@link #publish(WorkItemLifecycleEvent)} method
+   *
+   * @param workItemUid            a {@link String} containing unique identifier for the {@link WorkItemLifecycleEvent}
+   * @param workItemDetails        a {@link String} containing details of the {@link WorkItemLifecycleEvent}
+   * @param workItemLifecyclePhase a {@link WorkItemLifecyclePhase} representing the lifecycle event
+   * @param lifecycleDetails       a {@link String} containing any additional details about the lifecycle event, such as
+   *                               pertinent failure messages
+   * @param sourceTimestamp        a {@link Date} representing the time the lifecycle change occurred.
+   */
+  public static void publish( final String workItemUid, final String workItemDetails, final WorkItemLifecyclePhase
+    workItemLifecyclePhase, final String lifecycleDetails, final Date sourceTimestamp ) {
+    final WorkItemLifecycleEvent workItemLifecycleEvent = new WorkItemLifecycleEvent( workItemUid, workItemDetails,
+      workItemLifecyclePhase, lifecycleDetails, sourceTimestamp );
+    publish( workItemLifecycleEvent );
+  }
+
+  /**
    * A convenience method for publishing changes to the work item's lifecycles. Fetches the
    * {@link WorkItemLifecyclePublisher} bean, and if available, calls its {@link #publishImpl(WorkItemLifecycleEvent)}
    * method. Otherwise does nothing, as the {@link WorkItemLifecyclePublisher} bean may not be available, which is a
@@ -54,7 +102,7 @@ public class WorkItemLifecyclePublisher {
    *
    * @param workItemLifecycleEvent the {@link WorkItemLifecycleEvent}
    */
-  public static void publish( final WorkItemLifecycleEvent workItemLifecycleEvent ) {
+  private static void publish( final WorkItemLifecycleEvent workItemLifecycleEvent ) {
     final WorkItemLifecyclePublisher util = PentahoSystem.get( WorkItemLifecyclePublisher.class, PUBLISHER_BEAN_NAME,
       PentahoSessionHolder.getSession() );
     if ( util != null ) {

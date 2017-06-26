@@ -33,10 +33,8 @@ public class WorkItemLifecycleEventTest {
   @Test
   public void testValidInstantiation() {
     final WorkItemLifecycleEvent workItemLifecycleRecord = new WorkItemLifecycleEvent( workItemUid,
-      workItemDetails, currentTimeStamp );
-    workItemLifecycleRecord.setWorkItemLifecyclePhase( lifecyclePhase );
-    workItemLifecycleRecord.setLifecycleDetails( lifecycleDetails );
-    workItemLifecycleRecord.setSourceTimestamp( currentTimeStamp );
+      workItemDetails, lifecyclePhase, lifecycleDetails, currentTimeStamp );
+
     Assert.assertEquals( workItemUid, workItemLifecycleRecord.getWorkItemUid() );
     Assert.assertEquals( workItemDetails, workItemLifecycleRecord.getWorkItemDetails() );
     Assert.assertEquals( lifecyclePhase, workItemLifecycleRecord.getWorkItemLifecyclePhase() );
@@ -50,7 +48,9 @@ public class WorkItemLifecycleEventTest {
 
   @Test
   public void testNulls() {
-    final WorkItemLifecycleEvent workItemLifecycleRecord = new WorkItemLifecycleEvent( null, null, currentTimeStamp );
+
+    final WorkItemLifecycleEvent workItemLifecycleRecord = new WorkItemLifecycleEvent( null, null, null, null,
+      currentTimeStamp );
     Assert.assertNull( workItemLifecycleRecord.getWorkItemDetails() );
     Assert.assertNull( workItemLifecycleRecord.getWorkItemLifecyclePhase() );
     Assert.assertNull( workItemLifecycleRecord.getLifecycleDetails() );

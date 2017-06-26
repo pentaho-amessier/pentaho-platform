@@ -35,7 +35,6 @@ import org.pentaho.platform.api.scheduler2.IScheduler;
 import org.pentaho.platform.api.scheduler2.Job;
 import org.pentaho.platform.api.scheduler2.Job.JobState;
 import org.pentaho.platform.api.scheduler2.SchedulerException;
-import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.engine.security.SecurityHelper;
@@ -45,6 +44,7 @@ import org.pentaho.platform.scheduler2.blockout.BlockoutAction;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.security.policy.rolebased.actions.AdministerSecurityAction;
 import org.pentaho.platform.security.policy.rolebased.actions.SchedulerAction;
+import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.StringUtil;
 import org.pentaho.platform.util.messages.LocaleHelper;
 import org.pentaho.platform.web.http.api.resources.ComplexJobTriggerProxy;
@@ -56,7 +56,7 @@ import org.pentaho.platform.web.http.api.resources.SchedulerOutputPathResolver;
 import org.pentaho.platform.web.http.api.resources.SchedulerResourceUtil;
 import org.pentaho.platform.web.http.api.resources.SessionResource;
 import org.pentaho.platform.web.http.api.resources.proxies.BlockStatusProxy;
-import org.pentaho.platform.workitem.WorkItemLifecycleEvent;
+import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.workitem.WorkItemLifecyclePublisher;
 
 import java.io.FileNotFoundException;
@@ -67,6 +67,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class SchedulerService {
 
@@ -135,11 +136,9 @@ public class SchedulerService {
 
     HashMap<String, Serializable> parameterMap = new HashMap<String, Serializable>();
 
-    // create the WorkItemLifecycleEvent with null uid, so that it can be generated within
-    final WorkItemLifecycleEvent workItemLifecycleEvent = new WorkItemLifecycleEvent( null, StringUtil
-      .getMapAsPrettyString( parameterMap ) );
-    // put the workItemUid in the map so that it can be retrieved within the quartz scheduler and beyond
-    workItemLifecycleEvent.addUidToMap( parameterMap );
+    final String workItemDetails = StringUtil.getMapAsPrettyString( parameterMap );
+    final String workItemUid = UUID.randomUUID().toString();
+    parameterMap.put( ActionUtil.WORK_ITEM_UID, workItemUid );
 
     for ( JobScheduleParam param : scheduleRequest.getJobParameters() ) {
       parameterMap.put( param.getName(), param.getValue() );
@@ -174,8 +173,7 @@ public class SchedulerService {
       }
     }
 
-    workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SCHEDULED );
-    WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
+    WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.SCHEDULED );
     return job;
   }
 

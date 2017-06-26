@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.pentaho.platform.util.ActionUtil;
+import org.pentaho.platform.util.StringUtil;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -69,27 +70,33 @@ public class WorkItemLifecycleEvent {
    *
    * @param workItemUid     a {@link String} containing unique identifier for the {@link WorkItemLifecycleEvent}
    * @param workItemDetails a {@link String} containing details of the {@link WorkItemLifecycleEvent}
-   */
+
   public WorkItemLifecycleEvent( final String workItemUid, final String workItemDetails ) {
     this( workItemUid, workItemDetails, new Date() );
-  }
+  }*/
 
   /**
    * Creates the {@link WorkItemLifecycleEvent} with all the required parameters.
    *
-   * @param workItemUid     a {@link String} containing unique identifier for the {@link WorkItemLifecycleEvent}
-   * @param workItemDetails a {@link String} containing details of the {@link WorkItemLifecycleEvent}
-   * @param sourceTimestamp a {@link Date} representing the time the lifecycle change occured.
+   * @param workItemUid            a {@link String} containing unique identifier for the {@link WorkItemLifecycleEvent}
+   * @param workItemDetails        a {@link String} containing details of the {@link WorkItemLifecycleEvent}
+   * @param workItemLifecyclePhase a {@link WorkItemLifecyclePhase} representing the lifecycle event
+   * @param lifecycleDetails       a {@link String} containing any additional details about the lifecycle event, such as
+   *                               pertinent failure messages
+   * @param sourceTimestamp        a {@link Date} representing the time the lifecycle change occurred.
    */
 
-  public WorkItemLifecycleEvent( final String workItemUid, final String workItemDetails, final Date sourceTimestamp ) {
+  public WorkItemLifecycleEvent( final String workItemUid, final String workItemDetails, final WorkItemLifecyclePhase
+    workItemLifecyclePhase, final String lifecycleDetails, final Date sourceTimestamp ) {
     this.workItemUid = workItemUid;
     this.workItemDetails = workItemDetails;
+    this.workItemLifecyclePhase = workItemLifecyclePhase;
+    this.lifecycleDetails = lifecycleDetails;
     this.sourceTimestamp = sourceTimestamp;
 
     // if the workItemUid is null, generate it
     if ( this.workItemUid == null ) {
-      this.workItemUid = generateWorkItemId();
+      this.workItemUid = UUID.randomUUID().toString();
     }
     // Set sourceTimestamp to current date only if not already provided
     if ( this.sourceTimestamp == null ) {
@@ -105,37 +112,23 @@ public class WorkItemLifecycleEvent {
     this.sourceHostIp = HOST_IP;
   }
 
-  public static String generateWorkItemId() {
-    return String.format( ActionUtil.REQUEST_ID_FORMAT, UUID.randomUUID().toString() );
-  }
-
-  /**
-   * Adds the {@code workItemUid} to the given {@link Map}.
-   *
-   * @param map the {@link Map} to which the {@code workItemUid} is being added
-   */
-  public void addUidToMap( final Map map ) {
-    if ( map != null ) {
-      map.put( ActionUtil.REQUEST_ID, getWorkItemUid() );
-    }
-  }
-
   /**
    * Looks up the {@code ActionUtil.REQUEST_ID} within the {@link Map}. If available, the value is returned,
-   * otherwise a new uid is generated.
+   * otherwise a new uid is generated and placed within the {@link Map}.
    *
    * @param map a {@link Map} that may contain the {@code ActionUtil.REQUEST_ID}
    * @return {@code ActionUtil.REQUEST_ID} from the {@link Map} or a new uid
    */
   public static String getUidFromMap( final Map map ) {
     String workItemUid = null;
-    if ( map == null ) {
-      workItemUid = generateWorkItemId();
-    } else {
-      workItemUid = (String) map.get( ActionUtil.REQUEST_ID );
-      if ( workItemUid == null ) {
-        workItemUid = generateWorkItemId();
+    if ( map == null || StringUtil.isEmpty( (String) map.get( ActionUtil.WORK_ITEM_UID ) ) ) {
+      workItemUid = UUID.randomUUID().toString();
+      if ( StringUtil.isEmpty( workItemUid ) ) {
+        workItemUid = UUID.randomUUID().toString();
       }
+    }
+    if ( map != null ) {
+      map.put( ActionUtil.WORK_ITEM_UID, workItemUid );
     }
     return workItemUid;
   }

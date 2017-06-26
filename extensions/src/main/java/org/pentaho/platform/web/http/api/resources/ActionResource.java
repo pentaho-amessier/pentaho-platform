@@ -90,10 +90,18 @@ public class ActionResource {
     @QueryParam( ActionUtil.INVOKER_ACTIONUSER ) String actionUser,
     final String actionParams ) {
 
-    final String workItemUid = MDC.get( ActionUtil.REQUEST_ID );
-    final WorkItemLifecycleEvent workItemLifecycleEvent = new WorkItemLifecycleEvent( workItemUid, actionParams );
-    workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.RECEIVED );
-    WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
+    IAction action = null;
+    Map<String, Serializable> params = null;
+    try {
+      action = createActionBean( actionClass, actionId );
+      params = deserialize( action, actionParams );
+    } catch ( final Exception e ) {
+      logger.error( e.getLocalizedMessage() );
+      // we're not able to get the work item UID at this point
+      WorkItemLifecyclePublisher.publish( "?", actionParams, WorkItemLifecyclePhase.FAILED, e.getLocalizedMessage() );
+    }
+    final String workItemUid = WorkItemLifecycleEvent.getUidFromMap( params );
+    WorkItemLifecyclePublisher.publish( workItemUid, actionParams, WorkItemLifecyclePhase.RECEIVED );
 
     // https://docs.oracle.com/javase/7/docs/api/java/lang/Boolean.html#parseBoolean(java.lang.String)
     final boolean isAsyncExecution = Boolean.parseBoolean( async );
@@ -101,10 +109,10 @@ public class ActionResource {
 
     if ( isAsyncExecution ) {
       // default scenario for execution
-      executorService.submit( createCallable( actionId, actionClass, actionUser, actionParams ) );
+      executorService.submit( createCallable( action, actionUser, params ) );
       httpStatus = HttpStatus.SC_ACCEPTED;
     } else {
-      final IActionInvokeStatus status = createCallable( actionId, actionClass, actionUser, actionParams ).call();
+      final IActionInvokeStatus status = createCallable( action, actionUser, params ).call();
       httpStatus = ( status != null && status.getThrowable() == null ) ? HttpStatus.SC_OK : HttpStatus
         .SC_INTERNAL_SERVER_ERROR;
     }
@@ -115,15 +123,21 @@ public class ActionResource {
   /**
    * Returns a {@link CallableAction} that creates the {@link IAction} and invokes it.
    *
-   * @param actionId     the action id, if applicable
-   * @param actionClass  the action class name, if applicable
-   * @param user         the user invoking the action
-   * @param actionParams the action parameters needed to instantiate and invoke the action
+   * @param actionUser   the user invoking the action
    * @return a {@link CallableAction} that creates the {@link IAction} and invokes it
    */
-  protected CallableAction createCallable( final String actionId, final String actionClass, final String user, final
-    String actionParams ) {
-    return new CallableAction( this, actionId, actionClass, user, actionParams );
+  protected CallableAction createCallable( final IAction action, final String actionUser, final Map<String,
+    Serializable> params ) {
+    return new CallableAction( this, action, actionUser, params );
+  }
+
+  protected IAction createActionBean( final String actionClass, final String actionId ) throws Exception {
+    return ActionUtil.createActionBean( actionClass, actionId );
+  }
+
+  protected Map<String, Serializable> deserialize( final IAction action, final String actionParams )
+    throws IOException, ActionInvocationException {
+    return ActionParams.deserialize( action, ActionParams.fromJson( actionParams ) );
   }
 
   /**
@@ -145,80 +159,55 @@ public class ActionResource {
   static class CallableAction implements Callable {
 
     protected ActionResource resource;
-    protected String actionId;
-    protected String actionClass;
-    protected String user;
-    protected String actionParams;
+    protected IAction action;
+    protected String actionUser;
+    protected Map<String, Serializable> params;
+
     private Map<String, String> mdcContextMap = MDC.getCopyOfContextMap();
 
     CallableAction() {
     }
 
-    public CallableAction( final ActionResource resource, final String actionId, final String actionClass, final
-      String user, final String actionParams ) {
+    public CallableAction( final ActionResource resource, final IAction action, final String actionUser, final
+      Map<String, Serializable> params ) {
       this.resource = resource;
-      this.actionClass = actionClass;
-      this.actionId = actionId;
-      this.user = user;
-      this.actionParams = actionParams;
-    }
-
-    IAction createActionBean( final String actionClass, final String actionId ) throws Exception {
-      return ActionUtil.createActionBean( actionClass, actionId );
-    }
-
-    Map<String, Serializable> deserialize( final IAction action, final String actionParams )
-      throws IOException, ActionInvocationException {
-      return ActionParams.deserialize( action, ActionParams.fromJson( actionParams ) );
+      this.action = action;
+      this.actionUser = actionUser;
+      this.params = params;
     }
 
     @Override
     public IActionInvokeStatus call() {
-      WorkItemLifecycleEvent workItemLifecycleEvent = null;
+      final String workItemUid = WorkItemLifecycleEvent.getUidFromMap( params );
+      final String workItemDetails = StringUtil.getMapAsPrettyString( params );
       try {
-
         Optional.ofNullable( mdcContextMap ).ifPresent( s -> MDC.setContextMap( mdcContextMap ) );
-        if ( logger.isDebugEnabled() ) {
-          logger.debug( "Running action: " + actionId );
-        }
+
         // instantiate the DefaultActionInvoker directly to force local invocation of the action
         final IActionInvoker actionInvoker = resource.getDefaultActionInvoker();
-        final IAction action = createActionBean( actionClass, actionId );
-        final Map<String, Serializable> params = deserialize( action, actionParams );
 
-        workItemLifecycleEvent = new WorkItemLifecycleEvent( WorkItemLifecycleEvent.getUidFromMap( params ),
-          StringUtil.getMapAsPrettyString( params ) );
-
-        IActionInvokeStatus status = actionInvoker.invokeAction( action, user, params );
+        IActionInvokeStatus status = actionInvoker.invokeAction( action, actionUser, params );
 
         if ( status != null && status.getThrowable() == null ) {
-          workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SUCCEEDED );
-          WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
+          WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.SUCCEEDED );
           getLogger().info( Messages.getInstance().getRunningInBgLocallySuccess( action.getClass().getName(), params ),
             status.getThrowable() );
         } else {
           final String failureMessage = Messages.getInstance().getCouldNotInvokeActionLocally( action.getClass()
             .getName(), params );
-          workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
-          workItemLifecycleEvent.setLifecycleDetails( failureMessage );
-          WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
+          WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.FAILED,
+            failureMessage );
           getLogger().error( failureMessage, ( status != null ? status.getThrowable() : null ) );
         }
 
         return status;
 
       } catch ( final Throwable thr ) {
-        // this should never occur, but in case it does, we can create a dummy WorkItemLifecycleRecord without a
-        // proper uid
-        if ( workItemLifecycleEvent != null ) {
-          workItemLifecycleEvent = new WorkItemLifecycleEvent( "?", null );
-        }
-        workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
-        workItemLifecycleEvent.setLifecycleDetails( thr.getLocalizedMessage() );
-        WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
+        WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.FAILED,
+          thr.getLocalizedMessage() );
         getLogger()
-          .error( Messages.getInstance().getCouldNotInvokeActionLocallyUnexpected( ( StringUtil.isEmpty( actionClass )
-            ? actionId : actionClass ), actionParams ), thr );
+          .error( Messages.getInstance().getCouldNotInvokeActionLocallyUnexpected( action.getClass().getName(),
+            workItemDetails ), thr );
       }
 
       return null;

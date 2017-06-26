@@ -128,17 +128,13 @@ public class DefaultActionInvoker implements IActionInvoker {
     Map<String, Serializable> params ) throws Exception {
 
     final String workItemUid = WorkItemLifecycleEvent.getUidFromMap( params );
-    final WorkItemLifecycleEvent workItemLifecycleEvent = new WorkItemLifecycleEvent( workItemUid, StringUtil
-      .getMapAsPrettyString( params ) );
+    final String workItemDetails = StringUtil.getMapAsPrettyString( params );
 
-    workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.IN_PROGRESS );
-    WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
+    WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.IN_PROGRESS );
 
     if ( actionBean == null || params == null ) {
       final String failureMessage = Messages.getInstance().getCantInvokeNullAction();
-      workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
-      workItemLifecycleEvent.setLifecycleDetails( failureMessage );
-      WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
+      WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.FAILED, failureMessage );
       throw new ActionInvocationException( failureMessage );
     }
 
@@ -172,12 +168,10 @@ public class DefaultActionInvoker implements IActionInvoker {
     } else {
       try {
         requiresUpdate = SecurityHelper.getInstance().runAsUser( actionUser, actionBeanRunner );
-        workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.SUCCEEDED );
-        WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
+        WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.SUCCEEDED );
       } catch ( final Throwable t ) {
-        workItemLifecycleEvent.setWorkItemLifecyclePhase( WorkItemLifecyclePhase.FAILED );
-        workItemLifecycleEvent.setLifecycleDetails( t.getLocalizedMessage() );
-        WorkItemLifecyclePublisher.publish( workItemLifecycleEvent );
+        WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.FAILED,
+          t.getLocalizedMessage() );
         status.setThrowable( t );
       }
     }

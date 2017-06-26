@@ -23,8 +23,6 @@ import org.mockito.Mockito;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import java.util.Date;
-
 public class WorkItemLifecyclePublisherTest {
 
   private AbstractApplicationContext contextMock = null;
@@ -34,7 +32,6 @@ public class WorkItemLifecyclePublisherTest {
   private String workItemDetails = "foe";
   private WorkItemLifecyclePhase lifecyclePhase = WorkItemLifecyclePhase.DISPATCHED;
   private String lifecycleDetails = "foe";
-  private Date currentTimeStamp = new Date();
 
   public static boolean LISTENER_A_CALLED = false;
   public static boolean LISTENER_B_CALLED = false;
@@ -47,9 +44,8 @@ public class WorkItemLifecyclePublisherTest {
     publisherMock = Mockito.spy( contextMock.getBean( WorkItemLifecyclePublisher.class ) );
     publisherMock.setApplicationEventPublisher( contextMock );
 
-    workItemLifecycleEventMock = Mockito.spy( new WorkItemLifecycleEvent( workItemUid, workItemDetails ) );
-    workItemLifecycleEventMock.setWorkItemLifecyclePhase( lifecyclePhase );
-    workItemLifecycleEventMock.setLifecycleDetails( lifecycleDetails );
+    workItemLifecycleEventMock = Mockito.spy( new WorkItemLifecycleEvent( workItemUid, workItemDetails,
+      lifecyclePhase, lifecycleDetails, null ) );
   }
 
   @Test
