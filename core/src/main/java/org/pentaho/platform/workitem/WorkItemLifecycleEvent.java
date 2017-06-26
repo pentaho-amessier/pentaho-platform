@@ -42,6 +42,7 @@ public class WorkItemLifecycleEvent {
   private WorkItemLifecyclePhase workItemLifecyclePhase;
   private String lifecycleDetails;
   private Date sourceTimestamp;
+  private Date targetTimestamp;
   private String sourceHostName;
   private String sourceHostIp;
   private static String HOST_NAME;
@@ -94,6 +95,10 @@ public class WorkItemLifecycleEvent {
     if ( this.sourceTimestamp == null ) {
       this.sourceTimestamp = new Date();
     }
+    // target timestamp is always a fresh date, set at the time the event object is created; this is because the
+    // original event may be created on a different host, where  the clock is off; the target timestamp is guaranteed
+    // to be expressed in terms of a common clock on the target host, where the event is actually persisted
+    this.targetTimestamp = new Date();
 
     // set the default values for host name and ip, they can be changed directly if needed
     this.sourceHostName = HOST_NAME;
@@ -135,100 +140,74 @@ public class WorkItemLifecycleEvent {
     return workItemUid;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   public String getWorkItemUid() {
     return workItemUid;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   public void setWorkItemUid( final String workItemUid ) {
     this.workItemUid = workItemUid;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   public String getWorkItemDetails() {
     return workItemDetails;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   public void setWorkItemDetails( final String workItemDetails ) {
     this.workItemDetails = workItemDetails;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   public WorkItemLifecyclePhase getWorkItemLifecyclePhase() {
     return workItemLifecyclePhase;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  public String getWorkItemLifecyclePhaseName() {
+    return workItemLifecyclePhase.getName();
+  }
+
+  public String getWorkItemLifecyclePhaseDescription() {
+    return workItemLifecyclePhase.getDescription();
+  }
+
   public void setWorkItemLifecyclePhase( final WorkItemLifecyclePhase workItemLifecyclePhase ) {
     this.workItemLifecyclePhase = workItemLifecyclePhase;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   public String getLifecycleDetails() {
     return lifecycleDetails;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   public void setLifecycleDetails( final String lifecycleDetails ) {
     this.lifecycleDetails = lifecycleDetails;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   public Date getSourceTimestamp() {
     return sourceTimestamp;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   public void setSourceTimestamp( final Date sourceTimestamp ) {
     this.sourceTimestamp = sourceTimestamp;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  public Date getTargetTimestamp() {
+    return targetTimestamp;
+  }
+
+  public void setTargetTimestamp( final Date targetTimestamp ) {
+    this.targetTimestamp = targetTimestamp;
+  }
+
   public String getSourceHostName() {
     return sourceHostName;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   public void setSourceHostName( final String sourceHostName ) {
     this.sourceHostName = sourceHostName;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   public String getSourceHostIp() {
     return sourceHostIp;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   public void setSourceHostIp( final String sourceHostIp ) {
     this.sourceHostIp = sourceHostIp;
   }

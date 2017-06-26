@@ -58,24 +58,45 @@ public enum WorkItemLifecyclePhase {
    */
   FAILED( "LifecyclePhase.FAILED" );
 
-  private String shortNameMessageKey;
+  private String nameMessageKey;
 
-  WorkItemLifecyclePhase( final String shortNameMessageKey ) {
-    this.shortNameMessageKey = shortNameMessageKey;
+  WorkItemLifecyclePhase( final String nameMessageKey ) {
+    this.nameMessageKey = nameMessageKey;
   }
 
-  public String getShortName() {
-    return Messages.getInstance().getString( shortNameMessageKey );
+  public String getName() {
+    return getMessageBundle().getString( nameMessageKey );
   }
 
   public String getDescription() {
-    return Messages.getInstance().getString( shortNameMessageKey + "_DESC" );
+    return getMessageBundle().getString( nameMessageKey + "_DESC" );
+  }
+
+  /**
+   * Returns an instance of {@link WorkItemLifecyclePhase} whose name matches the provided {@code name}.
+   *
+   * @param name the name of the {@link WorkItemLifecyclePhase} being fetched
+   * @return an instance of {@link WorkItemLifecyclePhase} whose name matches the provided {@code name} or null, if no
+   * match is found
+   */
+  public static WorkItemLifecyclePhase get( final String name ) {
+    final WorkItemLifecyclePhase[] instances = WorkItemLifecyclePhase.class.getEnumConstants();
+    for ( final WorkItemLifecyclePhase instance : instances ) {
+      if ( instance.getName().equals( name ) ) {
+        return instance;
+      }
+    }
+    return null;
   }
 
   public String toString() {
     return new ToStringBuilder( this )
-      .append( "name", this.getShortName() )
+      .append( "name", this.getName() )
       .append( "description", this.getDescription() )
       .toString();
+  }
+
+  protected static Messages getMessageBundle() {
+    return Messages.getInstance();
   }
 }
