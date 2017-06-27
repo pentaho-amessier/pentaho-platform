@@ -128,7 +128,7 @@ public class DefaultActionInvoker implements IActionInvoker {
     Map<String, Serializable> params ) throws Exception {
 
     final String workItemUid = WorkItemLifecycleEvent.getUidFromMap( params );
-    final String workItemDetails = params.toString();
+    final String workItemDetails = params == null ? null : params.toString();
 
     if ( actionBean == null || params == null ) {
       final String failureMessage = Messages.getInstance().getCantInvokeNullAction();
@@ -167,8 +167,8 @@ public class DefaultActionInvoker implements IActionInvoker {
         // that created the job is a system user. See PPP-2350
         requiresUpdate = SecurityHelper.getInstance().runAsAnonymous( actionBeanRunner );
       } else {
-          requiresUpdate = SecurityHelper.getInstance().runAsUser( actionUser, actionBeanRunner );
-          WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.SUCCEEDED );
+        requiresUpdate = SecurityHelper.getInstance().runAsUser( actionUser, actionBeanRunner );
+        WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.SUCCEEDED );
       }
     } catch ( final Throwable t ) {
       WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.FAILED,
