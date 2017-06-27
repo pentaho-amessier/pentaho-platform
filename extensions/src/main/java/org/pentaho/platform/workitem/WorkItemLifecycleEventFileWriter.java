@@ -51,30 +51,47 @@ public class WorkItemLifecycleEventFileWriter {
 
   private static final String DEFAULT_FIELD_DELIMITER = "|";
 
-  private static List<String> DEFAULT_MESSAGE_FIELDS = new ArrayList<String>();
-
+  private static List<String> DEFAULT_EVENT_MESSAGE_FIELDS = new ArrayList<String>();
   static {
-    DEFAULT_MESSAGE_FIELDS.add( "targetTimestamp" );
-    DEFAULT_MESSAGE_FIELDS.add( "workItemUid" );
-    DEFAULT_MESSAGE_FIELDS.add( "workItemDetails" );
-    DEFAULT_MESSAGE_FIELDS.add( "workItemLifecyclePhaseName" );
-    DEFAULT_MESSAGE_FIELDS.add( "lifecycleDetails" );
-    DEFAULT_MESSAGE_FIELDS.add( "sourceTimestamp" );
-    DEFAULT_MESSAGE_FIELDS.add( "sourceHostName" );
-    DEFAULT_MESSAGE_FIELDS.add( "sourceHostIp" );
+    DEFAULT_EVENT_MESSAGE_FIELDS.add( "targetTimestamp" );
+    DEFAULT_EVENT_MESSAGE_FIELDS.add( "workItemUid" );
+    DEFAULT_EVENT_MESSAGE_FIELDS.add( "workItemLifecyclePhaseName" );
+    DEFAULT_EVENT_MESSAGE_FIELDS.add( "lifecycleDetails" );
+    DEFAULT_EVENT_MESSAGE_FIELDS.add( "sourceTimestamp" );
+    DEFAULT_EVENT_MESSAGE_FIELDS.add( "sourceHostName" );
+    DEFAULT_EVENT_MESSAGE_FIELDS.add( "sourceHostIp" );
+    DEFAULT_EVENT_MESSAGE_FIELDS.add( "workItemDetails" );
   }
 
-  // TODO: add environment variables that may be docker / mesos / framework specific
+  private static List<String> DEFAULT_ENV_VAR_MESSAGE_FIELDS = new ArrayList<String>();
+  static {
+    DEFAULT_ENV_VAR_MESSAGE_FIELDS.add( "HOSTNAME" );
+    DEFAULT_ENV_VAR_MESSAGE_FIELDS.add( "HOST" );
+    DEFAULT_ENV_VAR_MESSAGE_FIELDS.add( "PORT0" );
+    DEFAULT_ENV_VAR_MESSAGE_FIELDS.add( "MESOS_TASK_ID" );
+    DEFAULT_ENV_VAR_MESSAGE_FIELDS.add( "PORT_8080" );
+    DEFAULT_ENV_VAR_MESSAGE_FIELDS.add( "PORTS" );
+    DEFAULT_ENV_VAR_MESSAGE_FIELDS.add( "MESOS_CONTAINER_NAME" );
+  }
 
   private String fieldDelimiter = DEFAULT_FIELD_DELIMITER;
-  private List<String> messageFields = DEFAULT_MESSAGE_FIELDS;
+  private List<String> messageEventFields = DEFAULT_EVENT_MESSAGE_FIELDS;
+  private List<String> messageEnvVarFields = DEFAULT_ENV_VAR_MESSAGE_FIELDS;
 
-  public void setMessageFields( final List<String> messageFields ) {
-    this.messageFields = messageFields;
+  public void setEventMessageFields( final List<String> messageEventFields ) {
+    this.messageEventFields = messageEventFields;
   }
 
-  public List<String> getMessageFields() {
-    return CollectionUtils.isEmpty( this.messageFields ) ? DEFAULT_MESSAGE_FIELDS : this.messageFields;
+  public List<String> getEventMessageFields() {
+    return CollectionUtils.isEmpty( this.messageEventFields ) ? DEFAULT_EVENT_MESSAGE_FIELDS : this.messageEventFields;
+  }
+
+  public void setMessageEnvVarFields( final List<String> messageEnvVarFields ) {
+    this.messageEnvVarFields = messageEnvVarFields;
+  }
+
+  public List<String> getMessageEnvVarFields() {
+    return CollectionUtils.isEmpty( this.messageEnvVarFields ) ? DEFAULT_ENV_VAR_MESSAGE_FIELDS : this.messageEnvVarFields;
   }
 
   public void setFieldDelimiter( final String fieldDelimiter ) {
@@ -99,33 +116,42 @@ public class WorkItemLifecycleEventFileWriter {
         workItemLifecycleEvent.toString() ) );
     }
 
-    final String actualMessagePattern = getContent( getMessageFields(), getFieldDelimiter(), workItemLifecycleEvent );
+    final String actualMessagePattern = getContent( getEventMessageFields(), getMessageEnvVarFields(),
+      getFieldDelimiter(), workItemLifecycleEvent );
     getLogger().info( actualMessagePattern );
   }
 
+  private Logger workItemLogger = null;
+
   private Logger getLogger() {
-    final Logger workItemLogger = Logger.getLogger( WorkItemLifecycleEventFileWriter.class );
+    if ( workItemLogger == null ) {
+      synchronized ( WorkItemLifecycleEventFileWriter.class ) {
+        if ( workItemLogger == null ) {
+          workItemLogger = Logger.getLogger( WorkItemLifecycleEventFileWriter.class );
 
-    final PatternLayout layout = new PatternLayout();
-    layout.setConversionPattern( "%m%n" );
+          final PatternLayout layout = new PatternLayout();
+          layout.setConversionPattern( "%m%n" );
 
-    final DailyRollingFileAppender fileAppender = new DailyRollingFileAppender();
-    fileAppender.setFile( ".." + File.separator + "logs" + File.separator + WORK_ITEM_LOG_FILE + ".log" );
-    fileAppender.setLayout( layout );
-    fileAppender.activateOptions();
-    fileAppender.setAppend( true );
-    fileAppender.setDatePattern( "'.'yyyy-MM-dd" );
+          final DailyRollingFileAppender fileAppender = new DailyRollingFileAppender();
+          fileAppender.setFile( ".." + File.separator + "logs" + File.separator + WORK_ITEM_LOG_FILE + ".log" );
+          fileAppender.setLayout( layout );
+          fileAppender.activateOptions();
+          fileAppender.setAppend( false );
+          fileAppender.setDatePattern( "'.'yyyy-MM-dd" );
 
-    // TODO: why are the logs written to std out? remove...
+          // TODO: why are the logs written to std out? remove...
 
-    // The log level is arbitrary, it just needs to match the level used to log the work item lifecycle event
-    workItemLogger.setLevel( Level.INFO );
-    workItemLogger.addAppender( fileAppender );
+          // The log level is arbitrary, it just needs to match the level used to log the work item lifecycle event
+          workItemLogger.setLevel( Level.INFO );
+          workItemLogger.addAppender( fileAppender );
+        }
+      }
+    }
     return workItemLogger;
   }
 
-  protected static String getContent( final List<String> messageFields, final String fieldDelimiter,
-                                      final Object... data ) {
+  protected static String getContent( final List<String> messageEventFields, final List<String> messageEnvVarFields,
+    final String fieldDelimiter, final Object... data ) {
     final StringBuilder content = new StringBuilder();
     try {
       final ObjectMapper mapper = new ObjectMapper();
@@ -135,12 +161,20 @@ public class WorkItemLifecycleEventFileWriter {
         dataMap.putAll( mapper.convertValue( currentData, Map.class ) );
       }
       String actualDelimiter = "";
-      for ( final String fieldName : messageFields ) {
+      for ( final String fieldName : messageEventFields ) {
         String fieldContent = getContent( engine, dataMap, fieldName );
         if ( fieldContent == null ) {
-          fieldContent = "?";
+          fieldContent = "!" + fieldName + "!";
         }
         content.append( actualDelimiter ).append( fieldContent );
+        actualDelimiter = fieldDelimiter;
+      }
+      for ( final String envVarName : messageEnvVarFields ) {
+        String envVarValue = System.getenv( envVarName );
+        if ( envVarValue == null ) {
+          envVarValue = "!" + envVarName + "!";
+        }
+        content.append( actualDelimiter ).append( envVarValue );
         actualDelimiter = fieldDelimiter;
       }
       return content.toString();

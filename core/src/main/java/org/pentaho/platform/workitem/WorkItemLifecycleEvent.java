@@ -95,7 +95,7 @@ public class WorkItemLifecycleEvent {
     this.sourceTimestamp = sourceTimestamp;
 
     // if the workItemUid is null, generate it
-    if ( this.workItemUid == null ) {
+    if ( StringUtil.isEmpty( this.workItemUid ) ) {
       this.workItemUid = UUID.randomUUID().toString();
     }
     // Set sourceTimestamp to current date only if not already provided
@@ -120,12 +120,11 @@ public class WorkItemLifecycleEvent {
    * @return {@code ActionUtil.REQUEST_ID} from the {@link Map} or a new uid
    */
   public static String getUidFromMap( final Map map ) {
-    String workItemUid = null;
+    String workItemUid;
     if ( map == null || StringUtil.isEmpty( (String) map.get( ActionUtil.WORK_ITEM_UID ) ) ) {
       workItemUid = UUID.randomUUID().toString();
-      if ( StringUtil.isEmpty( workItemUid ) ) {
-        workItemUid = UUID.randomUUID().toString();
-      }
+    } else {
+      workItemUid = (String) map.get( ActionUtil.WORK_ITEM_UID );
     }
     if ( map != null ) {
       map.put( ActionUtil.WORK_ITEM_UID, workItemUid );
