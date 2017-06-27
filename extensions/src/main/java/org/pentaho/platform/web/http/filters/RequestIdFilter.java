@@ -18,6 +18,7 @@ package org.pentaho.platform.web.http.filters;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.pentaho.platform.util.RequestIdUtil;
 import org.slf4j.MDC;
 
 import javax.servlet.Filter;
@@ -35,11 +36,6 @@ import java.util.UUID;
 public class RequestIdFilter implements Filter {
 
   private static final Log logger = LogFactory.getLog( RequestIdFilter.class );
-
-  public static final String X_REQUEST_ID = "x-request-id"; //$NON-NLS-1$
-  public static final String REQUEST_ID = "requestId"; //$NON-NLS-1$
-  public static final String REQUEST_ID_FORMAT = "rid-%s"; //$NON-NLS-1$
-
   public void destroy() {
   }
 
@@ -47,14 +43,15 @@ public class RequestIdFilter implements Filter {
     throws ServletException, IOException {
 
     HttpServletRequest request = (HttpServletRequest) req;
-    String requestId = Optional.ofNullable( request.getHeader( X_REQUEST_ID ) ).orElse( UUID.randomUUID().toString() );
+    String requestId = Optional.ofNullable( request.getHeader( RequestIdUtil.X_REQUEST_ID ) ).orElse(
+      UUID.randomUUID().toString() );
 
     try {
 
       if ( logger.isDebugEnabled() ) {
         logger.debug( "received request with request id of: " + requestId );
       }
-      MDC.put( REQUEST_ID, getFormattedRequestUid( requestId ) );
+      MDC.put( RequestIdUtil.REQUEST_ID, RequestIdUtil.getFormattedRequestUid( requestId ) );
 
       chain.doFilter( req, resp );
 
@@ -63,13 +60,9 @@ public class RequestIdFilter implements Filter {
       if ( logger.isDebugEnabled() ) {
         logger.debug( "Exiting request with request id of: " + requestId );
       }
-      ( (HttpServletResponse) resp ).setHeader( X_REQUEST_ID, requestId );
-      MDC.remove( X_REQUEST_ID );
+      ( (HttpServletResponse) resp ).setHeader( RequestIdUtil.X_REQUEST_ID, requestId );
+      MDC.remove( RequestIdUtil.X_REQUEST_ID );
     }
-  }
-
-  public static String getFormattedRequestUid( final String requestId ) {
-    return  String.format( REQUEST_ID_FORMAT, requestId );
   }
 
   public void init( FilterConfig config ) throws ServletException {

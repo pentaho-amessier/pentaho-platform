@@ -102,11 +102,11 @@ public class WorkItemLifecycleEvent {
   }
 
   /**
-   * Looks up the {@code ActionUtil.REQUEST_ID} within the {@link Map}. If available, the value is returned,
+   * Looks up the {@code ActionUtil.WORK_ITEM_UID} within the {@link Map}. If available, the value is returned,
    * otherwise a new uid is generated and placed within the {@link Map}.
    *
-   * @param map a {@link Map} that may contain the {@code ActionUtil.REQUEST_ID}
-   * @return {@code ActionUtil.REQUEST_ID} from the {@link Map} or a new uid
+   * @param map a {@link Map} that may contain the {@code ActionUtil.WORK_ITEM_UID}
+   * @return {@code ActionUtil.WORK_ITEM_UID} from the {@link Map} or a new uid
    */
   public static String getUidFromMap( final Map map ) {
     String workItemUid;

@@ -20,6 +20,7 @@ package org.pentaho.platform.web.http.filters;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.pentaho.platform.util.RequestIdUtil;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -52,17 +53,17 @@ public class RequestIdFilterTest {
     RequestIdFilter requestIdFilter = new RequestIdFilter( );
     requestIdFilter.doFilter( request, response, chain );
 
-    verify( response ).setHeader( eq(  RequestIdFilter.X_REQUEST_ID ), anyString() );
+    verify( response ).setHeader( eq(  RequestIdUtil.X_REQUEST_ID ), anyString() );
   }
 
   @Test
   public void testRequestFilterIdProvided() throws ServletException, IOException {
 
     String requestId = UUID.randomUUID().toString();
-    when( request.getHeader( RequestIdFilter.X_REQUEST_ID ) ).thenReturn( requestId );
+    when( request.getHeader( RequestIdUtil.X_REQUEST_ID ) ).thenReturn( requestId );
     RequestIdFilter requestIdFilter = new RequestIdFilter();
     requestIdFilter.doFilter( request, response, chain );
 
-    verify( response ).setHeader( eq( RequestIdFilter.X_REQUEST_ID ), eq( requestId ) );
+    verify( response ).setHeader( eq( RequestIdUtil.X_REQUEST_ID ), eq( requestId ) );
   }
 }
