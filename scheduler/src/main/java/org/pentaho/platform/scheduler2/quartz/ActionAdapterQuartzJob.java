@@ -120,7 +120,7 @@ public class ActionAdapterQuartzJob implements Job {
     JobExecutionContext context, final Map<String, Serializable> params ) throws Exception {
 
     final String workItemUid = WorkItemLifecycleEvent.getUidFromMap( params );
-    final String workItemDetails = StringUtil.getMapAsPrettyString( params );
+    final String workItemDetails = params.toString();
 
     // create an instance of IActionInvoker, which knows know to invoke this IAction
     final IActionInvoker actionInvoker = PentahoSystem.get( IActionInvoker.class, "IActionInvoker", PentahoSessionHolder
@@ -190,6 +190,7 @@ public class ActionAdapterQuartzJob implements Job {
             QuartzJobKey jobKey = QuartzJobKey.parse( context.getJobDetail().getName() );
             String jobName = jobKey.getJobName();
             jobParams.put( QuartzScheduler.RESERVEDMAPKEY_RESTART_FLAG, Boolean.TRUE );
+            WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.RESTARTED );
             scheduler.createJob( jobName, iaction, jobParams, trigger, streamProvider );
             log.warn( "New RunOnce job created for " + jobName + " -> possible startup synchronization error" );
             return null;
@@ -204,7 +205,6 @@ public class ActionAdapterQuartzJob implements Job {
     scheduler.fireJobCompleted( actionBean, actionUser, params, streamProvider );
 
     if ( requiresUpdate ) {
-      // TODO log restart of work item status?
       log.warn( "Output path for job: " + context.getJobDetail().getName() + " has changed. Job requires update" );
       try {
         final IJobTrigger trigger = scheduler.getJob( context.getJobDetail().getName() ).getJobTrigger();
@@ -220,6 +220,7 @@ public class ActionAdapterQuartzJob implements Job {
             streamProvider.setStreamingAction( null ); // remove generated content
             QuartzJobKey jobKey = QuartzJobKey.parse( context.getJobDetail().getName() );
             String jobName = jobKey.getJobName();
+            WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.RESTARTED );
             org.pentaho.platform.api.scheduler2.Job j =
               scheduler.createJob( jobName, iaction, jobParams, trigger, streamProvider );
             log.warn( "New Job: " + j.getJobId() + " created" );

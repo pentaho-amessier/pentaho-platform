@@ -42,6 +42,10 @@ public enum WorkItemLifecyclePhase {
    */
   RECEIVED( "LifecyclePhase.RECEIVED" ),
   /**
+   * The work item execution has been accepted
+   */
+  ACCEPTED( "LifecyclePhase.ACCEPTED" ),
+  /**
    * The work item execution has been rejected
    */
   REJECTED( "LifecyclePhase.REJECTED" ),
@@ -56,7 +60,11 @@ public enum WorkItemLifecyclePhase {
   /**
    * The work item execution has failed
    */
-  FAILED( "LifecyclePhase.FAILED" );
+  FAILED( "LifecyclePhase.FAILED" ),
+  /**
+   * The work item execution has been restarted
+   */
+  RESTARTED( "LifecyclePhase.RESTARTED" );
 
   private String nameMessageKey;
 

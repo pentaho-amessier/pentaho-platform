@@ -92,17 +92,18 @@ public class ActionResource {
 
     IAction action = null;
     Map<String, Serializable> params = null;
+    String workItemDetails = null;
     try {
       action = createActionBean( actionClass, actionId );
       params = deserialize( action, actionParams );
+      workItemDetails = params.toString();
     } catch ( final Exception e ) {
       logger.error( e.getLocalizedMessage() );
       // we're not able to get the work item UID at this point
-      WorkItemLifecyclePublisher.publish( "?", actionParams, WorkItemLifecyclePhase.FAILED, e.getLocalizedMessage() );
+      WorkItemLifecyclePublisher.publish( "?", workItemDetails, WorkItemLifecyclePhase.FAILED, e.getLocalizedMessage() );
     }
     final String workItemUid = WorkItemLifecycleEvent.getUidFromMap( params );
-    WorkItemLifecyclePublisher.publish( workItemUid, StringUtil.getMapAsPrettyString( params ), WorkItemLifecyclePhase
-      .RECEIVED );
+    WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase .RECEIVED );
 
     // https://docs.oracle.com/javase/7/docs/api/java/lang/Boolean.html#parseBoolean(java.lang.String)
     final boolean isAsyncExecution = Boolean.parseBoolean( async );
@@ -190,22 +191,17 @@ public class ActionResource {
         IActionInvokeStatus status = actionInvoker.invokeAction( action, actionUser, params );
 
         if ( status != null && status.getThrowable() == null ) {
-          WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.SUCCEEDED );
           getLogger().info( Messages.getInstance().getRunningInBgLocallySuccess( action.getClass().getName(), params ),
             status.getThrowable() );
         } else {
           final String failureMessage = Messages.getInstance().getCouldNotInvokeActionLocally( action.getClass()
             .getName(), params );
-          WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.FAILED,
-            failureMessage );
           getLogger().error( failureMessage, ( status != null ? status.getThrowable() : null ) );
         }
 
         return status;
 
       } catch ( final Throwable thr ) {
-        WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.FAILED,
-          thr.getLocalizedMessage() );
         getLogger()
           .error( Messages.getInstance().getCouldNotInvokeActionLocallyUnexpected( action.getClass().getName(),
             workItemDetails ), thr );

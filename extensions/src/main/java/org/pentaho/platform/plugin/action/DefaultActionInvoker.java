@@ -128,15 +128,15 @@ public class DefaultActionInvoker implements IActionInvoker {
     Map<String, Serializable> params ) throws Exception {
 
     final String workItemUid = WorkItemLifecycleEvent.getUidFromMap( params );
-    final String workItemDetails = StringUtil.getMapAsPrettyString( params );
-
-    WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.IN_PROGRESS );
+    final String workItemDetails = params.toString();
 
     if ( actionBean == null || params == null ) {
       final String failureMessage = Messages.getInstance().getCantInvokeNullAction();
       WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.FAILED, failureMessage );
       throw new ActionInvocationException( failureMessage );
     }
+
+    WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.IN_PROGRESS );
 
     if ( logger.isDebugEnabled() ) {
       logger.debug( Messages.getInstance().getRunningInBackgroundLocally( actionBean.getClass().getName(), params ) );
@@ -161,19 +161,19 @@ public class DefaultActionInvoker implements IActionInvoker {
     final ActionInvokeStatus status = new ActionInvokeStatus();
 
     boolean requiresUpdate = false;
-    if ( ( StringUtil.isEmpty( actionUser ) ) || ( actionUser.equals( "system session" ) ) ) { //$NON-NLS-1$
-      // For now, don't try to run quartz jobs as authenticated if the user
-      // that created the job is a system user. See PPP-2350
-      requiresUpdate = SecurityHelper.getInstance().runAsAnonymous( actionBeanRunner );
-    } else {
-      try {
-        requiresUpdate = SecurityHelper.getInstance().runAsUser( actionUser, actionBeanRunner );
-        WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.SUCCEEDED );
-      } catch ( final Throwable t ) {
-        WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.FAILED,
-          t.getLocalizedMessage() );
-        status.setThrowable( t );
+    try {
+      if ( ( StringUtil.isEmpty( actionUser ) ) || ( actionUser.equals( "system session" ) ) ) { //$NON-NLS-1$
+        // For now, don't try to run quartz jobs as authenticated if the user
+        // that created the job is a system user. See PPP-2350
+        requiresUpdate = SecurityHelper.getInstance().runAsAnonymous( actionBeanRunner );
+      } else {
+          requiresUpdate = SecurityHelper.getInstance().runAsUser( actionUser, actionBeanRunner );
+          WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.SUCCEEDED );
       }
+    } catch ( final Throwable t ) {
+      WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.FAILED,
+        t.getLocalizedMessage() );
+      status.setThrowable( t );
     }
     status.setRequiresUpdate( requiresUpdate );
 
