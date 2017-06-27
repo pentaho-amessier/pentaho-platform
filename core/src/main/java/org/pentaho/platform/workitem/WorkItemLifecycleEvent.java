@@ -65,17 +65,6 @@ public class WorkItemLifecycleEvent {
   }
 
   /**
-   * Creates the {@link WorkItemLifecycleEvent} with all the required parameters. The {@code sourceTimestmap} is
-   * set to the current date.
-   *
-   * @param workItemUid     a {@link String} containing unique identifier for the {@link WorkItemLifecycleEvent}
-   * @param workItemDetails a {@link String} containing details of the {@link WorkItemLifecycleEvent}
-
-  public WorkItemLifecycleEvent( final String workItemUid, final String workItemDetails ) {
-    this( workItemUid, workItemDetails, new Date() );
-  }*/
-
-  /**
    * Creates the {@link WorkItemLifecycleEvent} with all the required parameters.
    *
    * @param workItemUid            a {@link String} containing unique identifier for the {@link WorkItemLifecycleEvent}
@@ -150,14 +139,6 @@ public class WorkItemLifecycleEvent {
 
   public WorkItemLifecyclePhase getWorkItemLifecyclePhase() {
     return workItemLifecyclePhase;
-  }
-
-  public String getWorkItemLifecyclePhaseName() {
-    return workItemLifecyclePhase.getName();
-  }
-
-  public String getWorkItemLifecyclePhaseDescription() {
-    return workItemLifecyclePhase.getDescription();
   }
 
   public void setWorkItemLifecyclePhase( final WorkItemLifecyclePhase workItemLifecyclePhase ) {

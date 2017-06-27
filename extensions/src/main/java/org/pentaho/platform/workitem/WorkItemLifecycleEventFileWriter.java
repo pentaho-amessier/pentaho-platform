@@ -55,7 +55,7 @@ public class WorkItemLifecycleEventFileWriter {
   static {
     DEFAULT_EVENT_MESSAGE_FIELDS.add( "targetTimestamp" );
     DEFAULT_EVENT_MESSAGE_FIELDS.add( "workItemUid" );
-    DEFAULT_EVENT_MESSAGE_FIELDS.add( "workItemLifecyclePhaseName" );
+    DEFAULT_EVENT_MESSAGE_FIELDS.add( "workItemLifecyclePhase" );
     DEFAULT_EVENT_MESSAGE_FIELDS.add( "lifecycleDetails" );
     DEFAULT_EVENT_MESSAGE_FIELDS.add( "sourceTimestamp" );
     DEFAULT_EVENT_MESSAGE_FIELDS.add( "sourceHostName" );
