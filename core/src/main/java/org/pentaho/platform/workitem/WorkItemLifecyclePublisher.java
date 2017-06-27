@@ -107,19 +107,27 @@ public class WorkItemLifecyclePublisher {
    *
    * @param workItemLifecycleEvent the {@link WorkItemLifecycleEvent}
    */
-  private static void publish( final WorkItemLifecycleEvent workItemLifecycleEvent ) {
-    final WorkItemLifecyclePublisher util = getInstance();
-    if ( util != null ) {
-      util.publishImpl( workItemLifecycleEvent );
+  public static void publish( final WorkItemLifecycleEvent workItemLifecycleEvent ) {
+    final WorkItemLifecyclePublisher publisher = getInstance();
+    if ( publisher != null ) {
+      publisher.publishImpl( workItemLifecycleEvent );
     } else {
       log.debug( String.format( "'%s' publisher bean is not available, unable to publish work item  lifecycle: %s",
         PUBLISHER_BEAN_NAME, workItemLifecycleEvent.toString() ) );
     }
   }
 
-  protected static WorkItemLifecyclePublisher getInstance() {
-    return PentahoSystem.get( WorkItemLifecyclePublisher.class, PUBLISHER_BEAN_NAME,
-      PentahoSessionHolder.getSession() );
+  private static WorkItemLifecyclePublisher instance;
+  public static synchronized WorkItemLifecyclePublisher getInstance() {
+    if ( instance == null ) {
+      synchronized ( WorkItemLifecyclePublisher.class ) {
+        if ( instance == null ) {
+          instance = PentahoSystem.get( WorkItemLifecyclePublisher.class, PUBLISHER_BEAN_NAME, PentahoSessionHolder
+            .getSession() );
+        }
+      }
+    }
+    return instance;
   }
 
   /**

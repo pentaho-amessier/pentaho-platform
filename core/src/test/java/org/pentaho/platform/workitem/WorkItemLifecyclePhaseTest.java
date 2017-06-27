@@ -27,7 +27,6 @@ public class WorkItemLifecyclePhaseTest {
     Assert.assertEquals( "Submitted", WorkItemLifecyclePhase.SUBMITTED.getName() );
     Assert.assertEquals( "Dispatched", WorkItemLifecyclePhase.DISPATCHED.getName() );
     Assert.assertEquals( "Received", WorkItemLifecyclePhase.RECEIVED.getName() );
-    Assert.assertEquals( "Accepted", WorkItemLifecyclePhase.ACCEPTED.getName() );
     Assert.assertEquals( "Rejected", WorkItemLifecyclePhase.REJECTED.getName() );
     Assert.assertEquals( "In progress", WorkItemLifecyclePhase.IN_PROGRESS.getName() );
     Assert.assertEquals( "Succeeded", WorkItemLifecyclePhase.SUCCEEDED.getName() );
@@ -45,8 +44,6 @@ public class WorkItemLifecyclePhaseTest {
         WorkItemLifecyclePhase.DISPATCHED.getDescription() );
     Assert.assertEquals( "The work item has been received by the component responsible for its execution",
       WorkItemLifecyclePhase.RECEIVED.getDescription() );
-    Assert.assertEquals( "The work item execution has been accepted",
-      WorkItemLifecyclePhase.ACCEPTED.getDescription() );
     Assert.assertEquals( "The work item execution has been rejected",
       WorkItemLifecyclePhase.REJECTED.getDescription() );
     Assert

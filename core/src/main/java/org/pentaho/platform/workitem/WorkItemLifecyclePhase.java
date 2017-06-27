@@ -26,10 +26,6 @@ import org.pentaho.platform.util.messages.Messages;
 public enum WorkItemLifecyclePhase {
 
   /**
-   * The work item has been scheduled for execution
-   */
-  SCHEDULED( "LifecyclePhase.SCHEDULED" ),
-  /**
    * The work item has been submitted for execution
    */
   SUBMITTED( "LifecyclePhase.SUBMITTED" ),
