@@ -17,6 +17,9 @@
 
 package org.pentaho.platform.util;
 
+/**
+ * A Utility class for methods related to unique request ids.
+ */
 public class RequestIdUtil {
 
   public static final String X_REQUEST_ID = "x-request-id"; //$NON-NLS-1$

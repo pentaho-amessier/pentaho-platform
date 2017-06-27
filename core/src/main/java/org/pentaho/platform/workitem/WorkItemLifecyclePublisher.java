@@ -89,11 +89,16 @@ public class WorkItemLifecyclePublisher {
    */
   public static void publish( final String workItemUid, final String workItemDetails, final WorkItemLifecyclePhase
     workItemLifecyclePhase, final String lifecycleDetails, final Date sourceTimestamp ) {
-    final WorkItemLifecycleEvent workItemLifecycleEvent = new WorkItemLifecycleEvent( workItemUid, workItemDetails,
+    final WorkItemLifecycleEvent workItemLifecycleEvent = createEvent( workItemUid, workItemDetails,
       workItemLifecyclePhase, lifecycleDetails, sourceTimestamp );
     publish( workItemLifecycleEvent );
   }
 
+  protected static WorkItemLifecycleEvent createEvent( final String workItemUid, final String workItemDetails, final
+    WorkItemLifecyclePhase workItemLifecyclePhase, final String lifecycleDetails, final Date sourceTimestamp ) {
+    return  new WorkItemLifecycleEvent( workItemUid, workItemDetails,
+      workItemLifecyclePhase, lifecycleDetails, sourceTimestamp );
+  }
   /**
    * A convenience method for publishing changes to the work item's lifecycles. Fetches the
    * {@link WorkItemLifecyclePublisher} bean, and if available, calls its {@link #publishImpl(WorkItemLifecycleEvent)}
@@ -103,14 +108,18 @@ public class WorkItemLifecyclePublisher {
    * @param workItemLifecycleEvent the {@link WorkItemLifecycleEvent}
    */
   private static void publish( final WorkItemLifecycleEvent workItemLifecycleEvent ) {
-    final WorkItemLifecyclePublisher util = PentahoSystem.get( WorkItemLifecyclePublisher.class, PUBLISHER_BEAN_NAME,
-      PentahoSessionHolder.getSession() );
+    final WorkItemLifecyclePublisher util = getInstance();
     if ( util != null ) {
       util.publishImpl( workItemLifecycleEvent );
     } else {
       log.debug( String.format( "'%s' publisher bean is not available, unable to publish work item  lifecycle: %s",
         PUBLISHER_BEAN_NAME, workItemLifecycleEvent.toString() ) );
     }
+  }
+
+  protected static WorkItemLifecyclePublisher getInstance() {
+    return PentahoSystem.get( WorkItemLifecyclePublisher.class, PUBLISHER_BEAN_NAME,
+      PentahoSessionHolder.getSession() );
   }
 
   /**
