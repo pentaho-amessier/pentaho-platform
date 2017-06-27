@@ -101,7 +101,8 @@ public class ActionResource {
       WorkItemLifecyclePublisher.publish( "?", actionParams, WorkItemLifecyclePhase.FAILED, e.getLocalizedMessage() );
     }
     final String workItemUid = WorkItemLifecycleEvent.getUidFromMap( params );
-    WorkItemLifecyclePublisher.publish( workItemUid, actionParams, WorkItemLifecyclePhase.RECEIVED );
+    WorkItemLifecyclePublisher.publish( workItemUid, StringUtil.getMapAsPrettyString( params ), WorkItemLifecyclePhase
+      .RECEIVED );
 
     // https://docs.oracle.com/javase/7/docs/api/java/lang/Boolean.html#parseBoolean(java.lang.String)
     final boolean isAsyncExecution = Boolean.parseBoolean( async );

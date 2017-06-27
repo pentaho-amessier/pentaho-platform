@@ -24,7 +24,6 @@ public class WorkItemLifecyclePhaseTest {
 
   @Test
   public void testLifecycleNames() {
-    Assert.assertEquals( "Scheduled", WorkItemLifecyclePhase.SCHEDULED.getName() );
     Assert.assertEquals( "Submitted", WorkItemLifecyclePhase.SUBMITTED.getName() );
     Assert.assertEquals( "Dispatched", WorkItemLifecyclePhase.DISPATCHED.getName() );
     Assert.assertEquals( "Received", WorkItemLifecyclePhase.RECEIVED.getName() );
@@ -37,8 +36,6 @@ public class WorkItemLifecyclePhaseTest {
 
   @Test
   public void testLifecycleDescriptions() {
-    Assert.assertEquals( "The work item has been scheduled for execution", WorkItemLifecyclePhase.SCHEDULED
-      .getDescription() );
     Assert.assertEquals( "The work item has been submitted to the component responsible for its execution",
       WorkItemLifecyclePhase.SUBMITTED.getDescription() );
     Assert

@@ -44,8 +44,6 @@ import org.pentaho.platform.scheduler2.blockout.BlockoutAction;
 import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.security.policy.rolebased.actions.AdministerSecurityAction;
 import org.pentaho.platform.security.policy.rolebased.actions.SchedulerAction;
-import org.pentaho.platform.util.ActionUtil;
-import org.pentaho.platform.util.StringUtil;
 import org.pentaho.platform.util.messages.LocaleHelper;
 import org.pentaho.platform.web.http.api.resources.ComplexJobTriggerProxy;
 import org.pentaho.platform.web.http.api.resources.JobRequest;
@@ -56,8 +54,6 @@ import org.pentaho.platform.web.http.api.resources.SchedulerOutputPathResolver;
 import org.pentaho.platform.web.http.api.resources.SchedulerResourceUtil;
 import org.pentaho.platform.web.http.api.resources.SessionResource;
 import org.pentaho.platform.web.http.api.resources.proxies.BlockStatusProxy;
-import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
-import org.pentaho.platform.workitem.WorkItemLifecyclePublisher;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -67,7 +63,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class SchedulerService {
 
@@ -136,10 +131,6 @@ public class SchedulerService {
 
     HashMap<String, Serializable> parameterMap = new HashMap<String, Serializable>();
 
-    final String workItemDetails = StringUtil.getMapAsPrettyString( parameterMap );
-    final String workItemUid = UUID.randomUUID().toString();
-    parameterMap.put( ActionUtil.WORK_ITEM_UID, workItemUid );
-
     for ( JobScheduleParam param : scheduleRequest.getJobParameters() ) {
       parameterMap.put( param.getName(), param.getValue() );
     }
@@ -173,7 +164,6 @@ public class SchedulerService {
       }
     }
 
-    WorkItemLifecyclePublisher.publish( workItemUid, workItemDetails, WorkItemLifecyclePhase.SCHEDULED );
     return job;
   }
 
