@@ -38,10 +38,6 @@ public enum WorkItemLifecyclePhase {
    */
   RECEIVED( "LifecyclePhase.RECEIVED" ),
   /**
-   * The work item execution has been accepted
-   */
-  ACCEPTED( "LifecyclePhase.ACCEPTED" ),
-  /**
    * The work item execution has been rejected
    */
   REJECTED( "LifecyclePhase.REJECTED" ),
