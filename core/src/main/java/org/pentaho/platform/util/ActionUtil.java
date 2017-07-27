@@ -31,6 +31,7 @@ import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.util.messages.Messages;
 import org.pentaho.platform.util.web.MimeHelper;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,10 +71,7 @@ public class ActionUtil {
    */
   private static final String WORK_ITEM_ID_INVALID_CHARS = "[^\\w\\\\.-]+";
 
-  /**
-   * The max allowable length of the work item id.
-   */
-  protected static final int WORK_ITEM_ID_MAX_LENGTH = 1000;
+  private static final int WORK_ITEM_ID_LENGTH_LIMIT = 1000;
 
   private static final Map<String, String> KEY_MAP;
 
@@ -121,12 +119,12 @@ public class ActionUtil {
    */
   public static String extractUid( final Map<String, Serializable> params ) {
     if ( params == null ) {
-      return generateUniqueWorkItemId( params );
+      return generateWorkItemUid( params );
     }
 
     String uid = (String) params.get( WORK_ITEM_UID );
     if ( uid == null ) {
-      uid = generateUniqueWorkItemId( params );
+      uid = generateWorkItemUid( params );
       params.put( WORK_ITEM_UID, uid );
     }
 
@@ -134,64 +132,52 @@ public class ActionUtil {
   }
 
   /**
-   * @param params a {@link Map} containing action/work item related attributes.
+   * @param params a {@link Map} containing action/work item related attributes, in particular {@code inputFile} and
+   *               {@code actionUser}, which are both used for the purpose of generating the uid.
    * @return a unique id for the work item
-   * @see {@link #generateUniqueWorkItemId(String, String, long, int)}
+   * @see {@link #generateWorkItemUid(String, String)}
    */
-  protected static String generateUniqueWorkItemId( final Map<String, Serializable> params ) {
-    return generateUniqueWorkItemId( (String) params.get( INVOKER_STREAMPROVIDER_INPUT_FILE ), (String) params.get(
-      INVOKER_ACTIONUSER ), System.currentTimeMillis(), WORK_ITEM_ID_MAX_LENGTH );
+  protected static String generateWorkItemUid( final Map<String, Serializable> params ) {
+    return generateWorkItemUid( (String) params.get( INVOKER_STREAMPROVIDER_INPUT_FILE ), (String) params.get(
+      INVOKER_ACTIONUSER ) );
   }
+
 
   /**
    * Returns a unique id for a work item which includes the input file name (derived from {@code inputFilePath}),
-   * {@code user} and {@code date}, in the following format: WI-<input file name>-<user>-<date></date>, stripping any
-   * invalid characters and sticking to the character limit defined for chronos job names.
+   * {@code user} and {@code date}, in the following format: WI-%input file name%-%user%-%date%, stripping any
+   * invalid characters.
    *
    * @param inputFilePath the path of the input file of the action being invoked - optional
-   * @param user          the user executing the action
-   * @param date          the time of the work item execution in ms since epoch
-   * @param maxLength     the max length allowed for the work item id
+   * @param userName      the user executing the action
    * @return a unique id for the work item
    */
-  protected static String generateUniqueWorkItemId( final String inputFilePath,
-                                                    final String user,
-                                                    final long date,
-                                                    final int maxLength ) {
+  public static String generateWorkItemUid( final String inputFilePath,
+                                            final String userName ) {
 
-    String inputFileName = inputFilePath == null ? "" : inputFilePath;
-    String userName = user == null ? "" : user;
+    if ( StringUtil.isEmpty( inputFilePath ) ) {
+      logger.info( "Input file path is not provided and will not be part of the work item uid." );
+    }
+    if ( StringUtil.isEmpty( userName ) ) {
+      logger.info( "User name is not provided and will not be part of the work item uid." );
+    }
     // we only care about the file name, not the full path, which may be long and not very helpful
-    if ( inputFileName != null && inputFileName.contains( RepositoryFile.SEPARATOR ) ) {
-      inputFileName = inputFileName.substring( inputFileName.lastIndexOf( RepositoryFile.SEPARATOR ) + 1 );
-    }
-    // sanitize inputFileName and userName by removing invalid characters
-    inputFileName = inputFileName.replaceAll( WORK_ITEM_ID_INVALID_CHARS, "_" );
-    userName = userName.replaceAll( WORK_ITEM_ID_INVALID_CHARS, "_" );
+    String inputFileName =  ( new File(  inputFilePath == null ? "" : inputFilePath ) ).getName();
 
-    String workItemId;
-    // if the maxLength is negative, we simply build the id without a length limit....
-    if ( maxLength < 0 ) {
-      workItemId = String.format( "WI-%s-%s-%s", inputFileName, userName, date );
-    } else {
-      // ... otherwise we need to take max length into account
-      // we want to always preserve the WI- prefix and -<date> suffix, and trim the middle as needed, if the max length
-      // is exceeded
-      final String defaultWorkItemId = String.format( "WI-%s", date );
-      final String trimmedMiddle = StringUtils.left( String.format( "%s-%s", inputFileName, userName ),
-        maxLength - defaultWorkItemId.length() );
-      workItemId = String.format( "WI-%s-%s", trimmedMiddle, date );
-    }
+    // sanitize inputFileName and user name by removing invalid characters
+    final String sanitizedInputFileName = inputFileName.replaceAll( WORK_ITEM_ID_INVALID_CHARS, "_" );
+    final String sanitizedUserName = ( userName == null ? "" : userName ).replaceAll( WORK_ITEM_ID_INVALID_CHARS, "_" );
+
+    String workItemId = String.format( "WI-%s-%s-%s", sanitizedInputFileName, sanitizedUserName,
+      System.currentTimeMillis() );
     // remove any double dash, in case all the "middle" was removed entirely, or one of the required pieces (user
     // name or inputFileName) is missing
     workItemId = workItemId.replaceAll( "[-]+", "-" );
 
-    if ( maxLength >= 0 ) {
-      // the workItemId might still be theoretically longer than the maxLength, but in practice, we know that will not
-      // be the case, so this code is just a last resort
-      workItemId = StringUtils.left( workItemId, maxLength );
+    if ( workItemId.length() > WORK_ITEM_ID_LENGTH_LIMIT ) {
+      logger.info( String.format( "Work item id exceeds max character limit of %d: %d", WORK_ITEM_ID_LENGTH_LIMIT,
+        workItemId.length() ) );
     }
-
     return workItemId;
   }
 

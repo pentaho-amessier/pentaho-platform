@@ -36,10 +36,11 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 @RunWith( PowerMockRunner.class )
 @PrepareForTest( PentahoSystem.class )
@@ -158,36 +159,40 @@ public class ActionUtilTest {
     assertEquals( 1, params.size() );
   }
 
+  public void testGenerateWorkItemUidWithMap() {
+    // TODO
+  }
+
   @Test
-  public void testGenerateUniqueWorkItemId() {
-    int maxLength = ActionUtil.WORK_ITEM_ID_MAX_LENGTH;
+  public void testGenerateWorkItemUid() throws NoSuchFieldException, IllegalAccessException {
+
+    String result;
     // simple case
-    assertEquals( "WI-Test.prpt-admin-0", ActionUtil.generateUniqueWorkItemId( "Test.prpt", "admin", 0L, maxLength ) );
+    result = ActionUtil.generateWorkItemUid( "Test.prpt", "admin" );
+    assertNotNull( result );
+    assertEquals( "WI-Test.prpt-admin", result.substring( 0, result.lastIndexOf( '-' ) ) );
 
     // bad characters
-    assertEquals( "WI-_.prpt-adm_in-0", ActionUtil.generateUniqueWorkItemId( "!@#$%^&*.prpt", "adm&*&in", 0L, maxLength ) );
+    result = ActionUtil.generateWorkItemUid( "!@#$%^&*.prpt", "adm&*&in" );
+    assertNotNull( result );
+    assertEquals( "WI-_.prpt-adm_in", result.substring( 0, result.lastIndexOf( '-' ) ) );
 
     // all bad characters
-    assertEquals( "WI-_.prpt-_-0", ActionUtil.generateUniqueWorkItemId( "!@#$%^&*.prpt", "&*&(*&", 0L, maxLength ) );
+    result = ActionUtil.generateWorkItemUid( "!@#$%^&*.prpt", "&*&(*&" );
+    assertNotNull( result );
+    assertEquals( "WI-_.prpt-_", result.substring( 0, result.lastIndexOf( '-' ) ) );
 
     // file path and spaces
-    assertEquals( "WI-Test_File.prpt-adm_in-12345", ActionUtil.generateUniqueWorkItemId( "folder/Test File.prpt",
-      "adm&*&in", 12345L, maxLength ) );
+    result = ActionUtil.generateWorkItemUid( "folder/Test File.prpt", "adm&*&in" );
+    assertNotNull( result );
+    assertEquals( "WI-Test_File.prpt-adm_in", result.substring( 0, result.lastIndexOf( '-' ) ) );
 
     // missing user and file
-    assertEquals( "WI-0", ActionUtil.generateUniqueWorkItemId( "", "", 0L, maxLength ) );
-    assertEquals( "WI-0", ActionUtil.generateUniqueWorkItemId( null, null, 0L, maxLength ) );
-    assertEquals( "WI-123", ActionUtil.generateUniqueWorkItemId( null, null, 123L, maxLength ) );
-
-    // exceeded length
-    assertEquals( "WI-12", ActionUtil.generateUniqueWorkItemId( "", "admin", 123L, 5 ) );
-    assertEquals( "WI-123", ActionUtil.generateUniqueWorkItemId( "", "admin", 123L, 6 ) );
-    // this will be the same, because we're replacing the double '--' with a single -
-    assertEquals( "WI-123", ActionUtil.generateUniqueWorkItemId( "", "admin", 123L, 7 ) );
-    assertEquals( "WI-a-123", ActionUtil.generateUniqueWorkItemId( "", "admin", 123L, 8 ) );
-    assertEquals( "WI-adm-123", ActionUtil.generateUniqueWorkItemId( "", "admin", 123L, 10 ) );
-
-    // negative maxLength should yield original value
-    assertEquals( "WI-admin-123", ActionUtil.generateUniqueWorkItemId( "", "admin", 123L, -1 ) );
+    result =  ActionUtil.generateWorkItemUid( "", "" );
+    assertNotNull( result );
+    assertEquals( "WI", result.substring( 0, result.lastIndexOf( '-' ) ) );
+    result =  ActionUtil.generateWorkItemUid( null, null );
+    assertNotNull( result );
+    assertEquals( "WI", result.substring( 0, result.lastIndexOf( '-' ) ) );
   }
 }
