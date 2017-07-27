@@ -38,6 +38,8 @@ import java.util.Map;
 
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 @RunWith( PowerMockRunner.class )
 @PrepareForTest( PentahoSystem.class )
@@ -69,7 +71,7 @@ public class ActionUtilTest {
   @Test
   public void resolveClassTestHappyPathNoBeanID() throws Exception {
     Class<?> aClass = ActionUtil.resolveActionClass( MyTestAction.class.getName(), "" );
-    Assert.assertEquals( MyTestAction.class, aClass );
+    assertEquals( MyTestAction.class, aClass );
   }
 
   @Test
@@ -86,13 +88,13 @@ public class ActionUtilTest {
 
     Class<?> aClass = ActionUtil.resolveActionClass( MyTestAction.class.getName(), beanId );
 
-    Assert.assertEquals( MyTestAction.class, aClass );
+    assertEquals( MyTestAction.class, aClass );
   }
 
   @Test
   public void createActionBeanHappyPath() throws ActionInvocationException {
     IAction iaction = ActionUtil.createActionBean( MyTestAction.class.getName(), null );
-    Assert.assertEquals( iaction.getClass(), MyTestAction.class );
+    assertEquals( iaction.getClass(), MyTestAction.class );
   }
 
 
@@ -103,7 +105,7 @@ public class ActionUtilTest {
     testMap.put( "two", "two" );
     testMap.remove( "one" );
     Assert.assertNull( testMap.get( "one" ) );
-    Assert.assertEquals( testMap.get( "two" ), "two" );
+    assertEquals( testMap.get( "two" ), "two" );
   }
 
   @Test
@@ -113,8 +115,8 @@ public class ActionUtilTest {
     testMap.put( "two", "two" );
     testMap.put( "actionClass", "actionClass" );
     testMap.remove( "actionClass" );
-    Assert.assertNull( testMap.get( "actionClass" ) );
-    Assert.assertEquals( testMap.get( "two" ), "two" );
+    assertNull( testMap.get( "actionClass" ) );
+    assertEquals( testMap.get( "two" ), "two" );
   }
 
   @Test
@@ -123,8 +125,8 @@ public class ActionUtilTest {
     testMap.put( ActionUtil.QUARTZ_ACTIONCLASS, "one" );
     testMap.put( "two", "two" );
     testMap.remove( ActionUtil.QUARTZ_ACTIONCLASS );
-    Assert.assertNull( testMap.get(ActionUtil.QUARTZ_ACTIONCLASS ) );
-    Assert.assertEquals( testMap.get( "two" ), "two" );
+    Assert.assertNull( testMap.get( ActionUtil.QUARTZ_ACTIONCLASS ) );
+    assertEquals( testMap.get( "two" ), "two" );
   }
 
   @Test
@@ -140,8 +142,8 @@ public class ActionUtilTest {
     testMap.put( ActionUtil.QUARTZ_ACTIONCLASS, "one" );
     testMap.put( ActionUtil.QUARTZ_ACTIONUSER, "two" );
     ActionUtil.prepareMap( testMap );
-    Assert.assertEquals( testMap.get( ActionUtil.QUARTZ_ACTIONCLASS ), null );
-    Assert.assertEquals( testMap.get( ActionUtil.QUARTZ_ACTIONUSER ), null );
+    assertEquals( testMap.get( ActionUtil.QUARTZ_ACTIONCLASS ), null );
+    assertEquals( testMap.get( ActionUtil.QUARTZ_ACTIONUSER ), null );
   }
 
   @Test
@@ -152,7 +154,40 @@ public class ActionUtilTest {
     // the map should now contain a uid
     Assert.assertTrue( params.containsKey( ActionUtil.WORK_ITEM_UID ) );
     final String uid = (String) params.get( ActionUtil.WORK_ITEM_UID );
-    Assert.assertEquals( uid, ActionUtil.extractUid( params ) );
-    Assert.assertEquals( 1, params.size() );
+    assertEquals( uid, ActionUtil.extractUid( params ) );
+    assertEquals( 1, params.size() );
+  }
+
+  @Test
+  public void testGenerateUniqueWorkItemId() {
+    int maxLength = ActionUtil.WORK_ITEM_ID_MAX_LENGTH;
+    // simple case
+    assertEquals( "WI-Test.prpt-admin-0", ActionUtil.generateUniqueWorkItemId( "Test.prpt", "admin", 0L, maxLength ) );
+
+    // bad characters
+    assertEquals( "WI-_.prpt-adm_in-0", ActionUtil.generateUniqueWorkItemId( "!@#$%^&*.prpt", "adm&*&in", 0L, maxLength ) );
+
+    // all bad characters
+    assertEquals( "WI-_.prpt-_-0", ActionUtil.generateUniqueWorkItemId( "!@#$%^&*.prpt", "&*&(*&", 0L, maxLength ) );
+
+    // file path and spaces
+    assertEquals( "WI-Test_File.prpt-adm_in-12345", ActionUtil.generateUniqueWorkItemId( "folder/Test File.prpt",
+      "adm&*&in", 12345L, maxLength ) );
+
+    // missing user and file
+    assertEquals( "WI-0", ActionUtil.generateUniqueWorkItemId( "", "", 0L, maxLength ) );
+    assertEquals( "WI-0", ActionUtil.generateUniqueWorkItemId( null, null, 0L, maxLength ) );
+    assertEquals( "WI-123", ActionUtil.generateUniqueWorkItemId( null, null, 123L, maxLength ) );
+
+    // exceeded length
+    assertEquals( "WI-12", ActionUtil.generateUniqueWorkItemId( "", "admin", 123L, 5 ) );
+    assertEquals( "WI-123", ActionUtil.generateUniqueWorkItemId( "", "admin", 123L, 6 ) );
+    // this will be the same, because we're replacing the double '--' with a single -
+    assertEquals( "WI-123", ActionUtil.generateUniqueWorkItemId( "", "admin", 123L, 7 ) );
+    assertEquals( "WI-a-123", ActionUtil.generateUniqueWorkItemId( "", "admin", 123L, 8 ) );
+    assertEquals( "WI-adm-123", ActionUtil.generateUniqueWorkItemId( "", "admin", 123L, 10 ) );
+
+    // negative maxLength should yield original value
+    assertEquals( "WI-admin-123", ActionUtil.generateUniqueWorkItemId( "", "admin", 123L, -1 ) );
   }
 }
