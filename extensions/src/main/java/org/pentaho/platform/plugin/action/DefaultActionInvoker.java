@@ -20,6 +20,7 @@ package org.pentaho.platform.plugin.action;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.MDC;
 import org.pentaho.platform.api.action.ActionInvocationException;
 import org.pentaho.platform.api.action.IAction;
 import org.pentaho.platform.api.action.IActionInvokeStatus;
@@ -138,9 +139,12 @@ public class DefaultActionInvoker implements IActionInvoker {
 
     WorkItemLifecyclePublisher.publish( workItemUid, params, WorkItemLifecyclePhase.IN_PROGRESS );
 
+    MDC.put("HEALTHCHECK", "true");
     if ( logger.isDebugEnabled() ) {
+      // ffi action is workitem acitonbean.log...
       logger.debug( Messages.getInstance().getRunningInBackgroundLocally( actionBean.getClass().getName(), params ) );
     }
+    MDC.remove("HEALTHCHECK");
 
     // set the locale, if not already set
     if ( params.get( LocaleHelper.USER_LOCALE_PARAM ) == null || StringUtils.isEmpty(
