@@ -39,7 +39,6 @@ import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.plugin.action.messages.Messages;
 import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.messages.LocaleHelper;
-import org.pentaho.platform.web.http.api.resources.WorkerNodeActionInvokerAuditor;
 import org.pentaho.platform.web.http.api.resources.utils.FileUtils;
 import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.workitem.WorkItemLifecyclePublisher;
@@ -252,8 +251,8 @@ public class ActionInvokerSystemListener implements IPentahoSystemListener {
     return null;
   }
 
-  IAction getActionBean( String actionClass, String actionId ) throws ActionInvocationException {
-    return ActionUtil.createActionBean( actionClass, actionId );
+  IAction getActionBean( String actionClass ) throws ActionInvocationException {
+    return ActionUtil.createActionBean( actionClass );
   }
 
   /**
@@ -267,7 +266,7 @@ public class ActionInvokerSystemListener implements IPentahoSystemListener {
   }
 
   public IActionInvoker getActionInvoker( ) {
-    return new WorkerNodeActionInvokerAuditor( PentahoSystem.get( IActionInvoker.class ) );
+    return new ActionInvokerAuditor( PentahoSystem.get( IActionInvoker.class ) );
   }
 
   class Payload {
@@ -285,10 +284,9 @@ public class ActionInvokerSystemListener implements IPentahoSystemListener {
       try {
         JSONObject jsonVars = new JSONObject( urlEncodedJson );
         String actionClass = URLDecoder.decode( jsonVars.getString( ActionUtil.INVOKER_ACTIONCLASS ), enc );
-        String actionId = URLDecoder.decode( jsonVars.getString( ActionUtil.INVOKER_ACTIONID ), enc );
         actionUser = URLDecoder.decode( jsonVars.getString( ActionUtil.INVOKER_ACTIONUSER ), enc );
         workItemUid = URLDecoder.decode( jsonVars.getString( ActionUtil.WORK_ITEM_UID ), enc );
-        action = getActionBean( actionClass, actionId );
+        action = getActionBean( actionClass );
         String stringActionParams = URLDecoder.decode( jsonVars.getString( ActionUtil.INVOKER_ACTIONPARAMS ), enc );
         ActionParams actionParams = ActionParams.fromJson( stringActionParams );
         actionMap = ActionParams.deserialize( action, actionParams );
@@ -303,7 +301,7 @@ public class ActionInvokerSystemListener implements IPentahoSystemListener {
 
     IActionInvokeStatus issueRequest( ) throws Exception {
       publishWorkItemStatus( WorkItemLifecyclePhase.RECEIVED, null );
-      return getActionInvoker().invokeAction( action, actionUser, actionMap );
+      return getActionInvoker().invokeAction( new ActionDetails( workItemUid, action, actionUser, actionMap ) );
     }
 
     void publishWorkItemStatus( final WorkItemLifecyclePhase phase, final String failureMessage ) {

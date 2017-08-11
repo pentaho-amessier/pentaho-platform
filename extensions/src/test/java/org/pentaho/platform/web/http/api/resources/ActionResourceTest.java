@@ -26,6 +26,7 @@ import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 import org.pentaho.platform.api.action.IAction;
+import org.pentaho.platform.api.action.IActionDetails;
 import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
 import org.pentaho.platform.api.engine.IPluginManager;
@@ -33,6 +34,8 @@ import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.engine.core.system.StandaloneSession;
 import org.pentaho.platform.engine.core.system.objfac.StandaloneSpringPentahoObjectFactory;
+import org.pentaho.platform.plugin.action.ActionDetails;
+import org.pentaho.platform.plugin.action.ActionInvokerAuditor;
 import org.pentaho.platform.plugin.action.ActionParams;
 import org.pentaho.platform.plugin.action.DefaultActionInvoker;
 import org.pentaho.platform.plugin.action.builtin.ActionSequenceAction;
@@ -50,7 +53,7 @@ import java.util.concurrent.ExecutorService;
  * Tests the {@link ActionResource} within the context of CE.
  */
 @RunWith( PowerMockRunner.class )
-@PrepareForTest( PentahoSystem.class )
+@PrepareForTest( {PentahoSystem.class, ActionInvokerAuditor.class} )
 public class ActionResourceTest {
 
   private IAction actionMock;
@@ -60,15 +63,15 @@ public class ActionResourceTest {
   private Response expectedResult;
   private StandaloneSession session;
   private StandaloneSpringPentahoObjectFactory springFactory;
+  private  IActionDetails actionDetails;
 
-  private String actionId = "myActionId";
   private Class<? extends IAction> actionClass = ActionSequenceAction.class;
   private String actionClassName = actionClass.getName();
   private String actionUser = "user";
   private String workItemUid = "uid";
   private ActionParams actionParams;
   private String actionParamsJson = "{\"serializedParams\": \"[ \\\"java.util.HashMap\\\", {\\\"actionUser\\\" : "
-    + "\\\"" + actionUser + "\\\", \\\"workItemUid\\\" : \\\"" + workItemUid + "\\\", \\\"actionId\\\" : \\\"" + actionId + "\\\"} ]\"}";
+    + "\\\"" + actionUser + "\\\", \\\"workItemUid\\\" : \\\"" + workItemUid + "\\\"} ]\"}";
 
   @Before
   public void setUp() throws Exception {
@@ -85,8 +88,10 @@ public class ActionResourceTest {
 
     actionMock = Mockito.spy( IAction.class );
     actionMapMock = Mockito.spy( Map.class );
-    Mockito.doReturn( actionMock ).when( resourceMock ).createActionBean( actionClassName, actionId );
+    Mockito.doReturn( actionMock ).when( resourceMock ).createActionBean( actionClassName );
     actionParams = ActionParams.fromJson( actionParamsJson );
+
+    actionDetails = new ActionDetails( null, actionMock, actionUser, actionMapMock );
   }
 
   @After
@@ -114,17 +119,19 @@ public class ActionResourceTest {
     final Map<String, Serializable> paramMap = ActionParams.deserialize( actionMock, actionParams );
     // mock the RunnableAction and how it's created by the resource
     final ActionResource.CallableAction callableAction = Mockito.spy( ActionResource.CallableAction.class );
-    Mockito.doReturn( callableAction ).when( resourceMock ).createCallable( actionMock, actionUser, paramMap );
+    Mockito.doReturn( callableAction ).when( resourceMock ).createCallable( new ActionDetails( null, actionMock,
+      actionUser, paramMap ) );
 
     // call the runInBackground methos
     resourceMock
-      .invokeAction( ActionUtil.INVOKER_DEFAULT_ASYNC_EXEC_VALUE, actionId, actionClassName, actionUser, actionParams );
+      .invokeAction( ActionUtil.INVOKER_DEFAULT_ASYNC_EXEC_VALUE, actionClassName, actionUser, actionParams );
 
     // verify that the createRunnable method was called with the expected parameters
-    Mockito.verify( resourceMock, Mockito.times( 1 ) ).createCallable( actionMock, actionUser, paramMap );
+    Mockito.verify( resourceMock, Mockito.times( 1 ) ).createCallable( new ActionDetails( null, actionMock,
+      actionUser, paramMap ) );
 
     // within invokeAction(), we expect the createActionBean to be called with the expected parameters
-    Mockito.verify( resourceMock, Mockito.times( 1 ) ).createActionBean( actionClassName, actionId );
+    Mockito.verify( resourceMock, Mockito.times( 1 ) ).createActionBean( actionClassName );
 
     // verity that the executor submit method was called to execute the expected RunnableAction
     Mockito.verify( resourceMock.executorService, Mockito.times( 1 ) ).submit( callableAction );
@@ -133,13 +140,14 @@ public class ActionResourceTest {
   @Test
   public void testCreateRunnable() {
 
-    final ActionResource.CallableAction runnable = resource.createCallable( actionMock, actionUser, actionMapMock );
+    final ActionResource.CallableAction runnable = resource.createCallable( actionDetails );
 
     Assert.assertNotNull( runnable );
     Assert.assertEquals( resource, runnable.resource );
-    Assert.assertEquals( actionUser, runnable.actionUser );
-    Assert.assertEquals( actionMock, runnable.action );
-    Assert.assertEquals( actionMapMock, runnable.params );
+    Assert.assertNotNull( runnable.actionDetails );
+    Assert.assertEquals( actionUser, runnable.actionDetails.getUserName() );
+    Assert.assertEquals( actionMock, runnable.actionDetails.getAction() );
+    Assert.assertEquals( actionMapMock, runnable.actionDetails.getParameters() );
 
   }
 
@@ -156,11 +164,9 @@ public class ActionResourceTest {
 
     // mock the RunnableAction and how it's created by the resource
     final ActionResource.CallableAction runnableAction = Mockito.spy( ActionResource.CallableAction.class );
-    runnableAction.action = actionMock;
-    runnableAction.actionUser = actionUser;
-    runnableAction.params = actionMapMock;
+    runnableAction.actionDetails = new ActionDetails( null, actionMock, actionUser, actionMapMock );
     runnableAction.resource = resourceMock;
-    Mockito.doReturn( runnableAction ).when( resourceMock ).createCallable( actionMock, actionUser, actionMapMock );
+    Mockito.doReturn( runnableAction ).when( resourceMock ).createCallable( actionDetails );
 
     // mock the action invoker
     final IActionInvoker actionInvoker = Mockito.spy( MyDefaultActionInvoker.class );
@@ -169,18 +175,6 @@ public class ActionResourceTest {
     final DefaultActionInvoker defaultActionInvoker = Mockito.spy( DefaultActionInvoker.class );
     Mockito.doReturn( defaultActionInvoker ).when( runnableAction.resource ).getDefaultActionInvoker();
 
-    /*
-
-    Mockito.doReturn( actionMock ).when( resourceMock ).createActionBean( actionClassName, actionId );
-    Mockito.doReturn( actionMapMock ).when( resourceMock ).deserialize( actionMock, actionParamsJson );
-     */
-    // mock the action
-    //final IAction action = Mockito.spy( ActionSequenceAction.class );
-    //Mockito.doReturn( action ).when( runnableAction ).createActionBean( actionClassName, actionId );
-    // mock the params
-    //final Map<String, Serializable> params = Mockito.spy( Map.class );
-    //Mockito.doReturn( params ).when( runnableAction ).deserialize( action, runnableAction.actionParamsJson );
-
     // invoke the call() method directly since we want to run it in the current thread to verify that its content is
     // executed as expected; given that we have already tested that the executor submit(...) method is invoked as
     // expected, we can perform this test separately and have confidence that end-to-end will also work when the
@@ -188,12 +182,10 @@ public class ActionResourceTest {
     runnableAction.call();
 
     // verify that invokeAction is called with the expected parameters
-    Mockito.verify( defaultActionInvoker, Mockito.times( 1 ) ).invokeAction( Mockito.eq( actionMock ), Mockito
-      .eq( actionUser ), Mockito.eq( actionMapMock ) );
+    Mockito.verify( defaultActionInvoker, Mockito.times( 1 ) ).invokeAction( Mockito.eq( actionDetails ) );
+
 
   }
-
-
 
   @Test
   public void testAuditInvoker() throws Exception {
@@ -205,14 +197,14 @@ public class ActionResourceTest {
     // mock the action invoker
     final IActionInvoker actionInvoker = Mockito.spy( MyDefaultActionInvoker.class );
 
-    final WorkerNodeActionInvokerAuditor wnActionInvokerAuditer = new WorkerNodeActionInvokerAuditor( actionInvoker );
-    WorkerNodeActionInvokerAuditor wnaiu = Mockito.spy( wnActionInvokerAuditer );
-    wnaiu.invokeAction( actionMock, actionUser, actionMapMock );
+    final ActionInvokerAuditor wnActionInvokerAuditer = new ActionInvokerAuditor( actionInvoker );
+    ActionInvokerAuditor wnaiu = PowerMockito.spy( wnActionInvokerAuditer );
+    wnaiu.invokeAction( new ActionDetails( null, actionMock, actionUser, actionMapMock ) );
 
-    Mockito.verify( actionInvoker, Mockito.times( 1 ) ).invokeAction(  Mockito.eq( actionMock ), Mockito.eq( actionUser ),  Mockito.eq( actionMapMock ) );
+    Mockito.verify( actionInvoker, Mockito.times( 1 ) ).invokeAction(  Mockito.eq( actionDetails ) );
 
-    Mockito.verify( wnaiu, Mockito.times( 2 ) ).makeAuditRecord( Mockito.anyLong(), Mockito.anyString(), Mockito.anyMap(),  Mockito.anyString() );
-
+    PowerMockito.verifyPrivate( wnaiu, Mockito.times( 2 ) ).invoke( "makeAuditRecord", Mockito.anyFloat(), Mockito
+        .anyString(), Mockito.anyMap(),  Mockito.anyString() );
   }
 }
 
@@ -225,8 +217,7 @@ public class ActionResourceTest {
 class MyDefaultActionInvoker extends DefaultActionInvoker {
 
   @Override
-  public IActionInvokeStatus invokeAction( final IAction actionBean, final String actionUser, final
-    Map<String, Serializable> params ) throws Exception {
+  public IActionInvokeStatus invokeActionImpl( final IActionDetails actionDetails ) throws Exception {
     return null;
   }
 }

@@ -24,10 +24,13 @@ import org.apache.http.HttpStatus;
 import org.codehaus.enunciate.jaxrs.ResponseCode;
 import org.codehaus.enunciate.jaxrs.StatusCodes;
 import org.pentaho.platform.api.action.IAction;
+import org.pentaho.platform.api.action.IActionDetails;
 import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
+import org.pentaho.platform.plugin.action.ActionDetails;
+import org.pentaho.platform.plugin.action.ActionInvokerAuditor;
 import org.pentaho.platform.plugin.action.ActionParams;
 import org.pentaho.platform.plugin.action.DefaultActionInvoker;
 import org.pentaho.platform.plugin.action.messages.Messages;
@@ -65,7 +68,6 @@ public class ActionResource {
   /**
    * Runs the action defined within the provided json feed in the background asynchronously.
    *
-   * @param actionId     the action id, if applicable
    * @param actionClass  the action class name, if applicable
    * @param actionUser   the user invoking the action
    * @param actionParams the action parameters needed to instantiate and invoke the action
@@ -82,7 +84,6 @@ public class ActionResource {
     } )
   public Response invokeAction(
     @QueryParam( ActionUtil.INVOKER_ASYNC_EXEC ) @DefaultValue( ActionUtil.INVOKER_DEFAULT_ASYNC_EXEC_VALUE ) String async,
-    @QueryParam( ActionUtil.INVOKER_ACTIONID ) String actionId,
     @QueryParam( ActionUtil.INVOKER_ACTIONCLASS ) String actionClass,
     @QueryParam( ActionUtil.INVOKER_ACTIONUSER ) String actionUser,
     final ActionParams actionParams ) {
@@ -91,7 +92,7 @@ public class ActionResource {
     Map<String, Serializable> params = null;
 
     try {
-      action = createActionBean( actionClass, actionId );
+      action = createActionBean( actionClass );
       params = ActionParams.deserialize( action, actionParams );
     } catch ( final Exception e ) {
       logger.error( e.getLocalizedMessage() );
@@ -106,12 +107,13 @@ public class ActionResource {
     final boolean isAsyncExecution = Boolean.parseBoolean( async );
     int httpStatus = HttpStatus.SC_INTERNAL_SERVER_ERROR; // default ( pessimistic )
 
+    final IActionDetails actionDetails = new ActionDetails( workItemUid, action, actionUser, params );
     if ( isAsyncExecution ) {
       // default scenario for execution
-      executorService.submit( createCallable( action, actionUser, params ) );
+      executorService.submit( createCallable( actionDetails ) );
       httpStatus = HttpStatus.SC_ACCEPTED;
     } else {
-      final IActionInvokeStatus status = createCallable( action, actionUser, params ).call();
+      final IActionInvokeStatus status = createCallable( actionDetails ).call();
       httpStatus = ( status != null && status.getThrowable() == null ) ? HttpStatus.SC_OK : HttpStatus
         .SC_INTERNAL_SERVER_ERROR;
     }
@@ -122,16 +124,15 @@ public class ActionResource {
   /**
    * Returns a {@link CallableAction} that creates the {@link IAction} and invokes it.
    *
-   * @param actionUser   the user invoking the action
+   * @param actionDetails The {@link IActionDetails} representing the {@link IAction} to be invoked
    * @return a {@link CallableAction} that creates the {@link IAction} and invokes it
    */
-  protected CallableAction createCallable( final IAction action, final String actionUser, final Map<String,
-    Serializable> params ) {
-    return new CallableAction( this, action, actionUser, params );
+  protected CallableAction createCallable( final IActionDetails actionDetails ) {
+    return new CallableAction( this, actionDetails );
   }
 
-  protected IAction createActionBean( final String actionClass, final String actionId ) throws Exception {
-    return ActionUtil.createActionBean( actionClass, actionId );
+  protected IAction createActionBean( final String actionClass ) throws Exception {
+    return ActionUtil.createActionBean( actionClass );
   }
 
   /**
@@ -153,21 +154,16 @@ public class ActionResource {
   static class CallableAction implements Callable {
 
     protected ActionResource resource;
-    protected IAction action;
-    protected String actionUser;
-    protected Map<String, Serializable> params;
+    protected IActionDetails actionDetails;
 
     private Map<String, String> mdcContextMap = MDC.getCopyOfContextMap();
 
     CallableAction() {
     }
 
-    public CallableAction( final ActionResource resource, final IAction action, final String actionUser, final
-      Map<String, Serializable> params ) {
+    public CallableAction( final ActionResource resource, final IActionDetails actionDetails ) {
       this.resource = resource;
-      this.action = action;
-      this.actionUser = actionUser;
-      this.params = params;
+      this.actionDetails = actionDetails;
     }
 
     @Override
@@ -176,16 +172,18 @@ public class ActionResource {
         Optional.ofNullable( mdcContextMap ).ifPresent( s -> MDC.setContextMap( mdcContextMap ) );
 
         // instantiate the DefaultActionInvoker directly to force local invocation of the action
-        final IActionInvoker actionInvoker = new WorkerNodeActionInvokerAuditor( resource.getDefaultActionInvoker() );
+        final IActionInvoker actionInvoker = new ActionInvokerAuditor( resource.getDefaultActionInvoker() );
 
-        IActionInvokeStatus status = actionInvoker.invokeAction( action, actionUser, params );
+        // TODO: set workItemUid once the CallableAction signature is updated
+        IActionInvokeStatus status = actionInvoker.invokeAction( actionDetails );
 
         if ( status != null && status.getThrowable() == null ) {
-          getLogger().info( Messages.getInstance().getRunningInBgLocallySuccess( action.getClass().getName(), params ),
+          getLogger().info( Messages.getInstance().getRunningInBgLocallySuccess( actionDetails.getActionClassName(),
+            actionDetails.getParameters() ),
             status.getThrowable() );
         } else {
-          final String failureMessage = Messages.getInstance().getCouldNotInvokeActionLocally( action.getClass()
-            .getName(), params );
+          final String failureMessage = Messages.getInstance().getCouldNotInvokeActionLocally( actionDetails
+            .getActionClassName(), actionDetails.getParameters() );
           getLogger().error( failureMessage, ( status != null ? status.getThrowable() : null ) );
         }
 
@@ -193,8 +191,8 @@ public class ActionResource {
 
       } catch ( final Throwable thr ) {
         getLogger()
-          .error( Messages.getInstance().getCouldNotInvokeActionLocallyUnexpected( action.getClass().getName(),
-            StringUtil.getMapAsPrettyString( params ) ), thr );
+          .error( Messages.getInstance().getCouldNotInvokeActionLocallyUnexpected( actionDetails.getActionClassName(),
+            StringUtil.getMapAsPrettyString( actionDetails.getParameters() ) ), thr );
       }
 
       return null;

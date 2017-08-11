@@ -70,6 +70,10 @@ public class Messages extends MessagesBase {
     return getErrorString( "ActionInvoker.ERROR_0005_ACTION_NULL" );
   }
 
+  public String getCantInvokeAction() {
+    return getErrorString( "ActionInvoker.ERROR_0013_CANNOT_INVOKE_ACTION" );
+  }
+
   public String getCantInvokeActionWithNullMap() {
     return getErrorString( "ActionInvoker.ERROR_0006_MAP_NULL" );
   }
@@ -89,6 +93,10 @@ public class Messages extends MessagesBase {
 
   public String getActionFailedToExecute( final String actionIdentifier ) {
     return getErrorString( "ActionInvoker.ERROR_0004_ACTION_FAILED", actionIdentifier );
+  }
+
+  public String getActionFailedMmissingCeredentials(  ) {
+    return getErrorString( "ActionInvoker.ERROR_0014_MISSING_CREDENTIALS" );
   }
 
   public String getSkipRemovingOutputFile( final String fileName ) {

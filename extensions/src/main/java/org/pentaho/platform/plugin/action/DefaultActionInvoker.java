@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.pentaho.platform.api.action.ActionInvocationException;
 import org.pentaho.platform.api.action.IAction;
+import org.pentaho.platform.api.action.IActionDetails;
 import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
 import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
@@ -30,7 +31,6 @@ import org.pentaho.platform.plugin.action.messages.Messages;
 import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.StringUtil;
 import org.pentaho.platform.util.messages.LocaleHelper;
-import org.pentaho.platform.web.http.api.resources.RepositoryFileStreamProvider;
 import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
 import org.pentaho.platform.workitem.WorkItemLifecyclePublisher;
 
@@ -40,104 +40,31 @@ import java.util.Map;
 /**
  * A concrete implementation of the {@link IActionInvoker} interface that invokes the {@link IAction} locally.
  */
-public class DefaultActionInvoker implements IActionInvoker {
+public class DefaultActionInvoker extends AbstractActionInvoker {
 
   private static final Log logger = LogFactory.getLog( DefaultActionInvoker.class );
 
   /**
-   * Gets the stream provider from the {@code INVOKER_STREAMPROVIDER,} or builds it from the input file and output
-   * dir {@link Map} values. Returns {@code null} if information needed to build the stream provider is not present in
-   * the {@code map}, which is perfectly ok for some {@link org.pentaho.platform.api.action.IAction} types.
-   *
-   * @param params the {@link Map} or parameters needed to invoke the {@link org.pentaho.platform.api.action.IAction}
-   * @return a {@link IBackgroundExecutionStreamProvider} represented in the {@code params} {@link Map}
-   */
-  protected IBackgroundExecutionStreamProvider getStreamProvider( final Map<String, Serializable> params ) {
-
-    if ( params == null ) {
-      logger.warn( Messages.getInstance().getMapNullCantReturnSp() );
-      return null;
-    }
-    IBackgroundExecutionStreamProvider streamProvider = null;
-
-    final Object objsp = params.get( ActionUtil.INVOKER_STREAMPROVIDER );
-    if ( objsp != null && IBackgroundExecutionStreamProvider.class.isAssignableFrom( objsp.getClass() ) ) {
-      streamProvider = (IBackgroundExecutionStreamProvider) objsp;
-      if ( streamProvider instanceof RepositoryFileStreamProvider ) {
-        params.put( ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE, ( (RepositoryFileStreamProvider) streamProvider )
-          .getInputFilePath() );
-        params.put( ActionUtil.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN, ( (RepositoryFileStreamProvider)
-          streamProvider ).getOutputFilePath() );
-        params.put( ActionUtil.INVOKER_STREAMPROVIDER_UNIQUE_FILE_NAME, ( (RepositoryFileStreamProvider)
-          streamProvider ).autoCreateUniqueFilename() );
-      }
-    } else {
-      final String inputFile = params.get( ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE ) == null ? null : params.get(
-        ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE ).toString();
-      final String outputFilePattern = params.get( ActionUtil.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN ) == null
-        ? null : params.get( ActionUtil.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN ).toString();
-      boolean hasInputFile = !StringUtils.isEmpty( inputFile );
-      boolean hasOutputPattern = !StringUtils.isEmpty( outputFilePattern );
-      if ( hasInputFile && hasOutputPattern ) {
-        boolean autoCreateUniqueFilename = params.get( ActionUtil.INVOKER_STREAMPROVIDER_UNIQUE_FILE_NAME ) == null
-          || params.get( ActionUtil.INVOKER_STREAMPROVIDER_UNIQUE_FILE_NAME ).toString().equalsIgnoreCase( "true" );
-        streamProvider = new RepositoryFileStreamProvider( inputFile, outputFilePattern, autoCreateUniqueFilename );
-        // put in the map for future lookup
-        params.put( ActionUtil.INVOKER_STREAMPROVIDER, streamProvider );
-      } else {
-        if ( logger.isWarnEnabled() ) {
-          logger.warn( Messages.getInstance().getMissingParamsCantReturnSp( String.format( "%s, %s",
-            ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE, ActionUtil.INVOKER_STREAMPROVIDER_OUTPUT_FILE_PATTERN ),
-            params ) ); //$NON-NLS-1$
-        }
-      }
-    }
-    return streamProvider;
-  }
-
-  /**
-   * Invokes the provided {@link IAction} as the provided {@code actionUser}.
-   *
-   * @param actionBean the {@link IAction} being invoked
-   * @param actionUser The user invoking the {@link IAction}
-   * @param params     the {@link Map} or parameters needed to invoke the {@link IAction}
-   * @return the {@link IActionInvokeStatus} object containing information about the action invocation
-   * @throws Exception when the {@code IAction} cannot be invoked for some reason.
-   */
-  @Override
-  public IActionInvokeStatus invokeAction( final IAction actionBean,
-                                           final String actionUser,
-                                           final Map<String, Serializable> params ) throws Exception {
-    ActionUtil.prepareMap( params );
-    // call getStreamProvider, in addition to creating the provider, this method also adds values to the map that
-    // serialize the stream provider and make it possible to deserialize and recreate it for remote execution.
-    getStreamProvider( params );
-    return invokeActionImpl( actionBean, actionUser, params );
-  }
-
-  /**
    * Invokes the provided {@link IAction} locally as the provided {@code actionUser}.
    *
-   * @param actionBean the {@link IAction} being invoked
-   * @param actionUser The user invoking the {@link IAction}
-   * @param params     the {@link Map} or parameters needed to invoke the {@link IAction}
+   * @param actionDetails The {@link IActionDetails} representing the {@link IAction} to be invoked
    * @return the {@link IActionInvokeStatus} object containing information about the action invocation
    * @throws Exception when the {@code IAction} cannot be invoked for some reason.
    */
-  protected IActionInvokeStatus invokeActionImpl( final IAction actionBean,
-                                                  final String actionUser,
-                                                  final Map<String, Serializable> params ) throws Exception {
+  protected IActionInvokeStatus invokeActionImpl( final IActionDetails actionDetails ) throws Exception {
+    final String workItemUid = ActionUtil.extractUid( actionDetails );
 
-    final String workItemUid = ActionUtil.extractUid( params );
-
-    if ( actionBean == null || params == null ) {
+    if ( actionDetails == null || actionDetails.getAction() == null || actionDetails.getParameters() == null ) {
       final String failureMessage = Messages.getInstance().getCantInvokeNullAction();
-      WorkItemLifecyclePublisher.publish( workItemUid, params, WorkItemLifecyclePhase.FAILED, failureMessage );
+      WorkItemLifecyclePublisher.publish( workItemUid, actionDetails.getParameters(), WorkItemLifecyclePhase.FAILED,
+        failureMessage );
       throw new ActionInvocationException( failureMessage );
     }
 
+    final Map<String, Serializable> params = actionDetails.getParameters();
     WorkItemLifecyclePublisher.publish( workItemUid, params, WorkItemLifecyclePhase.IN_PROGRESS );
 
+    final IAction actionBean = actionDetails.getAction();
     if ( logger.isDebugEnabled() ) {
       logger.debug( Messages.getInstance().getRunningInBackgroundLocally( actionBean.getClass().getName(), params ) );
     }
@@ -157,6 +84,7 @@ public class DefaultActionInvoker implements IActionInvoker {
     params.remove( ActionUtil.INVOKER_STREAMPROVIDER );
     params.remove( ActionUtil.INVOKER_UIPASSPARAM );
 
+    final String actionUser = actionDetails.getUserName();
     final ActionRunner actionBeanRunner = new ActionRunner( actionBean, actionUser, params, streamProvider );
     final ActionInvokeStatus status = new ActionInvokeStatus();
 
@@ -176,10 +104,5 @@ public class DefaultActionInvoker implements IActionInvoker {
     status.setRequiresUpdate( requiresUpdate );
 
     return status;
-  }
-
-  @Override
-  public boolean isSupportedAction( IAction action ) {
-    return true; // supports all
   }
 }

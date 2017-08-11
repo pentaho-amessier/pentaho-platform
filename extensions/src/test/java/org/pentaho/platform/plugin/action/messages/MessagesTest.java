@@ -80,7 +80,15 @@ public class MessagesTest {
   @Test
   public void testGetCantInvokeNullAction() {
     Assert
-      .assertEquals( "ActionInvoker.ERROR_0005 - Action is null, cannot invoke", messages.getCantInvokeNullAction() );
+      .assertEquals( "ActionInvoker.ERROR_0005 - Action or parameters are null, cannot invoke", messages
+        .getCantInvokeNullAction() );
+  }
+
+  @Test
+  public void testGetCantInvokeAction() {
+    Assert
+      .assertEquals( "ActionInvoker.ERROR_0013_CANNOT_INVOKE_ACTION - Unable to invoke action", messages
+        .getCantInvokeAction() );
   }
 
   @Test
@@ -115,6 +123,12 @@ public class MessagesTest {
   public void testGetActionFailedToExecute() {
     Assert.assertEquals( "ActionInvoker.ERROR_0004 - Action \"foo\" failed to execute", messages
       .getActionFailedToExecute( "foo" ) );
+  }
+
+  @Test
+  public void testGetActionFailedMmissingCeredentials() {
+    Assert.assertEquals( "ActionInvoker.ERROR_0014 - Action failed to execute due to missing credentials", messages
+      .getActionFailedMmissingCeredentials() );
   }
 
   @Test

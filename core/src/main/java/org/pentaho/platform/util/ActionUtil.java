@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.pentaho.platform.api.action.ActionInvocationException;
 import org.pentaho.platform.api.action.IAction;
+import org.pentaho.platform.api.action.IActionDetails;
 import org.pentaho.platform.api.engine.IPluginManager;
 import org.pentaho.platform.api.engine.PluginBeanException;
 import org.pentaho.platform.api.repository2.unified.IUnifiedRepository;
@@ -136,6 +137,17 @@ public class ActionUtil {
   }
 
   /**
+   * Calls {@link #extractUid(Map)} on the {@link IActionDetails} {@code parameters} {@link Map}.
+   * @see {@link #extractUid(Map)}
+   */
+  public static String extractUid( final IActionDetails actionDetails ) {
+    if ( actionDetails == null ) {
+      return generateWorkItemUid( null );
+    }
+    return extractUid( actionDetails.getParameters() );
+  }
+
+  /**
    * @param params a {@link Map} containing action/work item related attributes, in particular {@code inputFile} and
    *               {@code actionUser}, which are both used for the purpose of generating the uid.
    * @return a unique id for the work item
@@ -196,6 +208,15 @@ public class ActionUtil {
   private static final long RETRY_SLEEP_AMOUNT = 10000;
 
   /**
+   * Calls {@link #resolveActionClass(String, String)} with null {@code beanId}
+   * @see {@link #resolveActionClass(String, String)}}
+   */
+  static Class<?> resolveActionClass( final String actionClassName ) throws
+    PluginBeanException, ActionInvocationException {
+      return resolveActionClass( actionClassName, null );
+  }
+
+  /**
    * Returns the {@link Class} that corresponds to the provides {@code actionClassName} and {@code beanId}.
    *
    * @param actionClassName the name of the class being resolved
@@ -243,6 +264,15 @@ public class ActionUtil {
     // which can typically happen at system startup
     throw new ActionInvocationException( Messages.getInstance().getErrorString(
         "ActionUtil.ERROR_0002_FAILED_TO_CREATE_ACTION", StringUtils.isEmpty( beanId ) ? actionClassName : beanId ) );
+  }
+
+  /**
+   * Calls {@link #createActionBean(String, String)} with null {@code beanId}
+   * @see {@link #createActionBean(String, String)}}
+   */
+  public static IAction createActionBean( final String actionClassName ) throws
+    ActionInvocationException {
+      return createActionBean( actionClassName, null );
   }
 
   /**

@@ -59,14 +59,9 @@ public class ActionInvokerSystemListenerTest {
   private ActionInvokerSystemListener actionInvokerSystemListener;
   private static final String DEFAULT_CONTENT_FOLDER = resourcesFolder + "/system/default-content";
 
-  private String[] files = {
-    "environment.json",
-    "environment_invalid_actionIdMisspelled.json",
-    "valid_mock_wi.json",
-    "unparseable.json",
-    "invalid_action_params.json"
-  };
 
+  private static final String FILE_ENVIRONMENT = "environment.json";
+  private static final String FILE_VALID_MOCK = "valid_mock_wi.json";
 
   @Before
   public void init( ) {
@@ -100,14 +95,14 @@ public class ActionInvokerSystemListenerTest {
     ActionInvokerSystemListener tempActionInvokerSystemListener = new ActionInvokerSystemListener();
     actionInvokerSystemListener = spy( tempActionInvokerSystemListener );
     IAction action = spy( IAction.class );
-    doReturn( action ).when( actionInvokerSystemListener ).getActionBean( anyString(), anyString() );
+    doReturn( action ).when( actionInvokerSystemListener ).getActionBean( anyString() );
     if ( environmentVariablesFolderSet ) {
       actionInvokerSystemListener.setEnvironmentVariablesFolder( absFileName );
     }
     doReturn( absFileName ).when( actionInvokerSystemListener ).getSolutionPath();
     doReturn( actionInvoker ).when( actionInvokerSystemListener ).getActionInvoker();
     IActionInvokeStatus status = new ActionInvokeStatus();
-    doReturn( status ).when( actionInvoker ).invokeAction( any(), any(), any() );
+    doReturn( status ).when( actionInvoker ).invokeAction( any() );
     boolean res = actionInvokerSystemListener.runWorkItemFromFile( mockSession );
     Assert.assertTrue( res );
   }
@@ -128,13 +123,13 @@ public class ActionInvokerSystemListenerTest {
 
   @Test
   public void testPayload( ) throws Exception {
-    File validMockWi = new File( resourcesFolder + "/" + files[ 2 ] );
+    File validMockWi = new File( resourcesFolder + "/" + FILE_VALID_MOCK );
     ActionInvokerSystemListener temp = new ActionInvokerSystemListener();
     ActionInvokerSystemListener spy = spy( temp );
     IAction action = spy( IAction.class );
-    doReturn( action ).when( spy ).getActionBean( anyString(), anyString() );
+    doReturn( action ).when( spy ).getActionBean( anyString() );
     spy.new Payload( IOUtils.toString( new FileInputStream( validMockWi ) ) );
-    File valid_unencoded = new File( resourcesFolder + "/" + files[ 0 ] );
+    File valid_unencoded = new File( resourcesFolder + "/" + FILE_ENVIRONMENT );
     spy.new Payload( IOUtils.toString( new FileInputStream( valid_unencoded ) ) );
     //no exceptions thrown, payloads successfully created
     Assert.assertTrue( true );
@@ -151,14 +146,14 @@ public class ActionInvokerSystemListenerTest {
 
   @Test
   public void testPayloadIssueReqest()  throws Exception {
-    final File validMockWi = new File( resourcesFolder + "/" + files[ 2 ] );
+    final File validMockWi = new File( resourcesFolder + "/" + FILE_VALID_MOCK );
 
     final ActionInvokerSystemListener listener = spy( new ActionInvokerSystemListener() );
     IAction action = spy( IAction.class );
-    doReturn( action ).when( listener ).getActionBean( anyString(), anyString() );
+    doReturn( action ).when( listener ).getActionBean( anyString() );
     IActionInvoker invoker = spy( IActionInvoker.class );
     when( listener.getActionInvoker() ).thenReturn( invoker );
-    when( invoker.invokeAction( anyObject(), anyObject(), anyObject() ) ).thenReturn( null );
+    when( invoker.invokeAction( anyObject() ) ).thenReturn( null );
 
     final ActionInvokerSystemListener.Payload payload = Mockito.spy( listener.new Payload( IOUtils.toString( new
       FileInputStream( validMockWi ) ) ) );

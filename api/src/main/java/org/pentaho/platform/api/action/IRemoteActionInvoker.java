@@ -22,6 +22,22 @@ package org.pentaho.platform.api.action;
 public interface IRemoteActionInvoker extends IActionInvoker {
 
   /**
+   * Returns the authentication scheme to be used to log into the remote host (if any).
+   * @return {@link String}
+   */
+  String getAuthenticationScheme();
+
+  /**
+   * @return {@link String} username for worker node security
+   */
+  String getUserName();
+
+  /**
+   * @return {@link String} password for worker node user
+   */
+  String getPassword();
+
+  /**
    * @return hostname
    */
   String getHostname();

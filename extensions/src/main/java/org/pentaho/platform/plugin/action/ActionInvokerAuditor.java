@@ -14,11 +14,11 @@
  *
  * Copyright (c) 2017 Pentaho Corporation..  All rights reserved.
  */
-package org.pentaho.platform.web.http.api.resources;
+package org.pentaho.platform.plugin.action;
 
 
 import org.apache.commons.lang.time.StopWatch;
-import org.pentaho.platform.api.action.IAction;
+import org.pentaho.platform.api.action.IActionDetails;
 import org.pentaho.platform.api.action.IActionInvokeStatus;
 import org.pentaho.platform.api.action.IActionInvoker;
 import org.pentaho.platform.engine.core.audit.AuditHelper;
@@ -30,41 +30,45 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WorkerNodeActionInvokerAuditor implements IActionInvoker {
+public class ActionInvokerAuditor implements IActionInvoker {
 
   private final IActionInvoker actionInvoker;
 
-  public WorkerNodeActionInvokerAuditor( IActionInvoker actionInvoker ) {
+  public ActionInvokerAuditor( IActionInvoker actionInvoker ) {
     this.actionInvoker = actionInvoker;
   }
 
   @Override
-  public IActionInvokeStatus invokeAction( IAction action, String user, Map<String, Serializable> params ) throws Exception {
+  public IActionInvokeStatus invokeAction( final IActionDetails actionDetails ) throws Exception {
+    if ( actionDetails == null ) {
+      // TODO
+    }
     StopWatch stopWatch = new StopWatch();
     stopWatch.start();
-    Map<String, Serializable> auditParams = new HashMap<>( params ); // the prams list key change after invokeAction. Need to preserve.
-    makeAuditRecord( 0, MessageTypes.INSTANCE_START, auditParams, action.getClass().getName() );
+    // the prams list key change after invokeAction. Need to preserve
+    Map<String, Serializable> auditParams = new HashMap<>( actionDetails.getParameters() );
+    makeAuditRecord( 0, MessageTypes.INSTANCE_START, auditParams, actionDetails );
     try {
-      return actionInvoker.invokeAction( action, user, params );
+      return actionInvoker.invokeAction( actionDetails );
     } finally {
-      makeAuditRecord( stopWatch.getTime() / 1000, MessageTypes.INSTANCE_END, auditParams, action.getClass().getName() );
+      makeAuditRecord( stopWatch.getTime() / 1000, MessageTypes.INSTANCE_END, auditParams, actionDetails );
     }
   }
 
-
-  protected void makeAuditRecord( final float time, final String messageType,
-                                 final Map<String, Serializable> actionParams, String className ) {
+  private void makeAuditRecord( final float time, final String messageType,
+                                final Map<String, Serializable> auditParams,
+                                final IActionDetails actionDetails ) {
 
     AuditHelper.audit( PentahoSessionHolder.getSession() != null ? PentahoSessionHolder.getSession().getId() : "",
-            getValue( actionParams, ActionUtil.INVOKER_ACTIONUSER ),
-            getValue( actionParams, ActionUtil.INVOKER_STREAMPROVIDER ),
-            className,
-            getValue( actionParams, ActionUtil.INVOKER_ACTIONID ),
-            messageType,
-            getValue( actionParams, ActionUtil.QUARTZ_LINEAGE_ID ),
-            null,
-            time,
-            null );
+      actionDetails.getUserName(),
+      getValue( auditParams, ActionUtil.INVOKER_STREAMPROVIDER ),
+      actionDetails.getActionClassName(),
+      actionDetails.getActionId(),
+      messageType,
+      getValue( auditParams, ActionUtil.QUARTZ_LINEAGE_ID ),
+      null,
+      time,
+      null );
   }
 
   private String getValue( Map<String, Serializable> actionParams, String key ) {
@@ -72,7 +76,7 @@ public class WorkerNodeActionInvokerAuditor implements IActionInvoker {
   }
 
   @Override
-  public boolean isSupportedAction( IAction action ) {
+  public boolean canInvoke( final IActionDetails actionDetails ) {
     return false; // not needed
   }
 }

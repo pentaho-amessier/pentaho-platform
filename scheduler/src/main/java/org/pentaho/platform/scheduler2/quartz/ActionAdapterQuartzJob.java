@@ -30,6 +30,7 @@ import org.pentaho.platform.api.scheduler2.SimpleJobTrigger;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.engine.security.SecurityHelper;
+import org.pentaho.platform.plugin.action.ActionDetails;
 import org.pentaho.platform.scheduler2.blockout.BlockoutAction;
 import org.pentaho.platform.scheduler2.messsages.Messages;
 import org.pentaho.platform.util.ActionUtil;
@@ -137,7 +138,8 @@ public class ActionAdapterQuartzJob implements Job {
     }
 
     // Invoke the action and get the status of the invocation
-    final IActionInvokeStatus status = actionInvoker.invokeAction( actionBean, actionUser, params );
+    final IActionInvokeStatus status = actionInvoker.invokeAction( new ActionDetails( workItemUid, actionClassName,
+      actionId, actionUser, params ) );
 
     // Status may not be available for remote execution, which is expected
     if ( status == null ) {

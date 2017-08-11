@@ -20,11 +20,14 @@ package org.pentaho.platform.plugin.action;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.pentaho.platform.api.action.ActionInvocationException;
 import org.pentaho.platform.api.action.IAction;
+import org.pentaho.platform.api.action.IActionDetails;
 import org.pentaho.platform.api.scheduler2.IBackgroundExecutionStreamProvider;
 import org.pentaho.platform.plugin.action.builtin.ActionSequenceAction;
 import org.pentaho.platform.util.ActionUtil;
+import org.pentaho.platform.util.bean.TestAction;
 import org.pentaho.platform.web.http.api.resources.RepositoryFileStreamProvider;
 
 import java.io.BufferedWriter;
@@ -34,6 +37,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.mockito.Mockito.spy;
 
 public class DefaultActionInvokerTest {
   private DefaultActionInvoker defaultActionInvoker;
@@ -48,9 +53,9 @@ public class DefaultActionInvokerTest {
     Map<String, Serializable> testMap = new HashMap<>();
     testMap.put( ActionUtil.QUARTZ_ACTIONCLASS, "one" );
     testMap.put( ActionUtil.QUARTZ_ACTIONUSER, "two" );
-    IAction iaction = ActionUtil.createActionBean( ActionSequenceAction.class.getName(), null );
+    IAction iaction = ActionUtil.createActionBean( ActionSequenceAction.class.getName() );
     ActionInvokeStatus actionInvokeStatus =
-      (ActionInvokeStatus) defaultActionInvoker.invokeAction( iaction, "aUser", testMap );
+      (ActionInvokeStatus) defaultActionInvoker.invokeAction( new ActionDetails( null, iaction, "aUser", testMap ) );
     Assert.assertFalse( actionInvokeStatus.requiresUpdate() );
   }
 
@@ -59,15 +64,15 @@ public class DefaultActionInvokerTest {
     Map<String, Serializable> testMap = new HashMap<>();
     testMap.put( ActionUtil.QUARTZ_ACTIONCLASS, "one" );
     testMap.put( ActionUtil.QUARTZ_ACTIONUSER, "two" );
-    IAction iaction = ActionUtil.createActionBean( ActionSequenceAction.class.getName(), null );
+    IAction iaction = ActionUtil.createActionBean( ActionSequenceAction.class.getName() );
     ActionInvokeStatus actionInvokeStatus =
-      (ActionInvokeStatus) defaultActionInvoker.invokeAction( iaction, "aUser", testMap );
+      (ActionInvokeStatus) defaultActionInvoker.invokeAction( new ActionDetails( null, iaction, "aUser", testMap ) );
     Assert.assertFalse( actionInvokeStatus.requiresUpdate() );
   }
 
   @Test( expected = ActionInvocationException.class )
   public void invokeActionLocallyWithNullsThrowsExceptionTest() throws Exception {
-    defaultActionInvoker.invokeAction( null, "aUser", null );
+    defaultActionInvoker.invokeAction( new ActionDetails( null, null, "aUser", null, null ) );
   }
 
 
@@ -114,5 +119,44 @@ public class DefaultActionInvokerTest {
     paramMap.put( ActionUtil.INVOKER_STREAMPROVIDER, repositoryFileStreamProvider );
     IBackgroundExecutionStreamProvider iBackgroundExecutionStreamProvider = defaultActionInvoker.getStreamProvider( paramMap );
     Assert.assertEquals( repositoryFileStreamProvider, iBackgroundExecutionStreamProvider );
+  }
+
+  @Test( expected = ActionInvocationException.class )
+  public void testValidateNullActionDetails() throws Exception{
+    AbstractActionInvoker aaInvokerSpy = spy( new DefaultActionInvoker() );
+    aaInvokerSpy.validate( null );
+  }
+
+  @Test( expected = ActionInvocationException.class )
+  public void testValidateNullAction() throws Exception{
+    AbstractActionInvoker aaInvokerSpy = spy( new DefaultActionInvoker() );
+    aaInvokerSpy.validate( new ActionDetails( null, null, null, null ) );
+  }
+
+  @Test( expected = ActionInvocationException.class )
+  public void testValidateNullParameters() throws Exception{
+    AbstractActionInvoker aaInvokerSpy = spy( new DefaultActionInvoker() );
+    aaInvokerSpy.validate( new ActionDetails( null, new TestAction(), null, null ) );
+  }
+
+  @Test( expected = ActionInvocationException.class )
+  public void testValidateCannotInvoke() throws Exception{
+    AbstractActionInvoker aaInvokerSpy = spy( new DefaultActionInvoker() );
+    Mockito.when( aaInvokerSpy.canInvoke( Mockito.any( IActionDetails.class ) ) ).thenReturn( false );
+    IActionDetails details = new ActionDetails( null, new TestAction(), null, new HashMap<String, Serializable>() );
+    aaInvokerSpy.validate( details );
+  }
+
+  @Test
+  public void testValidateCanInvoke() throws Exception{
+    AbstractActionInvoker aaInvokerSpy = spy( new DefaultActionInvoker() );
+    Mockito.when( aaInvokerSpy.canInvoke( Mockito.any( IActionDetails.class ) ) ).thenReturn( true );
+    IActionDetails details = new ActionDetails( null, new TestAction(), null, new HashMap<String, Serializable>() );
+    try {
+      aaInvokerSpy.validate( details );
+      // we expect this to NOT throw an exception
+    } catch (final ActionInvocationException e ) {
+      Assert.fail();
+    }
   }
 }

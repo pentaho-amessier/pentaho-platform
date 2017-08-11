@@ -17,9 +17,6 @@
 
 package org.pentaho.platform.api.action;
 
-import java.io.Serializable;
-import java.util.Map;
-
 /**
  * The purpose of this interface is to provide functionality needed to invoke an {@link IAction} instance in a
  * generic fashion.
@@ -29,20 +26,18 @@ public interface IActionInvoker {
   /**
    * Invokes the {@link IAction} {@code action}.
    *
-   * @param action The {@link IAction} to be invoked
-   * @param user   The user invoking the action
-   * @param params the {@link Map} or parameters needed to invoke the {@link IAction}
+   * @param actionDetails The {@link IActionDetails} representing the {@link IAction} to be invoked
    * @return the {@link IActionInvokeStatus} object containing information about the action invocation
    * @throws Exception if the action cannot be run for some reason
    */
-  IActionInvokeStatus invokeAction( IAction action, final String user, final Map<String, Serializable> params )
-        throws Exception;
+  IActionInvokeStatus invokeAction( final IActionDetails actionDetails )
+    throws Exception;
 
   /**
-   * Predicate that tells whether an {@link IActionInvoker} can handle a given {@link IAction}
+   * Predicate that tells whether an {@link IActionInvoker} can handle the invocation of a given {@link IAction}.
    *
-   * @param action The {@link IAction} to be handled
+   * @param actionDetails The {@link IActionDetails} representing the {@link IAction} to be invoked
    * @return true if the {@link IActionInvoker} can handle a given {@link IAction}
    */
-  boolean isSupportedAction( IAction action );
+  boolean canInvoke( final IActionDetails actionDetails );
 }
