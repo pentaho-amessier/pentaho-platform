@@ -32,8 +32,8 @@ import org.pentaho.platform.scheduler2.quartz.QuartzScheduler;
 import org.pentaho.platform.util.ActionUtil;
 import org.pentaho.platform.util.StringUtil;
 import org.pentaho.platform.util.messages.LocaleHelper;
+import org.pentaho.platform.workitem.WorkItemLifecycleEventPublisherUtil;
 import org.pentaho.platform.workitem.WorkItemLifecyclePhase;
-import org.pentaho.platform.workitem.WorkItemLifecyclePublisher;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -92,11 +92,12 @@ public class DefaultActionInvoker implements IActionInvoker {
 
     if ( actionBean == null || params == null ) {
       final String failureMessage = Messages.getInstance().getCantInvokeNullAction();
-      WorkItemLifecyclePublisher.publish( workItemUid, params, WorkItemLifecyclePhase.FAILED, failureMessage );
+      //do "something" to trigger event
+      WorkItemLifecycleEventPublisherUtil.publish( workItemUid, params, WorkItemLifecyclePhase.FAILED, failureMessage );
       throw new ActionInvocationException( failureMessage );
     }
 
-    WorkItemLifecyclePublisher.publish( workItemUid, params, WorkItemLifecyclePhase.IN_PROGRESS );
+    WorkItemLifecycleEventPublisherUtil.publish( workItemUid, params, WorkItemLifecyclePhase.IN_PROGRESS );
 
     if ( logger.isDebugEnabled() ) {
       logger.debug( Messages.getInstance().getRunningInBackgroundLocally( actionBean.getClass().getName(), params ) );
@@ -131,7 +132,7 @@ public class DefaultActionInvoker implements IActionInvoker {
         requiresUpdate = SecurityHelper.getInstance().runAsUser( actionUser, actionBeanRunner );
       }
     } catch ( final Throwable t ) {
-      WorkItemLifecyclePublisher.publish( workItemUid, params, WorkItemLifecyclePhase.FAILED, t.toString() );
+      WorkItemLifecycleEventPublisherUtil.publish( workItemUid, params, WorkItemLifecyclePhase.FAILED, t.toString() );
       status.setThrowable( t );
     }
     status.setRequiresUpdate( requiresUpdate );

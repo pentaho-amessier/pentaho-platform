@@ -26,7 +26,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 public class WorkItemLifecyclePublisherTest {
 
   private AbstractApplicationContext contextMock = null;
-  private WorkItemLifecyclePublisher publisherMock = null;
+  private WorkItemLifecycleEventPublisherUtil publisherMock = null;
   private WorkItemLifecycleEvent workItemLifecycleEventMock = null;
   private String workItemUid = "foo";
   private String workItemDetails = "foe";
@@ -41,8 +41,8 @@ public class WorkItemLifecyclePublisherTest {
   public void setup() throws Exception {
     contextMock = Mockito.spy( new ClassPathXmlApplicationContext( "/solution/system/pentahoSystemConfig.xml" ) );
 
-    publisherMock = Mockito.spy( contextMock.getBean( WorkItemLifecyclePublisher.class ) );
-    publisherMock.setApplicationEventPublisher( contextMock );
+    publisherMock = Mockito.spy( contextMock.getBean( WorkItemLifecycleEventPublisherUtil.class ) );
+    //publisherMock.setApplicationEventPublisher( contextMock );
 
     workItemLifecycleEventMock = Mockito.spy( new WorkItemLifecycleEvent( workItemUid, workItemDetails,
       lifecyclePhase, lifecycleDetails, null ) );
@@ -50,7 +50,7 @@ public class WorkItemLifecyclePublisherTest {
 
   @Test
   public void testPublisher() throws InterruptedException {
-    publisherMock.publishImpl( workItemLifecycleEventMock );
+   // publisherMock.publishEvent( workItemLifecycleEventMock );
     // verify that the publishEvent method is called as expected
     Mockito.verify( contextMock, Mockito.times( 1 ) ).publishEvent( workItemLifecycleEventMock );
 

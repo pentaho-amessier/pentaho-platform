@@ -20,8 +20,6 @@ package org.pentaho.platform.workitem;
 import org.pentaho.platform.engine.core.system.PentahoSessionHolder;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.util.ActionUtil;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -30,20 +28,9 @@ import java.util.Map;
 /**
  * A class for common utility methods related to work item lifecycles.
  */
-public class WorkItemLifecyclePublisher implements ApplicationEventPublisherAware {
+public class WorkItemLifecycleEventPublisherUtil {
 
   private static String PUBLISHER_BEAN_NAME = "workItemLifecyclePublisher";
-
-  private ApplicationEventPublisher publisher = null;
-
-  @Override
-  public void setApplicationEventPublisher( final ApplicationEventPublisher publisher ) {
-    this.publisher = publisher;
-  }
-
-  public ApplicationEventPublisher getApplicationEventPublisher() {
-    return this.publisher;
-  }
 
   /**
    * A convenience method for publishing changes to the work item's lifecycles that calls
@@ -94,21 +81,21 @@ public class WorkItemLifecyclePublisher implements ApplicationEventPublisherAwar
 
   protected static WorkItemLifecycleEvent createEvent( final String workItemUid, final String workItemDetails, final
     WorkItemLifecyclePhase workItemLifecyclePhase, final String lifecycleDetails, final Date sourceTimestamp ) {
-    return  new WorkItemLifecycleEvent( workItemUid, workItemDetails,
+    return new WorkItemLifecycleEvent( workItemUid, workItemDetails,
       workItemLifecyclePhase, lifecycleDetails, sourceTimestamp );
   }
   /**
    * A convenience method for publishing changes to the work item's lifecycles. Fetches the
-   * {@link WorkItemLifecyclePublisher} bean, and if available, calls its {@link #publishImpl(WorkItemLifecycleEvent)}
-   * method. Otherwise does nothing, as the {@link WorkItemLifecyclePublisher} bean may not be available, which is a
-   * perfectly valid scenario, if we do not care about publishing {@link WorkItemLifecycleEvent}'s.
+   * {@link IWorkItemLifecycleEventPublisher} bean, and if available, calls its publishEvent method. Otherwise does
+   * nothing, as the {@link IWorkItemLifecycleEventPublisher} bean may not be available, which is a perfectly valid
+   * scenario, if we do not care about publishing {@link WorkItemLifecycleEvent}'s.
    *
    * @param workItemLifecycleEvent the {@link WorkItemLifecycleEvent}
    */
   public static void publish( final WorkItemLifecycleEvent workItemLifecycleEvent ) {
-    final WorkItemLifecyclePublisher publisher = getInstance();
+    final IWorkItemLifecycleEventPublisher publisher = getInstance();
     if ( publisher != null ) {
-      publisher.publishImpl( workItemLifecycleEvent );
+      publisher.publishEvent( workItemLifecycleEvent );
     }
   }
 
@@ -131,33 +118,19 @@ public class WorkItemLifecyclePublisher implements ApplicationEventPublisherAwar
     return sb.toString();
   }
 
-  private static WorkItemLifecyclePublisher instance;
+  private static IWorkItemLifecycleEventPublisher instance;
 
-  private static synchronized WorkItemLifecyclePublisher getInstance() {
+  private static synchronized IWorkItemLifecycleEventPublisher getInstance() {
     if ( instance == null ) {
-      synchronized ( WorkItemLifecyclePublisher.class ) {
+      synchronized ( WorkItemLifecycleEventPublisherUtil.class ) {
         if ( instance == null ) {
-          instance = PentahoSystem.get( WorkItemLifecyclePublisher.class, PUBLISHER_BEAN_NAME, PentahoSessionHolder
+          //instance = PentahoSystem.get( IWorkItemLifecycleEventPublisher.class );
+          instance = PentahoSystem.get( WorkItemLifecycleEventPublisher.class, PUBLISHER_BEAN_NAME, PentahoSessionHolder
             .getSession() );
+
         }
       }
     }
     return instance;
-  }
-
-  /**
-   * A convenience method for publishing changes to the work item's lifecycles. Fetches the available
-   * {@link ApplicationEventPublisher}, and if available, calls its
-   * {@link ApplicationEventPublisher#publishEvent(Object)} method, where the Object passed to the method is the
-   * {@link WorkItemLifecycleEvent} representing the {@link WorkItemLifecycleEvent}. Otherwise does nothing, as the
-   * {@link ApplicationEventPublisher} may not be available, which is a perfectly valid scenario, if we do not care
-   * about publishing {@link WorkItemLifecycleEvent}'s.
-   *
-   * @param workItemLifecycleEvent the {@link WorkItemLifecycleEvent}
-   */
-  protected void publishImpl( final WorkItemLifecycleEvent workItemLifecycleEvent ) {
-    if ( getApplicationEventPublisher() != null ) {
-      getApplicationEventPublisher().publishEvent( workItemLifecycleEvent );
-    }
   }
 }
