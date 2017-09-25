@@ -12,24 +12,12 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2017 Pentaho Corporation. All rights reserved.
+ * Copyright (c) 2017 Pentaho Corporation..  All rights reserved.
  */
 
-package org.pentaho.platform.workitem;
+package org.pentaho.platform.api.workitem;
 
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
+public interface IWorkItemLifecycleEventPublisher {
 
-/**
- * A dummy listener used for testing purposes.
- */
-@Component
-public class DummyListenerA {
-
-  @EventListener
-  @Async
-  public void onWorkItemLifecycleEvent( final WorkItemLifecycleEvent event ) {
-    WorkItemLifecyclePublisherTest.LISTENER_A_CALLED = true;
-  }
+  void publish( final IWorkItemLifecycleEvent event );
 }
