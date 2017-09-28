@@ -17,10 +17,12 @@
 
 package org.pentaho.platform.api.workitem;
 
+import org.pentaho.platform.api.monitoring.IMonitoringSubscriber;
+
 /**
  * A common interface for components wishing to listen for {@link IWorkItemLifecycleEvent}s.
  */
-public interface IWorkItemLifecycleEventSubscriber {
+public interface IWorkItemLifecycleEventSubscriber extends IMonitoringSubscriber {
 
   /**
    * Handler for the {@link IWorkItemLifecycleEvent}.
@@ -28,4 +30,6 @@ public interface IWorkItemLifecycleEventSubscriber {
    * @param event the {@link IWorkItemLifecycleEvent} being handled
    */
   void handleEvent( final IWorkItemLifecycleEvent event );
+
+  void setPublisher( final IWorkItemLifecycleEventPublisher publisher );
 }

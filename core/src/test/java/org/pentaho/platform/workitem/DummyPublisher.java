@@ -30,4 +30,6 @@ public class DummyPublisher implements IWorkItemLifecycleEventPublisher {
   public void setSubscribers( final List<IWorkItemLifecycleEventSubscriber> subscribers ) { }
 
   public List<IWorkItemLifecycleEventSubscriber> getSubscribers() { return null; }
+
+  public void register( final IWorkItemLifecycleEventSubscriber subscriber ) { }
 }

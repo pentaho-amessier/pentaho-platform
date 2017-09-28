@@ -17,8 +17,6 @@
 
 package org.pentaho.platform.api.workitem;
 
-import java.util.List;
-
 /**
  * Responsible for publishing {@link IWorkItemLifecycleEvent}s.
  */
@@ -30,20 +28,6 @@ public interface IWorkItemLifecycleEventPublisher {
    */
   void publish( final IWorkItemLifecycleEvent event );
 
-  /**
-   * Sets the {@link List} of {@link IWorkItemLifecycleEventSubscriber}s that wish to listen for
-   * {@link IWorkItemLifecycleEvent}s.
-   * @param subscribers the {@link List} of {@link IWorkItemLifecycleEventSubscriber}s that wish to listen for
-   * {@link IWorkItemLifecycleEvent}s.
-   */
-  void setSubscribers( final List<IWorkItemLifecycleEventSubscriber> subscribers );
 
-  /**
-   * Returns the {@link List} of {@link IWorkItemLifecycleEventSubscriber}s that wish to listen for {@link
-   * IWorkItemLifecycleEvent}s.
-   *
-   * @return the {@link List} of {@link IWorkItemLifecycleEventSubscriber}s that wish to listen for {@link
-   * IWorkItemLifecycleEvent}s.
-   */
-  List<IWorkItemLifecycleEventSubscriber> getSubscribers();
+  void register( final IWorkItemLifecycleEventSubscriber event );
 }

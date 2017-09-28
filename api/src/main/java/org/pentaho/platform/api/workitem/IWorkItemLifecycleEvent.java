@@ -17,12 +17,14 @@
 
 package org.pentaho.platform.api.workitem;
 
+import org.pentaho.platform.api.monitoring.IMonitoringEvent;
+
 import java.util.Date;
 
 /**
  * Encapsulates all information pertaining to a "work item" at a specific point in its lifecycle.
  */
-public interface IWorkItemLifecycleEvent {
+public interface IWorkItemLifecycleEvent extends IMonitoringEvent {
 
   /**
    * Returns the unique id of a work item.

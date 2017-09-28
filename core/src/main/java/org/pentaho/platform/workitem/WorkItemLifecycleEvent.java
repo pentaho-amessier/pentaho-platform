@@ -191,6 +191,11 @@ public class WorkItemLifecycleEvent implements IWorkItemLifecycleEvent {
     }
   }
 
+  @Override
+  public String getId() {
+    return getClass().getName();
+  }
+
   /**
    * An implementation of {@link XmlAdapter} that allows us to [de]serialize Dates as longs (milliseconds).
    */
