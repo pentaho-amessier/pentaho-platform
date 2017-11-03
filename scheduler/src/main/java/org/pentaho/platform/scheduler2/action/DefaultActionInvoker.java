@@ -61,6 +61,34 @@ public class DefaultActionInvoker implements IActionInvoker {
     return ( obj instanceof IBackgroundExecutionStreamProvider ) ? (IBackgroundExecutionStreamProvider) obj : null;
   }
 
+
+  /**
+   * Validates that the conditions required for the {@link IAction} to be invoked are true, throwing an
+   * {@link ActionInvocationException}, if the conditions are not met.
+   *
+   * TODO
+   * @throws ActionInvocationException when conditions needed to invoke the {@link IAction} are not met
+   */
+  public void validate( final IAction actionBean, final String actionUser,
+                        final Map<String, Serializable> params ) throws ActionInvocationException {
+
+    final String workItemUid = ActionUtil.extractUid( params );
+
+    if ( actionBean == null || params == null ) {
+      final String failureMessage = Messages.getInstance().getCantInvokeNullAction();
+      WorkItemLifecycleEventUtil.publish( workItemUid, params, WorkItemLifecyclePhase.FAILED,  failureMessage );
+      throw new ActionInvocationException( failureMessage );
+    }
+
+    if ( !isSupportedAction( actionBean ) ) {
+      // TODO: localize
+      final String failureMessage = "Can't invoke action - not supported: " + actionBean;//Messages.getInstance()
+      // .getCantInvokeAction();
+      WorkItemLifecycleEventUtil.publish( workItemUid, params, WorkItemLifecyclePhase.FAILED, failureMessage );
+      throw new ActionInvocationException( failureMessage );
+    }
+  }
+
   /**
    * Invokes the provided {@link IAction} as the provided {@code actionUser}.
    *
@@ -74,6 +102,7 @@ public class DefaultActionInvoker implements IActionInvoker {
   public IActionInvokeStatus invokeAction( final IAction actionBean,
                                            final String actionUser,
                                            final Map<String, Serializable> params ) throws Exception {
+    validate( actionBean, actionUser, params );
     return invokeActionImpl( actionBean, actionUser, params );
   }
 
