@@ -110,6 +110,12 @@ public class ActionAdapterQuartzJob implements Job {
     invokeAction( actionClass, actionId, actionUser, context, params );
   }
 
+  /*
+   * Returns a {@link Map} with any values of type {@link MapParamValue}, {@link ListParamValue} and
+   * {@link StringParamValue} converted to their native java types ({@link HashMap}, {@link ArrayList} and
+   * {@link String} respectively). This is being done because the parameter map is jsonified and posted to a rest
+   * resource, which may be unable to deserialize those specific types, if they are not on the classpath.
+   */
   private static Map<String, Serializable> getSerializableMap( final Map<String, Serializable> originalMap ) {
     final Map<String, Serializable> serializableMap = new HashMap<>( );
 
@@ -118,11 +124,11 @@ public class ActionAdapterQuartzJob implements Job {
       final Map.Entry<String, Serializable> entry = iter.next();
       final String key = entry.getKey();
       final Serializable value = entry.getValue();
-      if (value instanceof MapParamValue ) {
+      if ( value instanceof MapParamValue ) {
         serializableMap.put( key, new HashMap<String, Serializable>( (MapParamValue) value ) );
-      } else if (value instanceof ListParamValue ) {
+      } else if ( value instanceof ListParamValue ) {
         serializableMap.put( key, new ArrayList<Serializable>( (ListParamValue) value ) );
-      } else if (value instanceof StringParamValue ) {
+      } else if ( value instanceof StringParamValue ) {
         serializableMap.put( key, ( (StringParamValue) value ).getStringValue() );
       } else {
         serializableMap.put( key, value );
@@ -171,7 +177,8 @@ public class ActionAdapterQuartzJob implements Job {
       params.put( IBlockoutManager.SCHEDULED_FIRE_TIME, context.getScheduledFireTime() );
     }
 
-    // Invoke the action and get the status of the invocation
+    // Invoke the action and get the status of the invocation (the params map is massaged into a "serializable" form,
+    // see BACKLOG-19889 for details
     final IActionInvokeStatus status = actionInvoker.invokeAction( actionBean, actionUser, getSerializableMap( params ) );
 
     // Status may not be available for remote execution, which is expected
