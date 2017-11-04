@@ -17,6 +17,7 @@
 
 package org.pentaho.platform.scheduler2.quartz;
 
+import com.google.common.base.Splitter;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -51,6 +52,7 @@ import org.pentaho.platform.scheduler2.recur.QualifiedDayOfWeek.DayOfWeekQualifi
 import org.pentaho.platform.scheduler2.recur.RecurrenceList;
 import org.pentaho.platform.scheduler2.recur.SequentialRecurrence;
 import org.pentaho.platform.util.ActionUtil;
+import org.pentaho.platform.util.StringUtil;
 import org.quartz.Calendar;
 import org.quartz.CronTrigger;
 import org.quartz.JobDataMap;
@@ -245,6 +247,16 @@ public class QuartzScheduler implements IScheduler {
 
   private JobDetail createJobDetails( QuartzJobKey jobId, Map<String, Serializable> jobParams ) {
     JobDetail jobDetail = new JobDetail( jobId.toString(), jobId.getUserName(), BlockingQuartzJob.class );
+
+    // Store the inputFile in the map, so we have direct access to it
+    if ( jobParams.get( RESERVEDMAPKEY_STREAMPROVIDER ) != null ) {
+      final Map<String, String> streamProviderMap = StringUtil.trimStringMap( Splitter.on( ":" ).withKeyValueSeparator(
+        "=" ).split( jobParams.get( RESERVEDMAPKEY_STREAMPROVIDER ).toString() ) );
+      final String inputFile = StringUtil.trimToEmpty( streamProviderMap.get( "input file" ) );
+      if ( !StringUtil.isEmpty( inputFile ) ) {
+        jobParams.put( RESERVEDMAPKEY_STREAMPROVIDER_INPUTFILE, inputFile );
+      }
+    }
     jobParams.put( RESERVEDMAPKEY_ACTIONUSER, jobId.getUserName() );
     JobDataMap jobDataMap = new JobDataMap( jobParams );
     jobDetail.setJobDataMap( jobDataMap );

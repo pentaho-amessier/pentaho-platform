@@ -21,10 +21,12 @@ import org.pentaho.platform.api.workitem.IWorkItemLifecycleEvent;
 import org.pentaho.platform.api.workitem.IWorkItemLifecycleEventPublisher;
 import org.pentaho.platform.engine.core.system.PentahoSystem;
 import org.pentaho.platform.util.ActionUtil;
+import org.pentaho.platform.util.StringUtil;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * A class for common utility methods related to work item lifecycle events.
@@ -113,8 +115,13 @@ public class WorkItemLifecycleEventUtil {
     }
 
     final StringBuilder sb = new StringBuilder();
-    if ( detailsMap.containsKey( ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE ) ) {
-      sb.append( detailsMap.get( ActionUtil.INVOKER_STREAMPROVIDER_INPUT_FILE ).toString() );
+
+    final String inputFilePath = Optional.ofNullable( (String) detailsMap.get( ActionUtil
+      .INVOKER_STREAMPROVIDER_INPUT_FILE ) ).orElse( (String) detailsMap.get( ActionUtil
+      .QUARTZ_STREAMPROVIDER_INPUT_FILE ) );
+
+    if ( !StringUtil.isEmpty( inputFilePath ) ) {
+      sb.append( inputFilePath );
 
       if ( detailsMap.containsKey( ActionUtil.INVOKER_ACTIONUSER ) ) {
         sb.append( "[" );
